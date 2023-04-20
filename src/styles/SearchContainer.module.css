@@ -1,0 +1,28 @@
+.SearchContainer {
+    padding: 10px;
+    background-color: #f8f4e3;
+    border: 3px solid #77867f;
+    border-radius: 4px;
+    color: black;
+}
+
+input::placeholder {
+    font-style: italic;
+    color: #77868f;
+    text-align: center;
+}
+
+input:focus::placeholder {
+    color:transparent
+}
+
+.Filters{
+    text-align: center;
+    align-items: center;
+    justify-items: center;
+    padding: 0px;
+}
+
+.FilterBox{
+    min-width: 50px;
+}
