@@ -7,12 +7,12 @@ function Home() {
   return (
     <>
       
-      <h2> Welcome to MTGCollector!</h2>
+      <h2 className={styles.title}> Welcome to MTGCollector!</h2>
       <h3> What is it for?</h3>
       <p className={styles.Paragraph}> MTGCollector is the perfect solution for organizing you're <i>Magic: The Gathering</i> cards! Here you'll be able to:</p>
-      <ul>
+      <ul className={styles.list}>
         <li>
-          Mirror your physical cards by adding cards to your collection  
+          Mirror your physical cards by adding cards to your collection.
         </li>
         <li>
           Build multiple decks with the same cards that you have so you don't need to take notes on shared cards
