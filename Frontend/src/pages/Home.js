@@ -30,7 +30,7 @@ function Home() {
       <button>Create Collection!</button>
       
       <h1>All Magic Cards</h1>
-      <SearchContainer />
+      <SearchContainer baseOfSearch="AllCards"/>
     </>
   );
 }
