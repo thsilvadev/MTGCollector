@@ -2,7 +2,7 @@
     font-size: 50px;
     border: red solid 10px;
     box-shadow: 5px 5px black;
-    background-color: aliceblue;
+    background-color:antiquewhite;
     color: black;
     border-radius: 4px;
 }
@@ -12,7 +12,8 @@
 }
 
 .list {
-    margin: 20px 0px 0px 20px;
-    line-height: 30px;
-    list-style:disc;
+    margin: 20px 0px 20px 0px;
+    line-height: 40px;
+    list-style: disc;
+    text-align: start;
 }
