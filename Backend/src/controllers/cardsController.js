@@ -11,12 +11,15 @@ module.exports = {
   },
 
   async getAll(req, res) {
+    
+
     const result = await knex("cards");
 
     return res.json(result);
   },
 
   //COPY CARDS
+
 
   /* 
   
