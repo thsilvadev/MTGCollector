@@ -1,0 +1,11 @@
+To do today:
+
+1) create the schema / tables / columns => tried my best to edit the SQL (downloaded EmEditor and whatnot) but couldn't do nothing. So I'm running the whole SQL, thus creating a gigantic database. It's definitely overkill but, hey, I tried. Once it finished creating all those exceding tables and filling'em, I just had to create my own tables (collection, wishlist, decks and deck) and we're good to go.
+
+2) populate it with cards => done
+
+______________
+
+3) try to run the backend => tried it. GetbyId returning empty square brackets. Will need to find out what´s wrong.
+
+4) try to populate frontend with cards

@@ -1,0 +1,11 @@
+CREATE TABLE `cards` (
+	id INTEGER PRIMARY KEY AUTO_INCREMENT,
+	name TEXT
+	colors TEXT
+	manaValue FLOAT
+	name TEXT
+	type TEXT
+	rarity ENUM('uncommon', 'common', 'rare', 'mythic', 'special', 'bonus'),
+	setCode TEXT,
+	multiverseId TEXT"
+)

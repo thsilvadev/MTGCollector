@@ -1,11 +1,4 @@
-CREATE TABLE `Cards` (
-  `id` int PRIMARY KEY NOT NULL,
-  `name` varchar(255),
-  `type` varchar(255),
-  `set` varchar(255),
-  `mana` int,
-  `image` varchar(255)
-);
+
 
 CREATE TABLE `Collection` (
   `id_collection` int PRIMARY KEY NOT NULL,
@@ -34,9 +27,9 @@ CREATE TABLE `Deck` (
   `deck` int
 );
 
-ALTER TABLE `Collection` ADD FOREIGN KEY (`card_id`) REFERENCES `Cards` (`id`);
+ALTER TABLE `Collection` ADD FOREIGN KEY (`card_id`) REFERENCES `cards` (`id`);
 
-ALTER TABLE `Wishlist` ADD FOREIGN KEY (`card_id`) REFERENCES `Cards` (`id`);
+ALTER TABLE `Wishlist` ADD FOREIGN KEY (`card_id`) REFERENCES `cards` (`id`);
 
 ALTER TABLE `Deck` ADD FOREIGN KEY (`id_card`) REFERENCES `Collection` (`id_collection`);
 

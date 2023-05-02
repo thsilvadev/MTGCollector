@@ -1,0 +1,15 @@
+ABOUT GETTING IMAGES!!!
+
+
+
+1) create variable for multiverseId ${multiverseId}
+
+2) In Card component, this variable is going to be fed through props, receiving the actual displaying card multiverseId
+
+3) create string variable =  `https://gatherer.wizards.com/Handlers/Image.ashx?type=card&multiverseid=${multiverseId}
+
+
+
+[[			MORE TUTORIALS ON:			]]
+
+https://mtgjson.com/faq/#how-do-i-access-a-card-s-imagery
