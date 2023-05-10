@@ -19,8 +19,9 @@ const routes = express.Router();
 
 
 ///////ROUTES AND REQUISITIONS FOR THE CARDS TABLE
-routes.get('/card/:id', cardsController.getById); // GET cards
-routes.get('/cards', cardsController.getAll); // GET cards
+routes.get('/card/:id', cardsController.getById); // GET card by it's ID number
+routes.get('/cards/:page', cardsController.getAll); // GET cards
+routes.get('/cards/set/:set/:page', cardsController.getBySet);
 
 //routes.copy('/cards/:id', cardsController.copy); //COPY cards
 
