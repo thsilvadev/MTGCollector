@@ -23,7 +23,7 @@ function Home() {
         </li>
 
         <li>
-          ... and much more! All this with actual 3rd millenium user interface!
+          ... and much more! All this with actual 3rd millenium user interface! We keep it clean, we keep it safe.
         </li>
       </ul>
 

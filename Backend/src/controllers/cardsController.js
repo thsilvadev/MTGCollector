@@ -12,10 +12,24 @@ module.exports = {
   },
 
   async getAll(req, res) {
-    const { page } = req.params;
+    
 
+    const { params, query } = req;
 
-    const result = await knex("cards").orderBy("id", "desc").limit(40).offset(page * 40);
+    const { page } = params;
+
+    const result = await knex("cards")
+    
+      .where(builder => {
+        for (const [key, value] of Object.entries(query)) {
+          builder.where(key, value)
+        }
+      })
+      .orderBy("id", "desc")
+      
+      .limit(40)
+      
+      .offset(page * 40);
 
     return res.json(result);
   },
@@ -23,11 +37,42 @@ module.exports = {
   async getBySet(req, res) {
 
     const { set } = req.params
+  
     const { page } = req.params
     const result = await knex("cards").where({setCode: `${set}`}).orderBy("id", "desc").limit(40).offset(page * 40);
 
     return res.json(result);
+  },
+
+
+
+
+  
+    /*
+  async getByFilters(req, res) {
+
+
+
+    const query = req.query
+
+    const { manavalue } = query.manavalue
+    const { set } = query.setCode
+    const { colors } = query.colors
+    const { type } = query.type
+    const { rarity } = query.rarity
+    const { name } = query.rarity
+
+    let filteredResults = await knex("cards").where(builder => {
+      for (const [key, value] of Object.entries(query)) {
+        builder.where(key, value)
+      }
+    }) ;
+
+    
+    return res.json(result);
+
   }
+    */
 
   //COPY CARDS
 
