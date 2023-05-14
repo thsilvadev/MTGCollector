@@ -9,7 +9,7 @@ const AboutUs = () => {
         <div>
             <h1 className={styles.title} >About MTGCollector</h1>
             <div>
-                <img src={img1} className={styles.image1}/>
+                <img src={img1} className={styles.image1} alt="something"/>
             </div>
             <div className={styles.text}>
             <p>I'm thsilvadev but you can call me Thiagosauro, a casual <i>Magic: The Gathering</i> player. I used to play it 13 years ago back in the school days. Classic nerd twelve year olds group started to visit "Pergaminho" (word for Scroll, in english), a RPG store near our school. There we took part in dubious RPG sessions until the dungeon's keepers showed us Magic. It was unbeliavably magical. We all know it is.</p> <br/>

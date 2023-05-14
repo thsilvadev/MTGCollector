@@ -2,7 +2,7 @@
 import styles from "../styles/SearchContainer.module.css";
 
 const SearchContainer = ({ baseOfSearch }) => {
-  if ((baseOfSearch == "AllCards")) {
+  if ((baseOfSearch === "AllCards")) {
     return (
       <div className={styles.SearchContainer}>
         <h3> Filter by:</h3>
