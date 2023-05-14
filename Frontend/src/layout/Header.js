@@ -43,7 +43,7 @@ function Header() {
               About Us
             </a>
           </li>
-          <li class="nav-item">
+          <li className={styles.Header + 'nav-item'}>
             <a class="nav-link" href="/contact">
               Contact
             </a>

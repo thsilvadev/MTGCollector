@@ -1,8 +1,12 @@
+//In this script I'm using some destructured variables.
+
+
 const knex = require("../database/index");
 
 module.exports = {
   //GET CARDS
   async getById(req, res) {
+
     const { id } = req.params;
 
     const result = await knex("cards").where({ id });
@@ -13,7 +17,8 @@ module.exports = {
 
   async getAll(req, res) {
     
-
+    //This is a function to get All cards and it works with filters.
+    //
     const { params, query } = req;
 
     const { page } = params;
@@ -47,7 +52,7 @@ module.exports = {
 
 
 
-  
+
     /*
   async getByFilters(req, res) {
 
