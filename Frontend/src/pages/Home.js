@@ -19,7 +19,7 @@ function Home() {
   const page = 1;
 
   useEffect(() => {
-    Axios.get(`http://localhost:3344/cards/${page}`).then((response) => {
+    Axios.get(`http://192.168.0.88:3344/cards/${page}`).then((response) => {
       setCards(response.data);
     });
   }, []);
