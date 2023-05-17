@@ -9,11 +9,11 @@
     margin: 0 ;
     background-color: #2a2b2a;
     background: transparent;
+    transition: background-color 0.9s ease;
     
 }
 
 .Container.active {
     color: white;
-    background: linear-gradient(90deg, rgb(66,2,194) 0%, rgb(0, 78, 194) 100%);
-    transition: background-color ease-in 0.6s;
+    background-color: blue;
 }

@@ -28,15 +28,22 @@ const Container = () => {
         }
     }
 
-    window.addEventListener('scroll', changeBackground)
+    //ChatGPT insight
+    useEffect(() => {
+        window.addEventListener('scroll', changeBackground);
+        return () => {
+            window.removeEventListener('scroll', changeBackground)
+
+        }
+    }, [])
 
 
     //Return
     return (
-        <div className={container ? 'Container active' : 'Container'}>
+        <div className={`Container ${container ? 'active' : ''}`}>
             <AppRoutes />
         </div>
     )
 }
 
-export default Container;
+export default Container; 
