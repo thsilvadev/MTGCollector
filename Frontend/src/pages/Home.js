@@ -16,7 +16,8 @@ import React, { useState, useEffect } from "react";
 function Home() {
   const [cards, setCards] = useState([]);
 
-  const page = 4;
+  const page = i /* have to bring SearchContainer.selectedOption here by statelifting somehow. */ ;
+  const i = 0;
 
   useEffect(() => {
     Axios.get(`http://192.168.0.88:3344/cards/${page}`).then((response) => {
