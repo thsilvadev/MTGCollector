@@ -27,10 +27,10 @@ module.exports = {
     
       .where(builder => {
         for (const [key, value] of Object.entries(query)) {
-          builder.where(key, value)
+          builder.where(key, 'like', value)
         }
       })
-      .orderBy("id", "desc")
+      .orderBy("manaValue", "asc")
       
       .limit(40)
       
