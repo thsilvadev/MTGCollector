@@ -23,14 +23,21 @@ module.exports = {
 
     const { page } = params;
 
-    const result = await knex("cards")
+    const result = await knex
+
+      .select('id', 'name', 'types', 'setCode', 'manaCost', 'manaValue', 'rarity', 'multiverseId', 'colorIdentity')
+      
+      .from('cards')
     
       .where(builder => {
         for (const [key, value] of Object.entries(query)) {
-          builder.where(key, 'like', value)
+
+          const sanitizedValue = value.replace(/\\s/g, '');
+
+          builder.where(key, 'like', `${sanitizedValue}%`)
         }
-      })
-      .orderBy("manaValue", "asc")
+      }).whereRaw("multiverseId IS NOT NULL")
+      .orderBy("Rarity", "asc")
       
       .limit(40)
       

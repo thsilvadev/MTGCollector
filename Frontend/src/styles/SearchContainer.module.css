@@ -1,9 +1,11 @@
 .SearchContainer {
-    padding: 10px;
-    background-color: #f8f4e3;
-    border: 3px solid #77867f;
+    padding: 0px;
+    background-color: #6184d8;
+    border: 6px solid #ff8200;
     border-radius: 4px;
     color: black;
+    max-width: 75%;
+    margin: auto;
 }
 
 input::placeholder {
@@ -13,7 +15,7 @@ input::placeholder {
 }
 
 input:focus::placeholder {
-    color:transparent
+    color:transparent;
 }
 
 .Filters{
@@ -24,5 +26,9 @@ input:focus::placeholder {
 }
 
 .FilterBox{
-    min-width: 50px;
+    width: 170px;
+}
+
+.Button{
+    margin: 10px 0 10px 0;
 }
