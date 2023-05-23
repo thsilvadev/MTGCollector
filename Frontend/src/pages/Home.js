@@ -7,23 +7,37 @@ import Card from "../components/Card";
 
 import SearchContainer from "../components/SearchContainer";
 
+import PrevNext from "../components/PrevNext";
+
 import Axios from "axios";
 
 import React, { useState, useEffect } from "react";
 
-//Get Cards
+
 
 function Home() {
   const [cards, setCards] = useState([]);
 
-  const page = i /* have to bring SearchContainer.selectedOption here by statelifting somehow. */ ;
-  const i = 0;
+  //get page number
+  const [page, setPage] = useState(0);
+  const handlePage = (pageData) => {
+    setPage(pageData)
+    console.log(page)
+  }
 
+  //get Params
+  const [superParams, setSuperParams] = useState('')
+  const handleSuperParams = (paramsData) => {
+    setSuperParams(paramsData)
+    console.log(superParams)
+  }
+
+  //get filtered and paginated Cards
   useEffect(() => {
-    Axios.get(`http://192.168.0.88:3344/cards/${page}`).then((response) => {
+    Axios.get(`http://192.168.0.88:3344/cards/${page}?${superParams}`).then((response) => {
       setCards(response.data);
     });
-  }, []);
+  }, [page, superParams]);
 
   return (
     <>
@@ -55,7 +69,7 @@ function Home() {
       <button>Create Collection!</button>
 
       <h1>All Magic Cards</h1>
-      <SearchContainer baseOfSearch="AllCards" />
+      <SearchContainer baseOfSearch="AllCards" onParamsChange={handleSuperParams} />
       <h3>Cards</h3>
       <div className="row justify-content-around">
           {cards.map((card, key) => (
@@ -67,6 +81,7 @@ function Home() {
             />
           ))}
         </div>
+      <PrevNext onPageChange={handlePage} page={page}/>
     </>
   );
 }
