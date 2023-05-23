@@ -12,6 +12,9 @@ import AppRoutes from "../routes/index";
 //hooks (for Background change on scroll)
 import React, {useState, useEffect} from 'react';
 
+//images
+//import background from '../images/bg.jpg'
+
 
 
 const Container = () => {
@@ -21,7 +24,7 @@ const Container = () => {
 
     const changeBackground = () => {
         console.log(window.scrollY)
-        if (window.scrollY >= 80) {
+        if (window.scrollY >= 720) {
             setContainer(true)
         } else {
             setContainer(false)
@@ -40,7 +43,7 @@ const Container = () => {
 
     //Return
     return (
-        <div className={`Container ${container ? 'active' : ''}`}>
+        <div className={`Container ${container ? 'active' : ''}`} /* style={{backgroundImage: `url(${background})`}}*/ >
             <AppRoutes />
         </div>
     )

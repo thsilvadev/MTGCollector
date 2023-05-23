@@ -7,13 +7,12 @@
     color: white;
     background-size: auto;
     margin: 0 ;
-    background-color: #2a2b2a;
-    background: transparent;
+    background-color: #717568;
     transition: background-color 0.9s ease;
     
 }
 
 .Container.active {
     color: white;
-    background-color: blue;
+    background-color: #0a0903;
 }

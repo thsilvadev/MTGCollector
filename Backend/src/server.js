@@ -5,7 +5,7 @@ const app = express();
 const routes = require('./routes');
 
 const port = 3344;
-const ip = '192.168.0.88';
+const ip = '192.168.0.82';
 
 app.use(cors());
 app.use(express.json()); // Tells express that the response will be in JSON
