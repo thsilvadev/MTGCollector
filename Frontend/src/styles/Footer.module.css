@@ -1,6 +1,11 @@
 .Footer {
+  float: left;
   position:initial;
   left: 0;
+  vertical-align: middle;
+  align-items: center;
+  display: flex;
+  justify-content: center;
 
   bottom: 0;
   width: 100%;

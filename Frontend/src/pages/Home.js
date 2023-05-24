@@ -41,36 +41,35 @@ function Home() {
 
   return (
     <>
+      <div className={styles.titleContainer}>
       <h2 className={styles.title}> Welcome to MTGCollector!</h2>
-      <h3> What is it for?</h3>
+      </div>
+      
       <p className={styles.Paragraph}>
         {" "}
-        MTGCollector is the perfect solution for organizing you're{" "}
+        MTGCollector is the perfect solution for organizing your{" "}
         <i>Magic: The Gathering</i> cards! Here you'll be able to:
       </p>
       <ul className={styles.list}>
-        <li>Mirror your physical cards by adding cards to your collection.</li>
-        <li>
+        <li className={styles.listItem}>Mirror your physical cards by adding cards to your collection.</li>
+        <li className={styles.listItem}>
           Build multiple decks with the same cards that you have so you don't
           need to take notes on shared cards
         </li>
 
-        <li>
+        <li className={styles.listItem}>
           Fill your wishlist and write a description on each card to remember
           their role in your malevolent strategies in assigned deck
         </li>
 
-        <li>
+        <li className={styles.listItem}>
           ... and much more! All this with actual 3rd millenium user interface!
           We keep it clean, we keep it safe.
         </li>
       </ul>
 
-      <button>Create Collection!</button>
-
-      <h1>All Magic Cards</h1>
+      <h1>All <i>Magic: The Gathering</i> Cards</h1>
       <SearchContainer baseOfSearch="AllCards" onParamsChange={handleSuperParams} />
-      <h3>Cards</h3>
       <div className="row justify-content-around">
           {cards.map((card, key) => (
             <Card
@@ -78,6 +77,7 @@ function Home() {
               id={card.id}
               multiverseId={card.multiverseId}
               cardname={card.name}
+              types={card.types}
             />
           ))}
         </div>

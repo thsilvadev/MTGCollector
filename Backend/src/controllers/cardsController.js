@@ -31,12 +31,27 @@ module.exports = {
     
       .where(builder => {
         for (const [key, value] of Object.entries(query)) {
-
+          console.log({key, value})
+          //this is for Card Name Typing search
           const sanitizedValue = value.replace(/\\s/g, '');
 
-          builder.where(key, 'like', `${sanitizedValue}%`)
+          if (key === 'name'){
+            
+            builder.where(key, 'like', `${sanitizedValue}%`);
+            console.log(sanitizedValue)
+            return;
+          }
+
+          //for COLORLESS (colorIdentity value IS NULL)
+          if (key === 'colorIdentity' && value === 'colorless'){
+            builder.where(key, null)
+            return;
+          }
+            builder.where(key, value)
         }
-      }).whereRaw("multiverseId IS NOT NULL")
+      })
+      .whereRaw("multiverseId IS NOT NULL AND NOT multiverseId = '580709'")
+
       .orderBy("Rarity", "asc")
       
       .limit(40)

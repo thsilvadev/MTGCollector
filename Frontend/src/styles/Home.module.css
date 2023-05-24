@@ -1,10 +1,17 @@
-.title {
-    font-size: 50px;
+.titleContainer {
     border: red solid 10px;
     box-shadow: 5px 5px black;
     background-color:antiquewhite;
     color: black;
     border-radius: 4px;
+    max-width: 500px;
+    display: flex;
+    margin: 80px auto 80px auto;
+    box-sizing: border-box;
+}
+
+.title {
+    font-size: 50px;
 }
 
 .Paragraph {
@@ -12,8 +19,13 @@
 }
 
 .list {
-    margin: 20px 0px 20px 0px;
-    line-height: 40px;
+    max-width: 900px;
+    margin: auto;
+    line-height: 25px;
     list-style: disc;
     text-align: start;
+}
+
+.listItem {
+    margin: 15px 0 15px 0;
 }

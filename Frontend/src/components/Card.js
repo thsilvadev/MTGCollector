@@ -1,17 +1,29 @@
 //SHIT DO DO FIRST
 
 //imports
-import { React } from 'react';
+import { React, useState } from 'react';
 
 //styles
 
 import styles from "../styles/Card.module.css"
 
-function Card ({ id, type, cardname, setCode, rarity, cost, condition, multiverseId }) {
+function Card ({ id, types, cardname, setCode, rarity, cost, condition, multiverseId }) {
+
+    const [battle, setBattle] = useState(false);
+
+    const changeCardClass = () => {
+        if (types === 'Battle') {
+            setBattle(true)
+            console.log(battle)
+        } else {
+            setBattle(false)
+            console.log(battle)
+        }
+    }
 
     return (
         <div className="col-12 col-sm-6 col-lg-3">
-            <img src={"https://gatherer.wizards.com/Handlers/Image.ashx?type=card&multiverseid=" + multiverseId} alt="card" className={styles.Card} />
+            <img src={"https://gatherer.wizards.com/Handlers/Image.ashx?type=card&multiverseid=" + multiverseId} alt="card" className={battle ? styles.Battle : styles.Card} onMouseOver={changeCardClass} />
         </div>
     )
 }

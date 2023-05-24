@@ -24,14 +24,14 @@ const Container = () => {
 
     const changeBackground = () => {
         console.log(window.scrollY)
-        if (window.scrollY >= 720) {
+        if (window.scrollY >= 600) {
             setContainer(true)
         } else {
             setContainer(false)
         }
     }
 
-    //ChatGPT insight
+    //Event Listener
     useEffect(() => {
         window.addEventListener('scroll', changeBackground);
         return () => {

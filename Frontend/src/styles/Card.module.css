@@ -1,32 +1,60 @@
 
 
 .Card {
-    margin: 10px 0px 10px 0px;
+    margin: 15px 0px 15px 0px;
     transition: border 0.1s;
-    height: 240px;
+    height: 300px;
     border-radius: 11px;
+    
 }
 
 .Card:hover {
     border: solid 7px lightskyblue;
-    animation: hover-animation 0.8s forwards;
+    animation: hover-animation 0.4s forwards;
+    cursor: grab;
 
 }
 
+.Battle {
+    margin: 15px 0px 15px 0px;
+    transition: border 0.1s;
+    height: 300px;
+    border-radius: 11px;
+}
+
+.Battle:hover {
+    border: solid 7px lightskyblue;
+    animation: battle-hover-animation 0.4s forwards;
+    cursor: grab;
+}
 
 
 @keyframes hover-animation {
 
     0% {
-        transform: scale(1.0)
-    }
-
-    50% {
-        transform: scale(1.0)
-    }
-
-    100% {
-        transform: scale(1.7);
+        transform: scale(1);
     }
     
+    50% {
+        transform: scale(1);
+    }
+    
+    100% {
+        transform: scale(1.7)
+    }
+    
+}
+
+@keyframes battle-hover-animation {
+    0%{
+        transform: scale(1);
+    }
+
+    50%{
+        transform: scale(1);
+    }
+
+    100%{
+        transform: scale(1.7) rotate(90deg);
+    }
 }
