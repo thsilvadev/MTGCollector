@@ -18,7 +18,7 @@ function PrevNext({ onPageChange, page }) {
   onPageChange(pageData);
 
   if (page === 0) {
-    return <button onClick={handleIncrement}>Próxima</button>;
+    return <button className={styles.Button} onClick={handleIncrement}>Próxima</button>;
   }
   if (page >= 1) {
     return (

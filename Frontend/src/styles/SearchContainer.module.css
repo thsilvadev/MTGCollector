@@ -1,11 +1,12 @@
 .SearchContainer {
-    padding: 0px;
+    padding: 20px 0 20px 0;
     background-color: #6184d8;
     border: 6px solid #ff8200;
     border-radius: 4px;
     color: black;
     max-width: 75%;
     margin: auto;
+    margin-bottom: 35px;
 }
 
 input::placeholder {
@@ -29,6 +30,3 @@ input:focus::placeholder {
     width: 170px;
 }
 
-.Button{
-    margin: 10px 0 10px 0;
-}

@@ -22,7 +22,23 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     console.log(selectedName);
   }, [selectedType, selectedSet, selectedRarity, selectedColor, selectedName]);
 
+  
+
+  //Debouncer
+  const debounce = (func, delay) => {
+    let timerId;
+
+    return (...args) => {
+      clearTimeout(timerId);
+
+      timerId = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
+    };
+  };
+
   // Handle change when an Type is selected
+
   const handleTypeChange = (event) => {
     setSelectedType(event.target.value);
   };
@@ -47,6 +63,9 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     }
   };
 
+  const debouncedHandleNameChange = debounce(handleNameChange, 300);
+
+
   if (baseOfSearch === "AllCards") {
     return (
       <div className={styles.SearchContainer}>
@@ -68,6 +87,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 <option value="&types=Sorcery">Sorcery</option>
                 <option value="&types=Enchantment">Enchantment</option>
                 <option value="&types=Instant">Instant</option>
+                <option value="&types=Battle">Battle</option>
               </select>
             </div>
 
@@ -122,6 +142,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 <option value="&colorIdentity=U">Blue</option>
                 <option value="&colorIdentity=G">Green</option>
                 <option value="&colorIdentity=W">White</option>
+                <option value="&colorIdentity=colorless">Colorless</option>
               </select>
             </div>
           </div>
@@ -130,17 +151,12 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           <form role="search">
             <div className="row">
               <input
-                className={styles.FilterBox}
-                onChange={handleNameChange}
+                className={styles.Input}
+                onChange={debouncedHandleNameChange}
                 type="search"
                 placeholder="Type card name"
                 aria-label="Search"
               />
-            </div>
-            <div className="row">
-              <button class={styles.Button} type="submit">
-                Search
-              </button>
             </div>
           </form>
         </div>

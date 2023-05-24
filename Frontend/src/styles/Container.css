@@ -6,10 +6,12 @@
 .Container {
     color: white;
     background-size: auto;
-    margin: 0 ;
     background-color: #717568;
     transition: background-color 0.9s ease;
-    
+    /* This inhibits the Container to be pushed down in case of the first element of the page being top-marged*/
+    float: left;
+    width: 100%;
+
 }
 
 .Container.active {
