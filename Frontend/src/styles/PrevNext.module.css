@@ -1,20 +1,20 @@
 .ButtonsContainer {
     margin: 100px;
-    padding: 10px;
     height: 100px;
     align-items: center;
     background-color: transparent;
-    font-size: 40px;
-    justify-content: center !important;
-    justify-items: center !important;
+    font-size: 20px;
+    justify-content: center;
+    justify-items: center;
     display: flex;
 }
 
 .Button {
     border-radius: 8px;
-    background-color: black;
-    color: antiquewhite;
-    padding: 10px;
-    margin: 0 10px 30px 10px;
+    background-color: #FFC100;
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+    padding: 5px 10px 5px 10px;
+    margin: 0 10px 10px 10px;
     
 }

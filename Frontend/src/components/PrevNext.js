@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import styles from '../styles/PrevNext.module.css'
+import styles from "../styles/PrevNext.module.css";
 
 function PrevNext({ onPageChange, page }) {
   const [pageData, setPageData] = useState(0);
@@ -18,19 +18,29 @@ function PrevNext({ onPageChange, page }) {
   onPageChange(pageData);
 
   if (page === 0) {
-    return <button className={styles.Button} onClick={handleIncrement}>Próxima</button>;
+    return (
+      <div className={styles.ButtonsContainer}>
+        <button className={styles.Button} onClick={handleIncrement}>
+          Próxima
+        </button>
+      </div>
+    );
   }
   if (page >= 1) {
     return (
       <div className={styles.ButtonsContainer}>
-        <div >
-          <button className={styles.Button} onClick={handleDecrement}>Anterior</button>
+        <div>
+          <button className={styles.Button} onClick={handleDecrement}>
+            Anterior
+          </button>
         </div>
         <div>
           <p>{pageData}</p>
         </div>
-        <div >
-          <button className={styles.Button} onClick={handleIncrement}>Próxima</button>
+        <div>
+          <button className={styles.Button} onClick={handleIncrement}>
+            Próxima
+          </button>
         </div>
       </div>
     );
