@@ -50,7 +50,7 @@ module.exports = {
             builder.where(key, value)
         }
       })
-      .whereRaw("multiverseId IS NOT NULL AND NOT multiverseId = '580709'")
+      .whereRaw("multiverseId IS NOT NULL AND NOT multiverseId = '580709' AND NOT multiverseId = '580711'")
 
       .orderBy("Rarity", "asc")
       
