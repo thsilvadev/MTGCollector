@@ -9,13 +9,17 @@
     margin-bottom: 35px;
 }
 
-input::placeholder {
-    font-style: italic;
-    color: #77868f;
-    text-align: center;
+.Input {
+    width: 170px;
 }
 
-input:focus::placeholder {
+.Input::placeholder {
+    font-style: italic;
+    color: #77868f;
+    text-align: start;
+}
+
+.Input:focus::placeholder {
     color:transparent;
 }
 
