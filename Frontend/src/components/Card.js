@@ -14,10 +14,8 @@ function Card ({ id, types, cardname, setCode, rarity, cost, condition, multiver
     const changeCardClass = () => {
         if (types === 'Battle') {
             setBattle(true)
-            console.log(battle)
         } else {
             setBattle(false)
-            console.log(battle)
         }
     }
 

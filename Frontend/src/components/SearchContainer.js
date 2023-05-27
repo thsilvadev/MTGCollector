@@ -4,6 +4,13 @@ import styles from "../styles/SearchContainer.module.css";
 //imports
 import React, { useEffect, useState } from "react";
 
+//imgs
+import black from "../images/black.png";
+import green from "../images/green.png";
+import red from  "../images/red.png";
+import blue from "../images/blue.png";
+import white from "../images/white.png";
+
 const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [selectedType, setSelectedType] = useState("");
   const [selectedSet, setSelectedSet] = useState("");
@@ -23,19 +30,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   }, [selectedType, selectedSet, selectedRarity, selectedColor, selectedName]);
 
   
-
-  //Debouncer
-  const debounce = (func, delay) => {
-    let timerId;
-
-    return (...args) => {
-      clearTimeout(timerId);
-
-      timerId = setTimeout(() => {
-        func.apply(this, args);
-      }, delay);
-    };
-  };
 
   // Handle change when an Type is selected
 
@@ -63,8 +57,55 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     }
   };
 
+  //Debouncer
+  const debounce = (func, delay) => {
+    let timerId;
+
+    return (...args) => {
+      clearTimeout(timerId);
+
+      timerId = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
+    };
+  };
+
   const debouncedHandleNameChange = debounce(handleNameChange, 300);
 
+
+  //Color checkbox handler
+
+  const [blackIsChecked, setBlackIsChecked] = useState(false)
+  const [greenIsChecked, setGreenIsChecked] = useState(false)
+  const [redIsChecked, setRedIsChecked] = useState(false)
+  const [blueIsChecked, setBlueIsChecked] = useState(false)
+  const [whiteIsChecked, setWhiteIsChecked] = useState(false)
+
+  const checkHandler = (event) => {
+    if (event.target.id === "black"){
+      setBlackIsChecked(!blackIsChecked)
+    }
+    if (event.target.id === "green"){
+      setGreenIsChecked(!greenIsChecked)
+    }
+    if (event.target.id === "red"){
+      setRedIsChecked(!redIsChecked)
+    }
+    if (event.target.id === "blue"){
+      setBlueIsChecked(!blueIsChecked)
+    }
+    if (event.target.id === "white"){
+      setWhiteIsChecked(!whiteIsChecked)
+    }
+  }
+
+  useEffect(() => {
+    console.log('black is', blackIsChecked)
+  }, [blackIsChecked])
+
+  
+
+  
 
   if (baseOfSearch === "AllCards") {
     return (
@@ -144,6 +185,47 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 <option value="&colorIdentity=W">White</option>
                 <option value="&colorIdentity=colorless">Colorless</option>
               </select>
+            </div>
+
+            <div className="col-lg-3 col-md-6 col-sm-12">
+              <h4 className={styles.Filters}>Color</h4>
+              <div className="row">
+              <div className="col">
+                <input type="checkbox" checked={blackIsChecked} onChange={checkHandler} id="black" />
+                <label for="checkbox-1">
+                  <img src={black} width="25" alt="black-logo" />
+                </label>
+              </div>
+
+              <div className="col">
+                <input type="checkbox" checked={greenIsChecked} onChange={checkHandler} id="green" />
+                <label for="checkbox-2">
+                  <img src={green} width="25" alt="green-logo" />
+                </label>
+              </div>
+
+              <div className="col">
+                <input type="checkbox" checked={redIsChecked} onChange={checkHandler} id="red" />
+                <label for="checkbox-3">
+                  <img src={red} width="25" alt="red-logo" />
+                </label>
+              </div>
+
+              <div className="col">
+                <input type="checkbox" checked={blueIsChecked} onChange={checkHandler} id="blue" />
+                <label for="checkbox-4">
+                  <img src={blue} width="25" alt="blue-logo" />
+                </label>
+              </div>
+
+              <div className="col">
+                <input type="checkbox" checked={whiteIsChecked} onChange={checkHandler} id="white" />
+                <label for="checkbox-5">
+                  <img src={white} width="25" alt="white-logo" />
+                </label>
+              </div>
+              </div>
+              
             </div>
           </div>
         </div>
