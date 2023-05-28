@@ -2,7 +2,7 @@
 import styles from "../styles/SearchContainer.module.css";
 
 //imports
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 //imgs
 import black from "../images/black.png";
@@ -13,25 +13,20 @@ import white from "../images/white.png";
 
 const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [selectedType, setSelectedType] = useState("");
+
   const [selectedSet, setSelectedSet] = useState("");
+
   const [selectedRarity, setSelectedRarity] = useState("");
+
   const [selectedColor, setSelectedColor] = useState("");
+  const [handledColor, setHandledColor] = useState("");
+
   const [selectedName, setSelectedName] = useState("");
 
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;
   onParamsChange(queryParams);
 
-  useEffect(() => {
-    console.log(selectedType);
-    console.log(selectedSet);
-    console.log(selectedRarity);
-    console.log(selectedColor);
-    console.log(selectedName);
-  }, [selectedType, selectedSet, selectedRarity, selectedColor, selectedName]);
-
-  
-
-  // Handle change when an Type is selected
+  // Handle inputs
 
   const handleTypeChange = (event) => {
     setSelectedType(event.target.value);
@@ -44,10 +39,10 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const handleRarityChange = (event) => {
     setSelectedRarity(event.target.value);
   };
-
-  const handleColorChange = (event) => {
-    setSelectedColor(event.target.value);
-  };
+        //Had to use useCallback because of useEffect array dependency issue, later in the code.
+  const handleColorChange = useCallback(() => {
+    setSelectedColor(handledColor);
+  },[handledColor]);
 
   const handleNameChange = (event) => {
     if (event.target.value) {
@@ -75,6 +70,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   //Color checkbox handler
 
+  
+
   const [blackIsChecked, setBlackIsChecked] = useState(false)
   const [greenIsChecked, setGreenIsChecked] = useState(false)
   const [redIsChecked, setRedIsChecked] = useState(false)
@@ -99,13 +96,73 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     }
   }
 
+  const colorParams = useCallback(() => {
+
+    const colorsToCheck = [];
+    colorsToCheck.push(blackIsChecked, greenIsChecked, redIsChecked, blueIsChecked, whiteIsChecked);
+
+    let checkedColors = 0;
+    let result = '&colorIdentity=';
+
+    colorsToCheck.map((el, index) => {
+      if (el === true) {
+        checkedColors++;
+        if (checkedColors === 1){
+          if (index === 0){
+            result += 'B'
+          }
+          if (index === 1){
+            result += 'G'
+          }
+          if (index === 2){
+            result += 'R'
+          }
+          if (index === 3){
+            result += 'U'
+          }
+          if (index === 4){
+            result += 'W'
+          }
+        }
+        if (checkedColors > 1){
+          if (index === 0){
+            result += ',B'
+          }
+          if (index === 1){
+            result += ',G'
+          }
+          if (index === 2){
+            result += ',R'
+          }
+          if (index === 3){
+            result += ',U'
+          }
+          if (index === 4){
+            result += ',W'
+          }
+        }
+        
+      } return result;
+    });  
+    
+    if (checkedColors === 0){
+      result += 'colorless'
+    }
+    
+    return result;
+  }, [blackIsChecked, greenIsChecked, redIsChecked, blueIsChecked, whiteIsChecked]);
+
   useEffect(() => {
-    console.log('black is', blackIsChecked)
-  }, [blackIsChecked])
+    setHandledColor(colorParams());
+    handleColorChange();
+  }, [blackIsChecked, greenIsChecked, redIsChecked, blueIsChecked, whiteIsChecked, colorParams, handleColorChange])
 
-  
 
-  
+
+
+
+
+  //Returns
 
   if (baseOfSearch === "AllCards") {
     return (
@@ -169,23 +226,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </select>
             </div>
 
-            <div className="col-lg-3 col-md-6 col-sm-12">
-              <h4 className={styles.Filters}>Color</h4>
-              <select
-                value={selectedColor}
-                className={styles.FilterBox}
-                onChange={handleColorChange}
-                aria-label="Default select example"
-              >
-                <option selected> </option>
-                <option value="&colorIdentity=B">Black</option>
-                <option value="&colorIdentity=R">Red</option>
-                <option value="&colorIdentity=U">Blue</option>
-                <option value="&colorIdentity=G">Green</option>
-                <option value="&colorIdentity=W">White</option>
-                <option value="&colorIdentity=colorless">Colorless</option>
-              </select>
-            </div>
+
 
             <div className="col-lg-3 col-md-6 col-sm-12">
               <h4 className={styles.Filters}>Color</h4>
