@@ -70,13 +70,11 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   //Color checkbox handler
 
-  
-
-  const [blackIsChecked, setBlackIsChecked] = useState(false)
-  const [greenIsChecked, setGreenIsChecked] = useState(false)
-  const [redIsChecked, setRedIsChecked] = useState(false)
-  const [blueIsChecked, setBlueIsChecked] = useState(false)
-  const [whiteIsChecked, setWhiteIsChecked] = useState(false)
+  const [blackIsChecked, setBlackIsChecked] = useState(true)
+  const [greenIsChecked, setGreenIsChecked] = useState(true)
+  const [redIsChecked, setRedIsChecked] = useState(true)
+  const [blueIsChecked, setBlueIsChecked] = useState(true)
+  const [whiteIsChecked, setWhiteIsChecked] = useState(true)
 
   const checkHandler = (event) => {
     if (event.target.id === "black"){
@@ -152,6 +150,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     return result;
   }, [blackIsChecked, greenIsChecked, redIsChecked, blueIsChecked, whiteIsChecked]);
 
+  //this answers to handleColorChange up in the code. As there are multiple checkboxes, the query could not be updated simply by 'event.target.value' and it was necessary to build a function to workaround it (colorParams). Also, it had to be down here because of positioning (after colorParams is defined).
   useEffect(() => {
     setHandledColor(colorParams());
     handleColorChange();

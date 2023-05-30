@@ -39,6 +39,22 @@ function Home() {
     });
   }, [page, superParams]);
 
+  //Loading Spinner
+  const [loading, setLoading] = useState(true);
+  const [loadedImages, setLoadedImages] = useState(0);
+  const totalImages = cards.length;
+
+  const handleImageLoad = () => {
+    setLoadedImages(prevCount => prevCount + 1)
+  }
+
+  useEffect(() => {
+    if (loadedImages === totalImages) {
+      setLoading(false);
+    }
+  }, [loadedImages, totalImages])
+  //End of Loading Spinner
+
   return (
     <>
       <div className={styles.titleContainer}>
@@ -76,8 +92,9 @@ function Home() {
               key={key}
               id={card.id}
               multiverseId={card.multiverseId}
-              cardname={card.name}
+              name={card.name}
               types={card.types}
+              keywords={card.keywords}
             />
           ))}
         </div>
