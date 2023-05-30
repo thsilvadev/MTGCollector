@@ -25,7 +25,7 @@ module.exports = {
 
     const result = await knex
 
-      .select('id', 'name', 'types', 'setCode', 'manaCost', 'manaValue', 'rarity', 'multiverseId', 'colorIdentity')
+      .select('id', 'name', 'types', 'setCode', 'manaCost', 'manaValue', 'rarity', 'multiverseId', 'colorIdentity', 'keywords')
       
       .from('cards')
     
@@ -50,6 +50,7 @@ module.exports = {
             builder.where(key, value)
         }
       })
+      //Not showing cards with faulty images or wrong images
       .whereRaw("multiverseId IS NOT NULL AND NOT multiverseId = '580709' AND NOT multiverseId = '580711'")
 
       .orderBy("Rarity", "asc")
