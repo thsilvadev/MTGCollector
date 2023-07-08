@@ -23,9 +23,14 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   const [selectedName, setSelectedName] = useState("");
 
+
+
+  //Statelifting queryParams
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;
   onParamsChange(queryParams);
 
+
+  
   // Handle inputs
 
   const handleTypeChange = (event) => {
@@ -124,19 +129,19 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
         }
         if (checkedColors > 1){
           if (index === 0){
-            result += ',B'
+            result += ', B'
           }
           if (index === 1){
-            result += ',G'
+            result += ', G'
           }
           if (index === 2){
-            result += ',R'
+            result += ', R'
           }
           if (index === 3){
-            result += ',U'
+            result += ', U'
           }
           if (index === 4){
-            result += ',W'
+            result += ', W'
           }
         }
         

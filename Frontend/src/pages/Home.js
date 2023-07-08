@@ -22,7 +22,6 @@ function Home() {
   const [page, setPage] = useState(0);
   const handlePage = (pageData) => {
     setPage(pageData)
-    console.log(page)
   }
 
   //get Params
@@ -32,28 +31,15 @@ function Home() {
     console.log(superParams)
   }
 
-  //get filtered and paginated Cards
+  //get filtered and paginated Cards in real time
   useEffect(() => {
-    Axios.get(`http://192.168.0.82:3344/cards/${page}?${superParams}`).then((response) => {
+    
+    Axios.get(`http://127.0.0.1:3344/cards/${page}?${superParams}`).then((response) => {
       setCards(response.data);
     });
   }, [page, superParams]);
 
-  //Loading Spinner
-  const [loading, setLoading] = useState(true);
-  const [loadedImages, setLoadedImages] = useState(0);
-  const totalImages = cards.length;
-
-  const handleImageLoad = () => {
-    setLoadedImages(prevCount => prevCount + 1)
-  }
-
-  useEffect(() => {
-    if (loadedImages === totalImages) {
-      setLoading(false);
-    }
-  }, [loadedImages, totalImages])
-  //End of Loading Spinner
+ 
 
   return (
     <>

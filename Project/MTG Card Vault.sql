@@ -1,4 +1,21 @@
-
+CREATE TABLE supercards AS
+SELECT
+  c.id,
+  c.name,
+  c.types,
+  c.setCode,
+  c.manaCost,
+  c.manaValue,
+  c.rarity,
+  c.uuid,
+  c.colorIdentity,
+  c.keywords,
+  ci.multiverseId,
+  ci.scryfallId
+FROM
+  cards c
+LEFT JOIN
+  cardidentifiers ci ON c.uuid = ci.uuid;
 
 CREATE TABLE `Collection` (
   `id_collection` int PRIMARY KEY NOT NULL,
@@ -27,9 +44,9 @@ CREATE TABLE `Deck` (
   `deck` int
 );
 
-ALTER TABLE `Collection` ADD FOREIGN KEY (`card_id`) REFERENCES `cards` (`id`);
+ALTER TABLE `Collection` ADD FOREIGN KEY (`card_id`) REFERENCES `supercards` (`id`);
 
-ALTER TABLE `Wishlist` ADD FOREIGN KEY (`card_id`) REFERENCES `cards` (`id`);
+ALTER TABLE `Wishlist` ADD FOREIGN KEY (`card_id`) REFERENCES `supercards` (`id`);
 
 ALTER TABLE `Deck` ADD FOREIGN KEY (`id_card`) REFERENCES `Collection` (`id_collection`);
 
