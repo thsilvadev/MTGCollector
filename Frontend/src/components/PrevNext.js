@@ -47,7 +47,7 @@ function PrevNext({ onPageChange, page }) {
         </div>
         <div>
           <button className={styles.Button} onClick={handleIncrement}>
-            Próxima
+            Next
           </button>
         </div>
       </div>

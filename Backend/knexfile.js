@@ -7,7 +7,7 @@ module.exports = {
             host:'localhost',
             user:'root',
             password:'',
-            database:'mtg22.05'
+            database:'mtg_07.07.23'
         }
     }
 }
