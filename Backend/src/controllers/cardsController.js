@@ -41,19 +41,27 @@ module.exports = {
           console.log({key, value, page})
 
           //1)When Card name is typed, query for cards starting with typed string (and not just contaning it. E.G: user types 'fire', we do not want 'Safire' cards showing up, just  'Fire breath' or 'Fire ember')
-          const sanitizedValue = value.replace(/\\s/g, '');
+          
 
           if (key === 'name'){
             
-            builder.where(key, 'like', `${sanitizedValue}%`);
+            const sanitizedValue = value.replace(/\\s/g, '');
+            builder.where(function() {
+              this.where(key, 'like', `%${sanitizedValue}%`)
+              .orWhere(key, 'like', `${sanitizedValue}%`)
+              .orWhere(key, 'like', `${sanitizedValue}`);
+        });
             console.log(sanitizedValue)
+            console.log(value)
             return;
+
           }
 
           //2) When No color is selected, make it return colorless cards (by default it returns value='' but we need it to return value=null)
           if (key === 'colorIdentity' && value === 'colorless'){
-            builder.where(key, null)
+            builder.where(key, '')
             return;
+
           }
           //General build
             builder.where(key, value)
