@@ -31,6 +31,41 @@
 }
 
 .FilterBox{
-    width: 170px;
+    width: 130px;
 }
 
+/* Checkbox */
+
+input[type="checkbox"] {
+    display: none;
+}
+
+label {
+    border: 0px solid black;
+    border-radius: 100%;
+    cursor: pointer;
+}
+
+label::before {
+    transition-duration: 0.1s;
+}
+
+label img {
+    transition-duration: 0.1s;
+}
+
+:checked + label img {
+    border: 4px black solid;
+    border-radius: 100%;
+}
+
+:checked + label {
+    border: 8px 8px solid black;
+    border-radius: 100%;
+
+}
+
+:checked + label::before {
+    border: 2px black solid;
+    border-radius: 100%;
+}

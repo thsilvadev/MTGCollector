@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from "react";
 //imgs
 import black from "../images/black.png";
 import green from "../images/green.png";
-import red from  "../images/red.png";
+import red from "../images/red.png";
 import blue from "../images/blue.png";
 import white from "../images/white.png";
 
@@ -23,14 +23,10 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   const [selectedName, setSelectedName] = useState("");
 
-
-
   //Statelifting queryParams
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;
   onParamsChange(queryParams);
 
-
-  
   // Handle inputs
 
   const handleTypeChange = (event) => {
@@ -44,10 +40,10 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const handleRarityChange = (event) => {
     setSelectedRarity(event.target.value);
   };
-        //Had to use useCallback because of useEffect array dependency issue, later in the code.
+  //Had to use useCallback because of useEffect array dependency issue, later in the code.
   const handleColorChange = useCallback(() => {
     setSelectedColor(handledColor);
-  },[handledColor]);
+  }, [handledColor]);
 
   const handleNameChange = (event) => {
     if (event.target.value) {
@@ -72,99 +68,112 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   const debouncedHandleNameChange = debounce(handleNameChange, 300);
 
-
   //Color checkbox handler
 
-  const [blackIsChecked, setBlackIsChecked] = useState(true)
-  const [greenIsChecked, setGreenIsChecked] = useState(true)
-  const [redIsChecked, setRedIsChecked] = useState(true)
-  const [blueIsChecked, setBlueIsChecked] = useState(true)
-  const [whiteIsChecked, setWhiteIsChecked] = useState(true)
+  const [blackIsChecked, setBlackIsChecked] = useState(true);
+  const [greenIsChecked, setGreenIsChecked] = useState(true);
+  const [redIsChecked, setRedIsChecked] = useState(true);
+  const [blueIsChecked, setBlueIsChecked] = useState(true);
+  const [whiteIsChecked, setWhiteIsChecked] = useState(true);
 
   const checkHandler = (event) => {
-    if (event.target.id === "black"){
-      setBlackIsChecked(!blackIsChecked)
+    if (event.target.id === "black") {
+      setBlackIsChecked(!blackIsChecked);
     }
-    if (event.target.id === "green"){
-      setGreenIsChecked(!greenIsChecked)
+    if (event.target.id === "green") {
+      setGreenIsChecked(!greenIsChecked);
     }
-    if (event.target.id === "red"){
-      setRedIsChecked(!redIsChecked)
+    if (event.target.id === "red") {
+      setRedIsChecked(!redIsChecked);
     }
-    if (event.target.id === "blue"){
-      setBlueIsChecked(!blueIsChecked)
+    if (event.target.id === "blue") {
+      setBlueIsChecked(!blueIsChecked);
     }
-    if (event.target.id === "white"){
-      setWhiteIsChecked(!whiteIsChecked)
+    if (event.target.id === "white") {
+      setWhiteIsChecked(!whiteIsChecked);
     }
-  }
+  };
 
   const colorParams = useCallback(() => {
-
     const colorsToCheck = [];
-    colorsToCheck.push(blackIsChecked, greenIsChecked, redIsChecked, blueIsChecked, whiteIsChecked);
+    colorsToCheck.push(
+      blackIsChecked,
+      greenIsChecked,
+      redIsChecked,
+      blueIsChecked,
+      whiteIsChecked
+    );
 
     let checkedColors = 0;
-    let result = '&colorIdentity=';
+    let result = "&colorIdentity=";
 
     colorsToCheck.map((el, index) => {
       if (el === true) {
         checkedColors++;
-        if (checkedColors === 1){
-          if (index === 0){
-            result += 'B'
+        if (checkedColors === 1) {
+          if (index === 0) {
+            result += "B";
           }
-          if (index === 1){
-            result += 'G'
+          if (index === 1) {
+            result += "G";
           }
-          if (index === 2){
-            result += 'R'
+          if (index === 2) {
+            result += "R";
           }
-          if (index === 3){
-            result += 'U'
+          if (index === 3) {
+            result += "U";
           }
-          if (index === 4){
-            result += 'W'
-          }
-        }
-        if (checkedColors > 1){
-          if (index === 0){
-            result += ', B'
-          }
-          if (index === 1){
-            result += ', G'
-          }
-          if (index === 2){
-            result += ', R'
-          }
-          if (index === 3){
-            result += ', U'
-          }
-          if (index === 4){
-            result += ', W'
+          if (index === 4) {
+            result += "W";
           }
         }
-        
-      } return result;
-    });  
-    
-    if (checkedColors === 0){
-      result += 'colorless'
+        if (checkedColors > 1) {
+          if (index === 0) {
+            result += ", B";
+          }
+          if (index === 1) {
+            result += ", G";
+          }
+          if (index === 2) {
+            result += ", R";
+          }
+          if (index === 3) {
+            result += ", U";
+          }
+          if (index === 4) {
+            result += ", W";
+          }
+        }
+      }
+      return result;
+    });
+
+    if (checkedColors === 0) {
+      result += "colorless";
     }
-    
+
     return result;
-  }, [blackIsChecked, greenIsChecked, redIsChecked, blueIsChecked, whiteIsChecked]);
+  }, [
+    blackIsChecked,
+    greenIsChecked,
+    redIsChecked,
+    blueIsChecked,
+    whiteIsChecked,
+  ]);
 
   //this answers to handleColorChange up in the code. As there are multiple checkboxes, the query could not be updated simply by 'event.target.value' and it was necessary to build a function to workaround it (colorParams). Also, it had to be down here because of positioning (after colorParams is defined).
   useEffect(() => {
     setHandledColor(colorParams());
     handleColorChange();
-  }, [blackIsChecked, greenIsChecked, redIsChecked, blueIsChecked, whiteIsChecked, colorParams, handleColorChange])
-
-
-
-
-
+  }, [
+    blackIsChecked,
+    greenIsChecked,
+    redIsChecked,
+    blueIsChecked,
+    whiteIsChecked,
+    colorParams,
+    handleColorChange,
+  ]);
 
   //Returns
 
@@ -173,8 +182,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
       <div className={styles.SearchContainer}>
         <h3> Filter by:</h3>
         <div className="container">
-          <div className="row justify-content-between">
-            <div className="col-lg-3 col-md-6 col-sm-12">
+          <div className="row justify-content-around">
+            <div className="col-xl-3 col-lg-3 col-md-6 col-sm-12">
               <h4 className={styles.Filters}>Type</h4>
               <select
                 value={selectedType}
@@ -229,48 +238,72 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 <option value="&rarity=bonus">Bonus</option>
               </select>
             </div>
+          </div>
 
-
-
-            <div className="col-lg-3 col-md-6 col-sm-12">
+          <div className="row justify-content-center">
+            <div className="col-12">
               <h4 className={styles.Filters}>Color</h4>
               <div className="row">
-              <div className="col">
-                <input type="checkbox" checked={blackIsChecked} onChange={checkHandler} id="black" />
-                <label for="checkbox-1">
-                  <img src={black} width="25" alt="black-logo" />
-                </label>
-              </div>
+                <div className="col ps-0 pe-0">
+                  <input
+                    type="checkbox"
+                    checked={blackIsChecked}
+                    onChange={checkHandler}
+                    id="black"
+                  />
+                  <label for="black">
+                    <img src={black} width="25" alt="black-logo" />
+                  </label>
+                </div>
 
-              <div className="col">
-                <input type="checkbox" checked={greenIsChecked} onChange={checkHandler} id="green" />
-                <label for="checkbox-2">
-                  <img src={green} width="25" alt="green-logo" />
-                </label>
-              </div>
+                <div className="col ps-0 pe-0">
+                  <input
+                    type="checkbox"
+                    checked={greenIsChecked}
+                    onChange={checkHandler}
+                    id="green"
+                  />
+                  <label for="green">
+                    <img src={green} width="25" alt="green-logo" />
+                  </label>
+                </div>
 
-              <div className="col">
-                <input type="checkbox" checked={redIsChecked} onChange={checkHandler} id="red" />
-                <label for="checkbox-3">
-                  <img src={red} width="25" alt="red-logo" />
-                </label>
-              </div>
+                <div className="col ps-0 pe-0">
+                  <input
+                    type="checkbox"
+                    checked={redIsChecked}
+                    onChange={checkHandler}
+                    id="red"
+                  />
+                  <label for="red">
+                    <img src={red} width="25" alt="red-logo" />
+                  </label>
+                </div>
 
-              <div className="col">
-                <input type="checkbox" checked={blueIsChecked} onChange={checkHandler} id="blue" />
-                <label for="checkbox-4">
-                  <img src={blue} width="25" alt="blue-logo" />
-                </label>
-              </div>
+                <div className="col ps-0 pe-0">
+                  <input
+                    type="checkbox"
+                    checked={blueIsChecked}
+                    onChange={checkHandler}
+                    id="blue"
+                  />
+                  <label for="blue">
+                    <img src={blue} width="25" alt="blue-logo" />
+                  </label>
+                </div>
 
-              <div className="col">
-                <input type="checkbox" checked={whiteIsChecked} onChange={checkHandler} id="white" />
-                <label for="checkbox-5">
-                  <img src={white} width="25" alt="white-logo" />
-                </label>
+                <div className="col ps-0 pe-0">
+                  <input
+                    type="checkbox"
+                    checked={whiteIsChecked}
+                    onChange={checkHandler}
+                    id="white"
+                  />
+                  <label for="white">
+                    <img src={white} width="25" alt="white-logo" />
+                  </label>
+                </div>
               </div>
-              </div>
-              
             </div>
           </div>
         </div>
