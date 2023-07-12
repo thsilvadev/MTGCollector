@@ -1,19 +1,18 @@
 //In this script I'm using some destructured variables.
 
-
 const knex = require("../database/index");
 
 module.exports = {
 
   //GET CARDS
 
-  //This is a function to get card by ID.
+  //This is a function to get card by ID. Primarily built for testing, not available for users.
   async getById(req, res) {
 
     const { id } = req.params;
     //SELECT * FROM cards WHERE id = {id}
     const result = await knex("cards").where({ id });
-    console.log('request ok from');
+    console.log(`Request successful by ${req.ip} at ${formattedDate}`);
 
     return res.json(result);
   },
@@ -42,27 +41,55 @@ module.exports = {
 
           //1)When Card name is typed, query for cards starting with typed string (and not just contaning it. E.G: user types 'fire', we do not want 'Safire' cards showing up, just  'Fire breath' or 'Fire ember')
           
-
           if (key === 'name'){
-            
-            const sanitizedValue = value.replace(/\\s/g, '');
+
+            const sanitizedName = value.replace(/\\s/g, '');
             builder.where(function() {
-              this.where(key, 'like', `%${sanitizedValue}%`)
-              .orWhere(key, 'like', `${sanitizedValue}%`)
-              .orWhere(key, 'like', `${sanitizedValue}`);
+              this.where(key, 'like', `%${sanitizedName}%`)
+              .orWhere(key, 'like', `${sanitizedName}%`)
+              .orWhere(key, 'like', `${sanitizedName}`);
         });
-            console.log(sanitizedValue)
-            console.log(value)
-            return;
+            //Some Logging for more control
+            console.log(`Sanitized value: ${sanitizedName}`)
+            console.log(`Value: ${value}`)
+            continue;
 
           }
 
-          //2) When No color is selected, make it return colorless cards (by default it returns value='' but we need it to return value=null)
-          if (key === 'colorIdentity' && value === 'colorless'){
-            builder.where(key, '')
-            return;
+          //2)When nothing is typed, color check works as follows: search will return only cards that that match every color selected. But when user types anything, search will then return not only cards that match every color selected, but also cards of each color selected as well.
+          if (key === 'colorIdentity' && value != ''){
 
+            if (query.name !== ''){
+              const sanitizedColor = value.replace(/[, ]/g, '')
+            const colorsArr = [...sanitizedColor]
+            builder.where(function(){
+              this.where(function (){
+                this.where(key, value);
+                if (colorsArr.length >1 ) {
+                  for(let i = 0; i < colorsArr.length; i++){
+                    this.orWhere(key, colorsArr[i])
+                }
+              }
+              });
+            });
+            } if (query.name === '' || query.name === undefined){
+              builder.where(key, value)
+            }
+            
+            continue;
           }
+
+
+          //Not necessary anymore because of DB update. Now it counts '' as colorless, and not null value. So by default when no color is selected, it will return colorless cards.
+                    /*
+                  //3) When No color is selected, make it return colorless cards (by default it returns value='' but we need it to return value=null)
+                  if (key === 'colorIdentity' && value === 'colorless'){
+                    builder.where(key, '')
+                    return;
+
+                  }
+                    */
+
           //General build
             builder.where(key, value)
         }
@@ -78,11 +105,15 @@ module.exports = {
       
       .offset(page * 40);
 
-    console.log('Request successful');
+    //Console logging with IP and Date
+    const now = new Date();
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+
+    console.log(`Request successful by ${req.ip} at ${formattedDate}`);
     return res.json(result);
   } catch (error) {
-      console.error('Error:', error);
-      return res.status(500).json({error: 'Probably request values are mispelled. Try querying for it on phpMyAdmin or take a look at the column values to check for virgules, spaces or any other detail.'});
+      console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
+      return res.status(500).json({error: 'Probably request keys are mispelled. Try querying for it on phpMyAdmin or take a look at the column values to check for virgules, spaces or any other detail.'});
     }}
     ,
 
