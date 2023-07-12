@@ -29,6 +29,9 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   // Handle inputs
 
+    //Inputs type="select"
+
+      //Params prefixes are already written in input values so event.targer.value shall return '&set=ABC', '&type=Artifact' and so on.
   const handleTypeChange = (event) => {
     setSelectedType(event.target.value);
   };
@@ -40,11 +43,15 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const handleRarityChange = (event) => {
     setSelectedRarity(event.target.value);
   };
-  //Had to use useCallback because of useEffect array dependency issue, later in the code.
+
+    //Input type="checkbox"
+
+      //Had to use useCallback because of useEffect array dependency issue, later in the code.
   const handleColorChange = useCallback(() => {
     setSelectedColor(handledColor);
   }, [handledColor]);
 
+    //Input type="search"
   const handleNameChange = (event) => {
     if (event.target.value) {
       setSelectedName(`&name=${event.target.value}`);
@@ -70,12 +77,14 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   //Color checkbox handler
 
+    //Boolean variables for each color ('is the color checked or unchecked?')
   const [blackIsChecked, setBlackIsChecked] = useState(true);
   const [greenIsChecked, setGreenIsChecked] = useState(true);
   const [redIsChecked, setRedIsChecked] = useState(true);
   const [blueIsChecked, setBlueIsChecked] = useState(true);
   const [whiteIsChecked, setWhiteIsChecked] = useState(true);
 
+    //function that's called upon input (checking the checkboxes). It toggles the boolean variables
   const checkHandler = (event) => {
     if (event.target.id === "black") {
       setBlackIsChecked(!blackIsChecked);
@@ -94,7 +103,12 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     }
   };
 
+    //Here is the trick.
+
+    //Had to use useCallback because of useEffect array dependency issue, later in the code.
   const colorParams = useCallback(() => {
+
+    //1st | Create an array with the color variables.
     const colorsToCheck = [];
     colorsToCheck.push(
       blackIsChecked,
@@ -103,13 +117,17 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
       blueIsChecked,
       whiteIsChecked
     );
-
+    
+    //2nd | create this variable to add virgules if Param (letter) is not the first
     let checkedColors = 0;
+    //3rd | this is the outcome Param we want, it shall start with that, it's the key. Now let's get the value.
     let result = "&colorIdentity=";
 
+    //4th Map the array and upon each iteration, check if element (color variable) is true - if true, increment checkedColors.
     colorsToCheck.map((el, index) => {
       if (el === true) {
         checkedColors++;
+        //If this is the first true element, check which one it is by checking iteration index (0 is the first element => blackIsChecked; 4 is the last element => whiteIsChecked) and concatenate 'result' accordingly.
         if (checkedColors === 1) {
           if (index === 0) {
             result += "B";
@@ -127,6 +145,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
             result += "W";
           }
         }
+        //If it is not the first true element, do the same but add ', ' before the corresponding letter.
         if (checkedColors > 1) {
           if (index === 0) {
             result += ", B";
@@ -145,15 +164,20 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           }
         }
       }
-      return result;
+    return result;
     });
 
-    if (checkedColors === 0) {
-      result += "colorless";
-    }
+    //This was turned unecessary, as empty value '' is assumed as colorless by DB now, so we don't need to 'translate' it as before.
+      
+                /* 
+              if (checkedColors === 0) {
+                result += "colorless";
+              } */ 
 
     return result;
-  }, [
+  }, 
+    //Dependencies Array for the useCallback() function is mandatory.
+  [
     blackIsChecked,
     greenIsChecked,
     redIsChecked,
@@ -161,7 +185,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     whiteIsChecked,
   ]);
 
-  //this answers to handleColorChange up in the code. As there are multiple checkboxes, the query could not be updated simply by 'event.target.value' and it was necessary to build a function to workaround it (colorParams). Also, it had to be down here because of positioning (after colorParams is defined).
+    //this answers to handleColorChange up in the code. As there are multiple checkboxes, the query could not be updated simply by 'event.target.value' and it was necessary to build a function to workaround it (colorParams). Also, it had to be down here because of positioning (after colorParams is defined).
   useEffect(() => {
     setHandledColor(colorParams());
     handleColorChange();
@@ -175,7 +199,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     handleColorChange,
   ]);
 
-  //Returns
+//Returns
 
   if (baseOfSearch === "AllCards") {
     return (
