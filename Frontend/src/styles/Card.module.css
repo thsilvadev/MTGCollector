@@ -4,12 +4,14 @@
     margin: 15px 0px 15px 0px;
     transition: border 0.1s;
     height: 300px;
-    border-radius: 11px;
+    border-radius: 12px;
     
 }
 
 .Card:hover {
+    margin: 15px 0px 15px 0px;
     border: solid 7px lightskyblue;
+    border-radius: 19px;
     animation: hover-animation 0.4s forwards;
     cursor: grab;
 
@@ -37,7 +39,7 @@
     margin: 30px 0px 30px 0px;
     transition: border 0.1s;
     height: 215px;
-    width: 250px;
+    width: 300px;
     border-radius: 11px;
     rotate: 270deg;
 }

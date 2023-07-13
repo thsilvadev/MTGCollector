@@ -13,7 +13,8 @@ import Axios from "axios";
 
 import React, { useState, useEffect } from "react";
 
-
+//imgs
+import welcome from "../images/welcome.png";
 
 function Home() {
   const [cards, setCards] = useState([]);
@@ -44,7 +45,7 @@ function Home() {
   return (
     <>
       <div className={styles.titleContainer}>
-      <h2 className={styles.title}> Welcome to MTGCollector!</h2>
+      <img src={welcome} className={styles.title} width="500"/>
       </div>
       
       <p className={styles.Paragraph}>
@@ -70,7 +71,7 @@ function Home() {
         </li>
       </ul>
 
-      <h1>All <i>Magic: The Gathering</i> Cards</h1>
+      <h1 className={styles.h1}>All <i>Magic: The Gathering</i> Cards</h1>
       <SearchContainer baseOfSearch="AllCards" onParamsChange={handleSuperParams} />
       <div className="row justify-content-around">
           {cards.map((card, key) => (
