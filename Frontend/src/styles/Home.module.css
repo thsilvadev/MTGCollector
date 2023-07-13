@@ -1,12 +1,14 @@
 .titleContainer {
+     /*
     border: red solid 10px;
     box-shadow: 5px 5px black;
     background-color:antiquewhite;
     color: black;
     border-radius: 4px;
+    */
     max-width: 500px;
     display: flex;
-    margin: 80px auto 80px auto;
+    margin: 80px auto 0px auto;
     box-sizing: border-box;
 }
 
@@ -15,17 +17,27 @@
 }
 
 .Paragraph {
+    font-weight: bold;
     font-size: 20px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .list {
+    font-weight:600;
     max-width: 900px;
     margin: auto;
     line-height: 25px;
     list-style: disc;
     text-align: start;
+    margin-bottom: 40px;
+    padding-right: 1px;
 }
 
 .listItem {
     margin: 15px 0 15px 0;
+}
+
+.h1 {
+    margin-bottom: 20px;
 }
