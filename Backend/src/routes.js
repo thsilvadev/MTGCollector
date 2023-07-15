@@ -3,6 +3,7 @@ const express = require('express');
 /////////// CONTROLLERS //////////////
 
 const cardsController = require('./controllers/cardsController');
+const collectionController = require('./controllers/collectionController');
 
 /*
 const collectionController = require('./controllers/collectionController');
@@ -30,15 +31,15 @@ routes.get('/cards/set/:set/:page', cardsController.getBySet);
 
 
 
-/*
+
 
 ///////ROUTES AND REQUISITIONS FOR THE COLLECTION TABLE 
+routes.get('/collection/:page', collectionController.getCollection); // GET collection
+routes.post('/collection/', collectionController.PostOnCollection) // POST on collection
 
-routes.get('/collection/:id', collectionController.getById); // GET collection
-routes.get('/collection', collectionController.getAll); // GET collection
-routes.post('/collection', collectionController.create); // POST collection
-routes.copy('/collection/:id', collectionController.copy); //COPY collection
-routes.delete('/collection/:id', collectionController.delete);//DELETE collection
+
+
+/*
 
 ///////ROUTES AND REQUISITIONS FOR THE DECKS TABLE
 routes.get('/decks/:id', decksController.getById); // GET decks

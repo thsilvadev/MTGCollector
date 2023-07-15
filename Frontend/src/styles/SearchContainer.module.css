@@ -1,13 +1,14 @@
 .SearchContainer {
     padding: 20px 0 20px 0;
     background-color: #6184d8;
-    background-image: linear-gradient(#6184d8, rgb(28, 49, 151));
+    background-image: linear-gradient(#b8b8b8, rgb(82, 82, 82));
     border: 6px solid #ff8200;
     border-radius: 4px;
-    color: black;
-    max-width: 55%;
+    color: rgb(0, 0, 0);
+    max-width: 60%;
     margin: auto;
     margin-bottom: 35px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
 .Input {
@@ -32,7 +33,7 @@
 }
 
 .FilterBox{
-    width: 130px;
+    width: 170px;
 }
 
 /* Checkbox */
@@ -47,26 +48,22 @@ label {
     cursor: pointer;
 }
 
-label::before {
-    transition-duration: 0.1s;
-}
 
 label img {
-    transition-duration: 0.1s;
+    transition-duration: 0.08s;
 }
 
 :checked + label img {
-    border: 4px black solid;
+    border: 4px #000000 solid;
     border-radius: 100%;
 }
 
-:checked + label {
-    border: 8px 8px solid black;
-    border-radius: 100%;
-
+.Typing {
+    border: 4px orange solid;
 }
 
-:checked + label::before {
-    border: 2px black solid;
-    border-radius: 100%;
+.Blank {
+    border: 0px;
 }
+
+
