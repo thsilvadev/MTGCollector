@@ -6,7 +6,7 @@ module.exports = {
 
   //GET CARDS
 
-  //This is a function to get card by ID. Primarily built for testing, not available for users.
+  //This is a function to get card by ID. [STILL HAVEN'T FIGGURED OUT WHERE TO USE].
   async getById(req, res) {
 
     const { id } = req.params;
@@ -116,6 +116,8 @@ module.exports = {
       return res.status(500).json({error: 'Probably request keys are mispelled. Try querying for it on phpMyAdmin or take a look at the column values to check for virgules, spaces or any other detail.'});
     }}
     ,
+
+      
 
   async getBySet(req, res) {
 

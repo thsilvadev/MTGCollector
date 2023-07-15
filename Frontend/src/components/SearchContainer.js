@@ -84,6 +84,13 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [blueIsChecked, setBlueIsChecked] = useState(true);
   const [whiteIsChecked, setWhiteIsChecked] = useState(true);
 
+    //and for extra border when selected color and typing at the same time
+  const blackIsTyping = (selectedName && blackIsChecked) ? styles.Typing : styles.Blank;
+  const greenIsTyping = (selectedName && greenIsChecked) ? styles.Typing : styles.Blank;
+  const redIsTyping = (selectedName && redIsChecked) ? styles.Typing : styles.Blank;
+  const blueIsTyping = (selectedName && blueIsChecked) ? styles.Typing : styles.Blank;
+  const whiteIsTyping = (selectedName && whiteIsChecked) ? styles.Typing : styles.Blank;
+
     //function that's called upon input (checking the checkboxes). It toggles the boolean variables
   const checkHandler = (event) => {
     if (event.target.id === "black") {
@@ -107,7 +114,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
     //Had to use useCallback because of useEffect array dependency issue, later in the code.
   const colorParams = useCallback(() => {
-
     //1st | Create an array with the color variables.
     const colorsToCheck = [];
     colorsToCheck.push(
@@ -182,13 +188,14 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     greenIsChecked,
     redIsChecked,
     blueIsChecked,
-    whiteIsChecked,
+    whiteIsChecked
   ]);
 
     //this answers to handleColorChange up in the code. As there are multiple checkboxes, the query could not be updated simply by 'event.target.value' and it was necessary to build a function to workaround it (colorParams). Also, it had to be down here because of positioning (after colorParams is defined).
   useEffect(() => {
     setHandledColor(colorParams());
     handleColorChange();
+    
   }, [
     blackIsChecked,
     greenIsChecked,
@@ -198,6 +205,9 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     colorParams,
     handleColorChange,
   ]);
+  
+
+
 
 //Returns
 
@@ -206,8 +216,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
       <div className={styles.SearchContainer}>
         <h3> Filter by:</h3>
         <div className="container">
-          <div className="row justify-content-around">
-            <div className="col-xl-3 col-lg-3 col-md-6 col-sm-12">
+          <div className="row justify-content-around mb-2">
+            <div className="col-xl-4 col-lg-4 col-md-12 col-sm-12">
               <h4 className={styles.Filters}>Type</h4>
               <select
                 value={selectedType}
@@ -223,10 +233,11 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 <option value="&types=Enchantment">Enchantment</option>
                 <option value="&types=Instant">Instant</option>
                 <option value="&types=Battle">Battle</option>
+                <option value="&types=Plane">Plane</option>
               </select>
             </div>
 
-            <div className="col-lg-3 col-md-6 col-sm-12">
+            <div className="col-lg-4 col-md-12 col-sm-12">
               <h4 className={styles.Filters}>Set</h4>
               <select
                 value={selectedSet}
@@ -245,7 +256,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </select>
             </div>
 
-            <div className="col-lg-3 col-md-6 col-sm-12">
+            <div className="col-lg-4 col-md-12 col-sm-12">
               <h4 className={styles.Filters}>Rarity</h4>
               <select
                 value={selectedRarity}
@@ -275,8 +286,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="black"
                   />
-                  <label for="black">
-                    <img src={black} width="25" alt="black-logo" />
+                  <label className={`${blackIsTyping}`} for="black">
+                    <img  src={black} width="30" alt="black-logo" />
                   </label>
                 </div>
 
@@ -287,8 +298,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="green"
                   />
-                  <label for="green">
-                    <img src={green} width="25" alt="green-logo" />
+                  <label className={`${greenIsTyping}`} for="green">
+                    <img src={green} width="30" alt="green-logo" />
                   </label>
                 </div>
 
@@ -299,8 +310,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="red"
                   />
-                  <label for="red">
-                    <img src={red} width="25" alt="red-logo" />
+                  <label className={`${redIsTyping}`} for="red">
+                    <img src={red} width="30" alt="red-logo" />
                   </label>
                 </div>
 
@@ -311,8 +322,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="blue"
                   />
-                  <label for="blue">
-                    <img src={blue} width="25" alt="blue-logo" />
+                  <label className={`${blueIsTyping}`} for="blue">
+                    <img src={blue} width="30" alt="blue-logo" />
                   </label>
                 </div>
 
@@ -323,8 +334,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="white"
                   />
-                  <label for="white">
-                    <img src={white} width="25" alt="white-logo" />
+                  <label className={`${whiteIsTyping}`} for="white">
+                    <img src={white} width="30" alt="white-logo" />
                   </label>
                 </div>
               </div>

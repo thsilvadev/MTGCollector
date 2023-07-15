@@ -8,12 +8,40 @@
     */
     max-width: 500px;
     display: flex;
-    margin: 80px auto 0px auto;
+    margin: 80px auto 40px auto;
     box-sizing: border-box;
+    vertical-align: middle;
+    align-items: center;
 }
 
 .title {
     font-size: 50px;
+}
+
+.chestContainer {
+    position: relative;
+}
+
+.chestContainer .chest {
+    position: absolute;
+    margin-top: 40px;
+    top: -90px;
+    left: 10px;
+    width: 150px;
+    rotate: 5deg;
+
+}
+
+.fCards { 
+    width: 80px;
+    position: absolute;
+    left: 45px;
+    top: -55px;
+    rotate: 5deg;
+    /* not working by now
+    transform: translatey(0px);
+    animation: float 6s ease-in-out infinite;
+    */
 }
 
 .Paragraph {
