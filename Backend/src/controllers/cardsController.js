@@ -50,48 +50,77 @@ module.exports = {
               .orWhere(key, 'like', `${sanitizedName}`);
         });
             //Some Logging for more control
-            console.log(`Sanitized value: ${sanitizedName}`)
-            console.log(`Value: ${value}`)
+            console.log(`Sanitized name: ${sanitizedName}`)
+            console.log(`name: ${value}`)
             continue;
 
           }
 
           //2)When nothing is typed, color check works as follows: search will return only cards that that match every color selected. But when user types anything, search will then return not only cards that match every color selected, but also cards of each color selected as well.
-          if (key === 'colorIdentity' && value != ''){
+          if (key === "colorIdentity") {
+            if (
+              query.name &&
+              value !== "B, G, R, U, W"
+            ) {
+              const sanitizedColor = value.replace(/[, ]/g, "");
+              const colorsArr = [...sanitizedColor];
 
-            if (query.name !== ''){
-              const sanitizedColor = value.replace(/[, ]/g, '')
-            const colorsArr = [...sanitizedColor]
-            builder.where(function(){
-              this.where(function (){
-                this.where(key, value);
-                if (colorsArr.length >1 ) {
-                  for(let i = 0; i < colorsArr.length; i++){
-                    this.orWhere(key, colorsArr[i])
-                }
-              }
-              });
-            });
-            } if (query.name === '' || query.name === undefined){
-              builder.where(key, value)
+              builder.where(function () {
+                this.where(function () {
+                  this.where(key, value);
+                  if (colorsArr.length > 1) {
+                    for (let i = 0; i < colorsArr.length; i++) {
+                      this.orWhere(key, 'like', `%${colorsArr[i]}%`)
+                    }
+                  }
+                })
+              })
+
+              console.log(`Sanitized colorzzz: ${colorsArr}`);
+              console.log(`color: ${value}`);
             }
-            
-            continue;
+            else if (
+              query.name &&
+              value === "B, G, R, U, W"
+            ) {
+              const sanitizedColor = value.replace(/[, ]/g, "");
+              const colorsArr = [...sanitizedColor];
+
+              builder.where(function () {
+                this.where(function () {
+                  this.where(key, value);
+                  if (colorsArr.length > 1) {
+                    for (let i = 0; i < colorsArr.length; i++) {
+                      this.orWhere(key, 'like', `%${colorsArr[i]}%`);
+                    }
+                  }
+                  this.orWhere(key, "");
+                })
+              })
+
+              //Debugging
+              console.log(
+                `Sanitized colorrr: ${colorsArr} of type:` + typeof colorsArr
+              );
+              console.log(`Value: ${value}`);
+            } 
+
+            else if (query.name === '' || query.name === undefined){
+              //General build
+              builder.where(key, value);
+              console.log(`General build`)
+            } continue;
           }
 
-
           //Not necessary anymore because of DB update. Now it counts '' as colorless, and not null value. So by default when no color is selected, it will return colorless cards.
-                    /*
-                  //3) When No color is selected, make it return colorless cards (by default it returns value='' but we need it to return value=null)
-                  if (key === 'colorIdentity' && value === 'colorless'){
-                    builder.where(key, '')
-                    return;
+          /*
+                //3) When No color is selected, make it return colorless cards (by default it returns value='' but we need it to return value=null)
+                if (key === 'colorIdentity' && value === 'colorless'){
+                  builder.where(key, '')
+                  return;
 
-                  }
-                    */
-
-          //General build
-            builder.where(key, value)
+                }
+                  */
         }
       })
 
@@ -112,6 +141,9 @@ module.exports = {
     console.log(`Request successful by ${req.ip} at ${formattedDate}`);
     return res.json(result);
   } catch (error) {
+    //Console logging with IP and Date
+    const now = new Date();
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
       return res.status(500).json({error: 'Probably request keys are mispelled. Try querying for it on phpMyAdmin or take a look at the column values to check for virgules, spaces or any other detail.'});
     }}
