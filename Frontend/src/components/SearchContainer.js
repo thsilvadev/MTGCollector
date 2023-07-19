@@ -21,7 +21,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [selectedColor, setSelectedColor] = useState("");
   const [handledColor, setHandledColor] = useState("");
 
-  const [selectedName, setSelectedName] = useState("");
+  const [selectedName, setSelectedName] = useState("&name=%%");
 
   //Statelifting queryParams
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;
@@ -48,32 +48,20 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
       //Had to use useCallback because of useEffect array dependency issue, later in the code.
   const handleColorChange = useCallback(() => {
-    setSelectedColor(handledColor);
+    debounce(setSelectedColor(handledColor), 450);
   }, [handledColor]);
 
     //Input type="search"
   const handleNameChange = (event) => {
     if (event.target.value) {
       setSelectedName(`&name=${event.target.value}`);
+      //This means that whenever user types anything, it will search for the card in all table, unless new color check.
+      //setSelectedColor('');
     } else {
       setSelectedName("");
     }
   };
 
-  //Debouncer
-  const debounce = (func, delay) => {
-    let timerId;
-
-    return (...args) => {
-      clearTimeout(timerId);
-
-      timerId = setTimeout(() => {
-        func.apply(this, args);
-      }, delay);
-    };
-  };
-
-  const debouncedHandleNameChange = debounce(handleNameChange, 300);
 
   //Color checkbox handler
 
@@ -85,14 +73,15 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [whiteIsChecked, setWhiteIsChecked] = useState(true);
 
     //and for extra border when selected color and typing at the same time
-  const blackIsTyping = (selectedName && blackIsChecked) ? styles.Typing : styles.Blank;
-  const greenIsTyping = (selectedName && greenIsChecked) ? styles.Typing : styles.Blank;
-  const redIsTyping = (selectedName && redIsChecked) ? styles.Typing : styles.Blank;
-  const blueIsTyping = (selectedName && blueIsChecked) ? styles.Typing : styles.Blank;
-  const whiteIsTyping = (selectedName && whiteIsChecked) ? styles.Typing : styles.Blank;
+  const blackIsTyping = (!selectedName && blackIsChecked) ? styles.Blank : styles.Typing;
+  const greenIsTyping = (!selectedName && greenIsChecked) ? styles.Blank : styles.Typing;
+  const redIsTyping = (!selectedName && redIsChecked) ? styles.Blank : styles.Typing;
+  const blueIsTyping = (!selectedName && blueIsChecked) ? styles.Blank : styles.Typing;
+  const whiteIsTyping = (!selectedName && whiteIsChecked) ? styles.Blank : styles.Typing;
 
     //function that's called upon input (checking the checkboxes). It toggles the boolean variables
   const checkHandler = (event) => {
+
     if (event.target.id === "black") {
       setBlackIsChecked(!blackIsChecked);
     }
@@ -126,7 +115,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     
     //2nd | create this variable to add virgules if Param (letter) is not the first
     let checkedColors = 0;
-    //3rd | this is the outcome Param we want, it shall start with that, it's the key. Now let's get the value.
+    //3rd | this is the outcome Param we want, it shall start with that, it's the key. Now let's concat the value to it.
     let result = "&colorIdentity=";
 
     //4th Map the array and upon each iteration, check if element (color variable) is true - if true, increment checkedColors.
@@ -206,7 +195,20 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     handleColorChange,
   ]);
   
-
+    //Debouncer
+    const debounce = (func, delay) => {
+      let timerId;
+  
+      return (...args) => {
+        clearTimeout(timerId);
+  
+        timerId = setTimeout(() => {
+          func.apply(this, args);
+        }, delay);
+      };
+    };
+  
+    const debouncedHandleNameChange = debounce(handleNameChange, 450);
 
 
 //Returns

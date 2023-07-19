@@ -45,10 +45,14 @@ function Card({
   //postOnCollection
   const postOnCollection = () => {
 
+      //Use prompt() method for card condition. Just for instance.
     let cardCondition;
-    let userCondition = prompt("You're adding a card to your collection. What's it's condition?")
-    if(userCondition === null || userCondition === "") {
+    let userCondition = prompt("You're adding a card to your collection. What's it's condition?", 'Near Mint')
+    
+    if (userCondition !== null){
+    if(userCondition === "") {
         alert(`no condition info was put along with your new card`)
+        cardCondition = `undescribed`
     } else {
         cardCondition = userCondition
         alert(`Card at the ${cardCondition} was put into your collection!`)
@@ -63,15 +67,16 @@ function Card({
     }).then(
         console.log(`id postado: ${id}`)
     )
-  };
+  }};
 
   return (
-    <div className="col-12 col-sm-6 col-lg-3" onClick={postOnCollection}>
+    <div className="col-12 col-sm-6 col-lg-3" >
       <img
         src={
           "https://gatherer.wizards.com/Handlers/Image.ashx?type=card&multiverseid=" +
           multiverseId
         }
+        onClick={postOnCollection}
         alt="card"
         className={`${isBattle} ${isPlane}`}
         onLoad={changeCardClass}

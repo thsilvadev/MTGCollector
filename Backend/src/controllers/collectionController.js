@@ -51,33 +51,65 @@ module.exports = {
                   .orWhere(key, "like", `${sanitizedName}`);
               });
               //Some Logging for more control
-              console.log(`Sanitized value: ${sanitizedName}`);
-              console.log(`Value: ${value}`);
+              console.log(`Sanitized name: ${sanitizedName}`);
+              console.log(`name: ${value}`);
               continue;
             }
 
-            //2)When user is typing something, color check works as follows: search will return only cards that that match every color selected. But when there is nothing typed, search will then return not only cards that match every color selected, but also cards of each color selected as well.
+            //2)When nothing is typed, color check works as follows: search will return only cards that that match every color selected. But when user types anything, search will then return not only cards that match every color selected, but also cards of each color selected as well.
             if (key === "colorIdentity") {
-              if (query.name === "" || typeof query.name === `undefined`) {
-                const sanitizedColor = value.split(", ");
+              if (
+                query.name &&
+                value !== "B, G, R, U, W"
+              ) {
+                const sanitizedColor = value.replace(/[, ]/g, "");
+                const colorsArr = [...sanitizedColor];
 
                 builder.where(function () {
                   this.where(function () {
                     this.where(key, value);
-                    if (sanitizedColor.length > 1) {
-                      for (let i = 0; i < sanitizedColor.length; i++) {
-                        this.orWhere(key, "like", sanitizedColor[i]);
+                    if (colorsArr.length > 1) {
+                      for (let i = 0; i < colorsArr.length; i++) {
+                        this.orWhere(key, 'like', `%${colorsArr[i]}%`)
                       }
                     }
-                  });
-                });
-                console.log(`Sanitized color: ${sanitizedColor}`);
-                console.log(`Value: ${value}`);
-              } else {
-                builder.where(key, value);
-              }
+                  })
+                })
 
-              continue;
+                console.log(`Sanitized colorzzz: ${colorsArr}`);
+                console.log(`color: ${value}`);
+              }
+              else if (
+                query.name &&
+                value === "B, G, R, U, W"
+              ) {
+                const sanitizedColor = value.replace(/[, ]/g, "");
+                const colorsArr = [...sanitizedColor];
+
+                builder.where(function () {
+                  this.where(function () {
+                    this.where(key, value);
+                    if (colorsArr.length > 1) {
+                      for (let i = 0; i < colorsArr.length; i++) {
+                        this.orWhere(key, 'like', `%${colorsArr[i]}%`);
+                      }
+                    }
+                    this.orWhere(key, "");
+                  })
+                })
+
+                //Debugging
+                console.log(
+                  `Sanitized colorrr: ${colorsArr} of type:` + typeof colorsArr
+                );
+                console.log(`Value: ${value}`);
+              } 
+
+              else if (query.name === '' || query.name === undefined){
+                //General build
+                builder.where(key, value);
+                console.log(`General build`)
+              } continue;
             }
 
             //Not necessary anymore because of DB update. Now it counts '' as colorless, and not null value. So by default when no color is selected, it will return colorless cards.
@@ -89,9 +121,6 @@ module.exports = {
 
                   }
                     */
-
-            //General build
-            builder.where(key, value);
           }
         })
 
@@ -122,19 +151,21 @@ module.exports = {
     const now = new Date();
     let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
 
-    const body = req.body
+    const body = req.body;
     const { card_id } = body;
-    const { card_condition} = body;
+    const { card_condition } = body;
 
     try {
-      const result = await knex("collection")
-      .insert(
-        { card_id, card_condition });
+      const result = await knex("collection").insert({
+        card_id,
+        card_condition,
+      });
 
-      console.log(`Post successful of ${body} on Collection by ${req.ip} at ${formattedDate}`);
+      console.log(
+        `Post successful of ${body} on Collection by ${req.ip} at ${formattedDate}`
+      );
 
       return res.json(result);
-
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
       return res.status(500).json({
