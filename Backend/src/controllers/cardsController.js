@@ -59,7 +59,7 @@ module.exports = {
           //2)When nothing is typed, color check works as follows: search will return only cards that that match every color selected. But when user types anything, search will then return not only cards that match every color selected, but also cards of each color selected as well.
           if (key === "colorIdentity") {
             if (
-              query.name &&
+              (!query.name || query.name === undefined) &&
               value !== "B, G, R, U, W"
             ) {
               const sanitizedColor = value.replace(/[, ]/g, "");
@@ -80,7 +80,7 @@ module.exports = {
               console.log(`color: ${value}`);
             }
             else if (
-              query.name &&
+              (!query.name || query.name === undefined) &&
               value === "B, G, R, U, W"
             ) {
               const sanitizedColor = value.replace(/[, ]/g, "");
@@ -105,7 +105,7 @@ module.exports = {
               console.log(`Value: ${value}`);
             } 
 
-            else if (query.name === '' || query.name === undefined){
+            else if (query.name){
               //General build
               builder.where(key, value);
               console.log(`General build`)
