@@ -20,7 +20,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   const [selectedColor, setSelectedColor] = useState("");
   const [handledColor, setHandledColor] = useState("");
-
+  //care for SQL Injection possibility
   const [selectedName, setSelectedName] = useState("&name=%%");
 
   //Statelifting queryParams
@@ -56,7 +56,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     if (event.target.value) {
       setSelectedName(`&name=${event.target.value}`);
       //This means that whenever user types anything, it will search for the card in all table, unless new color check.
-      //setSelectedColor('');
+      setSelectedColor('');
     } else {
       setSelectedName("");
     }
