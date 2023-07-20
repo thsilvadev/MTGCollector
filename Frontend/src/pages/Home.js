@@ -134,13 +134,14 @@ function Home() {
             key={key}
             id={card.id}
             multiverseId={card.multiverseId}
+            scryfallId={card.scryfallId}
             name={card.name}
             types={card.types}
             keywords={card.keywords}
           />
         ))}
       </div>
-      <PrevNext onPageChange={handlePage} page={page} />
+      <PrevNext onPageChange={handlePage} page={page} cardTotal={cards}/>
     </>
   );
 }

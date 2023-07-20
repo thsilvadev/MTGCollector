@@ -16,9 +16,27 @@ function Card({
   rarity,
   cost,
   condition,
+  scryfallId,
   multiverseId,
   keywords,
 }) {
+
+  Card.defaultProps = {
+    scryfallId: '', // Set a default value here or any other appropriate default value.
+  };
+
+  //Scryfall ID management
+  
+  const fileFace = 'front';
+const fileType = 'large';
+const fileFormat = '.jpg';
+const fileName = scryfallId;
+const dir1 = fileName.charAt(0);
+const dir2 = fileName.charAt(1);
+
+
+
+
   //Conditional CSS classes for exotic type cards
 
   const [battle, setBattle] = useState(false);
@@ -73,8 +91,7 @@ function Card({
     <div className="col-12 col-sm-6 col-lg-3" >
       <img
         src={
-          "https://gatherer.wizards.com/Handlers/Image.ashx?type=card&multiverseid=" +
-          multiverseId
+          `https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`
         }
         onClick={postOnCollection}
         alt="card"

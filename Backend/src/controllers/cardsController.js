@@ -28,7 +28,7 @@ module.exports = {
     try {
       const result = await knex
       //SELECT id, name, types, setCode, manaCost, manaValue, rarity, uuid, colorIdentity, keywords 
-      .select('id', 'name', 'types', 'setCode', 'manaCost', 'manaValue', 'rarity', 'uuid', 'colorIdentity', 'keywords', 'multiverseId')
+      .select('id', 'name', 'types', 'setCode', 'manaCost', 'manaValue', 'rarity', 'uuid', 'colorIdentity', 'keywords', 'multiverseId', 'scryfallId')
       //FROM supercards;
       .from('supercards')
 
@@ -106,11 +106,15 @@ module.exports = {
             } 
 
             else if (query.name){
-              //General build
               builder.where(key, value);
-              console.log(`General build`)
+              console.log(`name typed and color selected`)
             } continue;
           }
+          else {
+            //General general build
+          builder.where(key, value); 
+            console.log('General general build (no name and no color input)')
+        }
 
           //Not necessary anymore because of DB update. Now it counts '' as colorless, and not null value. So by default when no color is selected, it will return colorless cards.
           /*
