@@ -23,7 +23,6 @@ const Container = () => {
     const [container, setContainer] = useState(false);
 
     const changeBackground = () => {
-        console.log(window.scrollY)
         if (window.scrollY >= 600) {
             setContainer(true)
         } else {
