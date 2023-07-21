@@ -33,7 +33,7 @@ function PrevNext({ onPageChange, page, cardTotal }) {
 
   if (page === 0) {
     return (
-      <div className={styles.ButtonsContainer}>
+      <div className={styles.ButtonsContainer} onLoad={console.log(cardTotal)}>
         <button className={buttonIsNeeded} onClick={handleIncrement}>
           Next
         </button>

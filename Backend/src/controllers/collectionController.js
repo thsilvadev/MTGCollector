@@ -31,6 +31,8 @@ module.exports = {
           "supercards.multiverseId",
           "supercards.scryfallId"
         )
+        //COUNT for card quantity. Alias needed to simplify key name to send to frontend.
+        .count('id', {as: 'countById'})
         //FROM supercards;
         .from("supercards")
         //JOIN collection
@@ -131,6 +133,8 @@ module.exports = {
         .whereRaw(
           "multiverseId IS NOT NULL AND NOT multiverseId = '580709' AND NOT multiverseId = '580711'"
         )
+        //This is for cards not to be repeated if more than one same card present in Collection.
+        .groupBy('supercards.id')
 
         .orderBy("Rarity", "asc")
 
@@ -149,6 +153,7 @@ module.exports = {
     }
   },
 
+  //Post on Colecction
   async PostOnCollection(req, res) {
     //Console logging with IP and Date (in yellow)
     const now = new Date();
@@ -175,6 +180,37 @@ module.exports = {
         error:
           "TO BE UPDATE // TO BE UPDATED  // TO BE UPDATED // TO BE UPDATED // TO BE UPDATED // TO BE UPDATED.",
       });
+    }
+  },
+
+  //This is a function to get card by ID. This is used to check if card is in Collection or Wishlist.
+  async getById(req, res) {
+
+    const { id } = req.params;
+    //SELECT * FROM cards WHERE id = {id}
+    try {
+      const result = await knex
+      //SELECT just id
+      .select(
+        "supercards.id")
+
+      //COUNT (`id`)
+      .count('id', {as: 'countById'})
+      //FROM supercards;
+      .from("supercards")
+      //JOIN collection
+      .join("collection", "collection.card_id", "=", "supercards.id")
+      .where({ id })
+      .groupBy('id');
+      
+    
+
+    return res.json(result);
+    } catch (error) {
+      console.error(`ip: ${req.ip}, ERROR:`, error);
+      return res.status(500).json({
+        error: "TO BE UPDATED"
+      })
     }
   },
 };

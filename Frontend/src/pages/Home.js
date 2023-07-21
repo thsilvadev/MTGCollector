@@ -20,6 +20,7 @@ import openedchest from "../images/opened-chest.png";
 import floatingCards from "../images/cards.png";
 
 function Home() {
+  //all cards
   const [cards, setCards] = useState([]);
 
   //get page number
