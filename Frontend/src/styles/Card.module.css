@@ -11,8 +11,8 @@
 
 .Card:hover {
     margin: 15px 0px 15px 0px;
-    border: solid 7px lightskyblue;
-    border-radius: 19px;
+    border: solid 12px lightskyblue;
+    border-radius: 25px;
     animation: hover-animation 0.4s forwards;
     cursor: grab;
     z-index: 2;
@@ -31,7 +31,8 @@
 }
 
 .Battle:hover {
-    border: solid 7px lightskyblue;
+    border: solid 12px lightskyblue;
+    border-radius: 25px;
     animation: battle-hover-animation 0.4s forwards;
     cursor: grab;
     z-index: 2;
@@ -53,7 +54,8 @@
 }
 
 .Plane:hover { 
-    border: solid 7px lightskyblue;
+    border: solid 12px lightskyblue;
+    border-radius: 25px;
     animation: battle-hover-animation 0.4s forwards;
     cursor: grab;
     position: relative;
@@ -91,4 +93,12 @@
     100%{
         transform: scale(1.7)  rotate(90deg);
     }
+}
+
+.CardOverlay {
+    margin: 100px 0 5px 0;
+    height: 30px;
+    color: white;
+    font-size: 50px;
+    z-index: 5;
 }

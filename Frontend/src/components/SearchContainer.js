@@ -21,7 +21,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [selectedColor, setSelectedColor] = useState("");
   const [handledColor, setHandledColor] = useState("");
   //care for SQL Injection possibility
-  const [selectedName, setSelectedName] = useState("&name=%%");
+  const [selectedName, setSelectedName] = useState("&name=");
 
   //Statelifting queryParams
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;

@@ -20,7 +20,7 @@ const routes = express.Router();
 
 
 ///////ROUTES AND REQUISITIONS FOR THE CARDS TABLE
-routes.get('/card/:id', cardsController.getById); // GET card by it's ID number
+
 routes.get('/cards/:page', cardsController.getAll); // GET cards
 routes.get('/cards/set/:set/:page', cardsController.getBySet);
 
@@ -36,6 +36,7 @@ routes.get('/cards/set/:set/:page', cardsController.getBySet);
 ///////ROUTES AND REQUISITIONS FOR THE COLLECTION TABLE 
 routes.get('/collection/:page', collectionController.getCollection); // GET collection
 routes.post('/collection/', collectionController.PostOnCollection) // POST on collection
+routes.get('/card/:id', collectionController.getById); // GET card by it's ID number
 
 
 

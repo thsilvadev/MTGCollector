@@ -12,7 +12,7 @@ module.exports = {
     const { id } = req.params;
     //SELECT * FROM cards WHERE id = {id}
     const result = await knex("cards").where({ id });
-    console.log(`Request successful by ${req.ip} at ${formattedDate}`);
+    console.log(`Request successful by ${req.ip}`);
 
     return res.json(result);
   },
