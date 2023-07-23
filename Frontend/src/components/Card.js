@@ -18,7 +18,7 @@ function Card({
   condition,
   scryfallId,
   multiverseId,
-  keywords
+  keywords,
 }) {
   //Scryfall ID management
 
@@ -118,35 +118,30 @@ function Card({
     }
 
     if (collectionCard.length === 0) {
-      return <span>owned: 0</span>;
+      return <span>not obtained</span>;
     } else {
       return collectionCard.map((hoveredCard) => (
-        <span key={hoveredCard.id}>owned: {hoveredCard.countById}</span>
+        <span key={hoveredCard.id}>on Collection: {hoveredCard.countById}</span>
       ));
     }
   };
 
-
-
-
-
   return (
     <div className="col-12 col-sm-6 col-lg-3">
-      <div className={styles.cardContainer}>
-      <img
-        src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
-        onClick={postOnCollection}
-        alt="card"
-        className={`${isBattle} ${isPlane}`}
-        onLoad={changeCardClass}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      />
-      <div className={styles.CardOverlay}>
-        <p>{renderer()}</p>
+      <div className={styles.CardContainer}>
+          <img
+            src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+            onClick={postOnCollection}
+            alt="card"
+            className={`${isBattle} ${isPlane}`}
+            onLoad={changeCardClass}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          />
+        <div className={styles.CardOverlay}>
+          <p>{renderer()}</p>
+        </div>
       </div>
-      </div>
-      
     </div>
   );
 }
