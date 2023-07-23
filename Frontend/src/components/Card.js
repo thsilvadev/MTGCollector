@@ -132,6 +132,7 @@ function Card({
 
   return (
     <div className="col-12 col-sm-6 col-lg-3">
+      <div className={styles.cardContainer}>
       <img
         src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
         onClick={postOnCollection}
@@ -144,6 +145,8 @@ function Card({
       <div className={styles.CardOverlay}>
         <p>{renderer()}</p>
       </div>
+      </div>
+      
     </div>
   );
 }
