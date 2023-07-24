@@ -17,9 +17,10 @@
     border-top: solid 42px lightskyblue;
     border-top-left-radius: 47px;
     border-top-right-radius: 47px;
-    animation: hover-animation 0.4s forwards;
+    animation: hover-animation .4s forwards;
     cursor: grab;
     z-index: 2;
+
 
 
 }
@@ -71,11 +72,11 @@
 @keyframes hover-animation {
 
     0% {
-        transform: scale(1);
+        transform: scale(1.11);
     }
     
     50% {
-        transform: scale(1);
+        transform: scale(1.11);
     }
     
     100% {
@@ -86,11 +87,11 @@
 
 @keyframes battle-hover-animation {
     0%{
-        transform: scale(1);
+        transform: scale(1.11);
     }
 
     50%{
-        transform: scale(1);
+        transform: scale(1.11);
     }
 
     100%{
@@ -106,5 +107,6 @@
     font-size: 20px;
     background-color: black;
     z-index: 5;
+    pointer-events: none;
 
 }
