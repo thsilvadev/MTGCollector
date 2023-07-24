@@ -39,6 +39,9 @@
 .Battle:hover {
     border: solid 12px lightskyblue;
     border-radius: 25px;
+    border-left: solid 42px lightskyblue;
+    border-top-left-radius: 47px;
+    border-bottom-left-radius: 47px;
     animation: battle-hover-animation 0.4s forwards;
     cursor: grab;
     z-index: 2;
@@ -48,12 +51,10 @@
 
 /* Plane Cards are read horizontally, but unlike Battles they are already wide-long by default. To maintain pattern, it's getting rotated before hover and on mouseover it turns horizontal.  */
 .Plane { 
-    margin: 50px 0px 50px 0px;
+    margin: 15px 0px 15px 0px;
     transition: border 0.1s;
-    height: 215px;
-    width: 300px;
+    height: 300px;
     border-radius: 14px;
-    rotate: 270deg;
     z-index: 1;
 
 }
@@ -61,9 +62,11 @@
 .Plane:hover { 
     border: solid 12px lightskyblue;
     border-radius: 25px;
+    border-left: solid 42px lightskyblue;
+    border-top-left-radius: 47px;
+    border-bottom-left-radius: 47px;
     animation: battle-hover-animation 0.4s forwards;
     cursor: grab;
-    position: relative;
     z-index: 10;
 
 }
@@ -77,6 +80,7 @@
     
     50% {
         transform: scale(1.11);
+
     }
     
     100% {
@@ -101,12 +105,17 @@
 
 .CardOverlay {
     position: absolute;
-    top: -390px;
-    left: -90px;
+    top: -40px;
+    left: 40px;
+    height: 12px;
     color: white;
-    font-size: 20px;
+    font-size: 10px;
     background-color: black;
     z-index: 5;
     pointer-events: none;
 
+}
+
+.CardContainer {
+    position: relative;
 }
