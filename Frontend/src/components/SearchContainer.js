@@ -219,7 +219,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
         <h3> Filter by:</h3>
         <div className="container">
           <div className="row justify-content-around mb-2">
-            <div className="col-xl-4 col-lg-4 col-md-12 col-sm-12">
+            <div className="col-12">
               <h4 className={styles.Filters}>Type</h4>
               <select
                 value={selectedType}
@@ -239,7 +239,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </select>
             </div>
 
-            <div className="col-lg-4 col-md-12 col-sm-12">
+            <div className="col-12">
               <h4 className={styles.Filters}>Set</h4>
               <select
                 value={selectedSet}
@@ -258,7 +258,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </select>
             </div>
 
-            <div className="col-lg-4 col-md-12 col-sm-12">
+            <div className="col-12">
               <h4 className={styles.Filters}>Rarity</h4>
               <select
                 value={selectedRarity}
