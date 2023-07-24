@@ -5,9 +5,10 @@
     border: 6px solid #ff8200;
     border-radius: 4px;
     color: rgb(0, 0, 0);
-    max-width: 60%;
+    max-width: 40%;
+    min-width: 320px;
     margin: auto;
-    margin-bottom: 35px;
+    margin-bottom: 95px;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
@@ -33,7 +34,9 @@
 }
 
 .FilterBox{
-    width: 170px;
+    min-width: 287px;
+    max-width: 320px;
+
 }
 
 /* Checkbox */
