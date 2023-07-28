@@ -63,6 +63,8 @@ function Collection () {
             name={card.name}
             types={card.types}
             keywords={card.keywords}
+            table='collection'
+            id_collection={card.id_collection}
           />
         ))}
       </div>

@@ -37,6 +37,7 @@ routes.get('/cards/set/:set/:page', cardsController.getBySet);
 routes.get('/collection/:page', collectionController.getCollection); // GET collection
 routes.post('/collection/', collectionController.PostOnCollection) // POST on collection
 routes.get('/card/:id', collectionController.getById); // GET card by it's ID number
+routes.delete('/card/:id_collection', collectionController.deleteById); //DELETE card by it's ID number
 
 
 

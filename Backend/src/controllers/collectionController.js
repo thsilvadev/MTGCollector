@@ -29,7 +29,8 @@ module.exports = {
           "supercards.colorIdentity",
           "supercards.keywords",
           "supercards.multiverseId",
-          "supercards.scryfallId"
+          "supercards.scryfallId",
+          "collection.id_collection"
         )
         //COUNT for card quantity. Alias needed to simplify key name to send to frontend.
         .count('id', {as: 'countById'})
@@ -159,6 +160,7 @@ module.exports = {
     const now = new Date();
     let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
 
+    //This is a body request. Data comes in json and not in params. 
     const body = req.body;
     const { card_id } = body;
     const { card_condition } = body;
@@ -213,4 +215,35 @@ module.exports = {
       })
     }
   },
-};
+
+  async deleteById(req, res) {
+    //Console logging with IP and Date (in yellow)
+    const now = new Date();
+    let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+
+    
+    //Params request
+    const { id_collection } = req.params;
+
+    try {
+      const result = await knex
+      .select('id_collection')
+      .from("collection")
+      .where( `id_collection`, id_collection )
+      .del();
+
+      console.log(
+        `Delete successful of card number "${id_collection}" on Collection by ${req.ip} at ${formattedDate}`
+      );
+
+      return res.json(result);
+    } catch (error) {
+      console.error(`IP: ${req.ip}, Time: ${formattedDate}, id_collection: ${id_collection} ERROR:`, error);
+      return res.status(500).json({
+        error:
+          "something went wrong",
+      });
+    }
+  },
+
+  };

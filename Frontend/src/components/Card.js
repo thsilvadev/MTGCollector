@@ -4,6 +4,7 @@
 import { React, useState } from "react";
 import Axios from "axios";
 
+
 //styles
 
 import styles from "../styles/Card.module.css";
@@ -19,6 +20,8 @@ function Card({
   scryfallId,
   multiverseId,
   keywords,
+  table,
+  id_collection,
 }) {
   //Scryfall ID management
 
@@ -50,6 +53,15 @@ function Card({
     } //Fuse cards act just like Battle cards so it's using the same class.
   };
 
+  //Click Handler
+  const clickHandler = () => {
+    if (table === "allCards") {
+      postOnCollection();
+    } else if (table === "collection") {
+      deleteFromCollection();
+    }
+  };
+
   //Post
 
   //postOnCollection
@@ -57,7 +69,7 @@ function Card({
     //Use prompt() method for card condition. Just for instance.
     let cardCondition;
     let userCondition = prompt(
-      "You're adding a card to your collection. What's it's condition?",
+      `You're adding ${name} to your collection. What's it's condition?`,
       "Near Mint"
     );
 
@@ -79,6 +91,19 @@ function Card({
   };
 
   //Delete
+  //Delete from Collection
+  const deleteFromCollection = () => {
+    if (
+      window.confirm(`You're deleting ${name} from your collection. Confirm?`)
+    ) {
+      Axios.delete(`http://192.168.0.82:3344/card/${id_collection}`).then(
+        console.log(`${name} deleted from collection`)
+      );
+    } else {
+      window.alert("deletion canceled");
+    }
+  };
+
   /*
                                                 
    __       _                                    _       _       
@@ -126,18 +151,36 @@ function Card({
     }
   };
 
+  //Dragging cards
+
+  /*
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const isBeingDragged = isDragging ? styles.Dragging : styles.Card;
+  */
+
   return (
-    <div className="col-12 col-sm-6 col-lg-3">
+
+    <div className="col-12 col-sm-6 col-lg-4 col-xl-3">
       <div className={styles.CardContainer}>
-          <img
-            src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
-            onClick={postOnCollection}
-            alt="card"
-            className={`${isBattle} ${isPlane}`}
-            onLoad={changeCardClass}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          />
+        <img
+          src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+          onClick={clickHandler}
+          alt="card"
+          className={`${isBattle} ${isPlane}`}
+          onLoad={changeCardClass}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+
+        />
         <div className={styles.CardOverlay}>
           <p>{renderer()}</p>
         </div>

@@ -1,0 +1,62 @@
+.OpenBoxDiv{
+    height: 80%;
+    position: fixed;
+    top: 10%;
+    right: 0;
+    width: 248px;
+    background-color: rgb(157, 69, 15);
+    border: solid 6px rgb(233, 170, 12);
+    z-index: 2;
+    clear: bottom;
+    opacity: .3;
+    animation: showSideBar .4s;
+
+    @media (max-width: 849px) {
+        display: none;
+      }
+
+}
+
+.OpenBoxDiv:hover {
+    opacity: 1;
+}
+
+.UponDraggedItem {
+    opacity: 1;
+    z-index: 6;
+}
+
+@keyframes showSideBar {
+    from {
+        width: 0;
+    }
+    to {
+        width: 255px;
+    }
+}
+
+.ClosedBoxDiv {
+    height: 80%;
+    position: fixed;
+    top: 10%;
+    right: 0;
+    width: 0;
+    background-color: rgb(214, 159, 63);
+    z-index: 8;
+    clear: bottom;
+    opacity: .4;
+    animation: hideSideBar .4s;
+
+    @media (max-width: 849px) {
+        display: none;
+      }
+}
+
+@keyframes hideSideBar {
+    from {
+        width: 255px;
+    }
+    to {
+        width: 0;
+    }
+}

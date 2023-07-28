@@ -1,83 +1,118 @@
 .titleContainer {
-     /*
+  /*
     border: red solid 10px;
     box-shadow: 5px 5px black;
     background-color:antiquewhite;
     color: black;
     border-radius: 4px;
     */
-    max-width: 500px;
-    display: flex;
-    margin: 80px auto 40px auto;
-    box-sizing: border-box;
-    vertical-align: middle;
-    align-items: center;
+  max-width: 500px;
+  display: flex;
+  margin: 80px auto 40px auto;
+  box-sizing: border-box;
+  vertical-align: middle;
+  align-items: center;
 }
 
 .title {
-    font-size: 50px;
+  font-size: 50px;
 }
 
 .chestContainer {
-    position: relative;
+  position: relative;
 }
 
 .chestContainer .chest {
-    position: absolute;
-    margin-top: 40px;
-    top: -90px;
-    left: 10px;
-    width: 150px;
-    rotate: 5deg;
-
+  position: absolute;
+  margin-top: 40px;
+  top: -90px;
+  left: 10px;
+  width: 150px;
+  rotate: 5deg;
 }
 
 /* This is for the cards image on the logo, not the actual cards (components) */
-.fCards { 
-    width: 80px;
-    position: absolute;
-    left: 45px;
-    top: -55px;
-    rotate: 5deg;
-    /* not working by now
+.fCards {
+  width: 80px;
+  position: absolute;
+  left: 45px;
+  top: -55px;
+  rotate: 5deg;
+  /* not working by now
     transform: translatey(0px);
     animation: float 6s ease-in-out infinite;
     */
 }
 
 .Paragraph {
-    font-weight: bold;
-    font-size: 20px;
-    margin-left: 5px;
-    margin-right: 5px;
+  font-weight: bold;
+  font-size: 20px;
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 .list {
-    font-weight:600;
-    max-width: 900px;
-    margin: auto;
-    line-height: 25px;
-    list-style: disc;
-    text-align: start;
-    margin-bottom: 40px;
-    padding-right: 1px;
+  font-weight: 600;
+  max-width: 900px;
+  margin: auto;
+  line-height: 25px;
+  list-style: disc;
+  text-align: start;
+  margin-bottom: 40px;
+  padding-right: 1px;
 }
 
 .listItem {
-    margin: 15px 0 15px 0;
+  margin: 15px 0 15px 0;
 }
 
 .h1 {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
+.cardsContainer {  
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: auto;
+  
+}
 
-  
-  
-  
-  
-  
-  
-  
-  
+.cardsContainerWithModal {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+
+}
+
+@media (min-width: 849px) {
+
+    .cardsContainerWithModal {
+        width: 70%;
+    }
+    .cardsContainer {
+        width: 90%;
+    }
+    
+  }
+
+  @media (min-width: 992px) {
+    .cardsContainer {
+        width: 70%;
+    }
+
+    .cardsContainerWithModal {
+        width: 70%;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .cardsContainer {
+        width: 80%;
+    }
+
+    .cardsContainerWithModal {
+        width: 75%;
+    }
+  }
 
