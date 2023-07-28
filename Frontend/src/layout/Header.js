@@ -5,7 +5,7 @@ import React from 'react';
 
 function Header() {
   return (
-    <nav className="navbar navbar-expand-sm navbar-light bg-light ps-3 pe-3">
+    <nav className="navbar navbar-expand-sm navbar-dark bg-dark ps-3 pe-3">
       <div class="container-fluid">
 
       <a className="navbar-brand" href="/">

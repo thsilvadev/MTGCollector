@@ -3,12 +3,16 @@ import styles from "../styles/Home.module.css";
 
 //Imports
 
+//Components
 import Card from "../components/Card";
 
 import SearchContainer from "../components/SearchContainer";
 
 import PrevNext from "../components/PrevNext";
 
+import SideBar from "../components/SideBar";
+
+//Tools
 import Axios from "axios";
 
 import React, { useState, useEffect } from "react";
@@ -52,10 +56,10 @@ function Home() {
 
   const HandleMouseEnter = () => {
     setIsHovered(true);
-  }
+  };
   const HandleMouseLeave = () => {
     setIsHovered(false);
-  }
+  };
 
   useEffect(() => {
     const preloadImages = async () => {
@@ -81,19 +85,51 @@ function Home() {
         setIsImagesLoaded(true);
       } catch (error) {
         // Handle any errors while preloading images
-        console.error('Error preloading images:', error);
+        console.error("Error preloading images:", error);
       }
     };
 
     preloadImages();
   }, []);
 
+  //Modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleModalOpen = (modalState) => {
+      setIsModalOpen(modalState);
+
+    }
+
+    const containerClass = isModalOpen ? styles.cardsContainerWithModal : styles.cardsContainer;
+
   return (
     <>
+      <SideBar modalHandler={handleModalOpen}/>
       <div className={styles.titleContainer}>
         <img src={welcome} className={styles.title} width="500" alt="Logo" />
-        <div className={styles.chestContainer} onMouseEnter={HandleMouseEnter} onMouseLeave={HandleMouseLeave}><a href="/collection">
-          {isHovered && isImagesLoaded ? (<div><img src={openedchest} className={styles.chest} alt="opened chest" /> <img src={floatingCards} className={styles.fCards} alt="cards floating"/></div>) : (<img src={closedchest} className={styles.chest} alt="chest"/> )}</a>
+        <div
+          className={styles.chestContainer}
+          onMouseEnter={HandleMouseEnter}
+          onMouseLeave={HandleMouseLeave}
+        >
+          <a href="/collection">
+            {isHovered && isImagesLoaded ? (
+              <div>
+                <img
+                  src={openedchest}
+                  className={styles.chest}
+                  alt="opened chest"
+                />{" "}
+                <img
+                  src={floatingCards}
+                  className={styles.fCards}
+                  alt="cards floating"
+                />
+              </div>
+            ) : (
+              <img src={closedchest} className={styles.chest} alt="chest" />
+            )}
+          </a>
         </div>
       </div>
 
@@ -129,20 +165,24 @@ function Home() {
         baseOfSearch="AllCards"
         onParamsChange={handleSuperParams}
       />
-      <div className="row justify-content-around">
-        {cards.map((card, key) => (
-          <Card
-            key={key}
-            id={card.id}
-            multiverseId={card.multiverseId}
-            scryfallId={card.scryfallId}
-            name={card.name}
-            types={card.types}
-            keywords={card.keywords}
-          />
-        ))}
+      <div className={containerClass}>
+        <div className="row justify-content-center">
+          {cards.map((card, key) => (
+            <Card
+              key={key}
+              id={card.id}
+              multiverseId={card.multiverseId}
+              scryfallId={card.scryfallId}
+              name={card.name}
+              types={card.types}
+              keywords={card.keywords}
+              table="allCards"
+            />
+          ))}
+        </div>
       </div>
-      <PrevNext onPageChange={handlePage} page={page} cardTotal={cards}/>
+
+      <PrevNext onPageChange={handlePage} page={page} cardTotal={cards} />
     </>
   );
 }

@@ -6,7 +6,7 @@
 .Container {
     color: white;
     background-size: auto;
-    background-color: #0a0903;
+    background-color: #000000;
 
     transition: background-color 0.9s ease;
     /* This inhibits the Container to be pushed down in case of the first element of the page being top-marged*/
@@ -17,6 +17,6 @@
 
 .Container.active {
     color: white;
-    background-color: #000000;
+    background-color: #0a0903;
 }
 

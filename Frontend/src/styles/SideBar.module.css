@@ -1,0 +1,54 @@
+.ClosedToggler {
+    position: fixed;
+    cursor: grab;
+    top: 50%;
+    right: 0;
+    z-index: 3;
+    animation: closing .4s;
+    rotate: 180deg;
+    border: 2px solid transparent;
+    
+}
+
+.OpenToggler {
+    position: fixed;
+    cursor: grab;
+    top: 50%;
+    right: 235px;
+    z-index: 3;
+    animation: opening .4s;
+    border: 2px solid transparent;
+
+}
+
+.ClosedToggler:hover{
+    border: solid 2px red;
+    border-radius: 100%;
+}
+
+.OpenToggler:hover {
+    border: solid 2px red;
+    border-radius: 100%;
+}
+
+
+
+@keyframes opening {
+    from {
+        right: 0;
+    }
+    to {
+        right: 235px;
+    }
+}
+
+@keyframes closing {
+    from {
+        right: 235px;
+        
+    }
+    to {
+        right: 0;
+    }
+}
+
