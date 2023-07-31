@@ -10,3 +10,7 @@
     justify-items: center;
     vertical-align: middle;
 }
+
+.MiniCard:hover {
+    border: solid 2px skyblue;
+}
