@@ -104,17 +104,6 @@ function Card({
     }
   };
 
-  /*
-                                                
-   __       _                                    _       _       
-  / _|_   _| |_ _   _ _ __ ___   _   _ _ __   __| | __ _| |_ ___ 
- | |_| | | | __| | | | '__/ _ \ | | | | '_ \ / _` |/ _` | __/ _ \
- |  _| |_| | |_| |_| | | |  __/ | |_| | |_) | (_| | (_| | ||  __/
- |_|  \__,_|\__|\__,_|_|  \___|  \__,_| .__/ \__,_|\__,_|\__\___|
-                                      |_|                        
-                                      
-                                      */
-
   //How many in collection?
 
   //Quantity owned in collection and in wishlist
@@ -167,6 +156,12 @@ function Card({
   const isBeingDragged = isDragging ? styles.Dragging : styles.Card;
   */
 
+  const handleOnDrag = (e, data) => {
+    console.log('dragStart')
+    e.dataTransfer.clearData();
+    e.dataTransfer.setData("card", data);
+  }
+
   return (
 
     <div className="col-12 col-sm-6 col-lg-4 col-xl-3">
@@ -179,6 +174,8 @@ function Card({
           onLoad={changeCardClass}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          draggable={true}
+          onDragStart={(e) => handleOnDrag(e, {id, name, cost, table, id_collection})}
 
         />
         <div className={styles.CardOverlay}>

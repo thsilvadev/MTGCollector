@@ -11,3 +11,10 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@font-face {
+  font-family: "BelerenBold";
+  src: local("BelerenBold"),
+   url("./fonts/Beleren2016-Bold.ttf") format("truetype");
+  font-weight: bold;
+ }

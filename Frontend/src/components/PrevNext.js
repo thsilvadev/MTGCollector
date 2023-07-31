@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import styles from "../styles/PrevNext.module.css";
 
 
-function PrevNext({ onPageChange, page, cardTotal }) {
+function PrevNext({ onPageChange, page, cardTotal, where }) {
   const [pageData, setPageData] = useState(page);
 
   const handleScrollToTop = () => {
@@ -28,12 +28,17 @@ function PrevNext({ onPageChange, page, cardTotal }) {
 
     //function
 
+    
   const buttonIsNeeded = cardTotal.length > 39 ? styles.Button : styles.Hidden;
+
+  //Change classes based on where is being rendered
+
+  const whereIsRendered = where === 'page' ? styles.ButtonsContainer : styles.SideBar ;
 
 
   if (page === 0) {
     return (
-      <div className={styles.ButtonsContainer} onLoad={console.log(cardTotal)}>
+      <div className={whereIsRendered}>
         <button className={buttonIsNeeded} onClick={handleIncrement}>
           Next
         </button>
@@ -42,10 +47,10 @@ function PrevNext({ onPageChange, page, cardTotal }) {
   }
   if (page >= 1) {
     return (
-      <div className={styles.ButtonsContainer}>
+      <div className={whereIsRendered}>
         <div>
           <button className={styles.Button} onClick={handleDecrement}>
-            Previous
+            &lt;&lt;
           </button>
         </div>
         <div>
@@ -53,7 +58,7 @@ function PrevNext({ onPageChange, page, cardTotal }) {
         </div>
         <div>
           <button className={buttonIsNeeded} onClick={handleIncrement}>
-            Next
+          &gt;&gt;
           </button>
         </div>
       </div>

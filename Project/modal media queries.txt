@@ -1,0 +1,48 @@
+a variável de estado que indica se o modal está aberto ou fechado vai 
+
+1) sair do sidebar (filho)
+2) chegar no Home (pai)
+3) modificar o cardsContainer >> tirar e colocar margin:auto
+4) passar pro Card (outro filho)
+5) modificar a div primária do card >> trocar classe pra 
+
+
+
+MODAL [sem margin:auto]
+
+	1) BOOTSTRAP
+
+"col-12 col-sm-6 col-lg-4 col-xl-3"
+
+<576px 
+<768px 
+<992px 
+<1200px 
+>1200px
+
+	2) cardsContainer @media
+
+min-width: 320px > width: 70%  OK 
+min-width: 992px > width: 70%  OK
+min-width: 1200px > width: 75% OK
+
+
+SEM MODAL [margin:auto]
+
+	1) BOOTSTRAP
+
+"col-12 col-sm-6 col-lg-4 col-xl-3"
+
+<576px OK
+<768px OK
+<992px OK
+<1200px OK
+>1200px OK
+
+	2) cardsContainer @media
+
+min-width: 320px > width: 90% OK
+min-width: 992px > width: 70% OK
+min-width: 1200px > width: 80% OK
+
+
