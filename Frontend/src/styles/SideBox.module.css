@@ -7,9 +7,10 @@
     background-color: rgb(157, 69, 15);
     border: solid 6px rgb(233, 170, 12);
     z-index: 2;
-    clear: bottom;
     opacity: .3;
     animation: showSideBar .4s;
+    overflow-x: hidden;
+        overflow-y: auto;
 
     @media (max-width: 849px) {
         display: none;
@@ -23,7 +24,7 @@
 
 .UponDraggedItem {
     opacity: 1;
-    z-index: 6;
+    z-index: 2;
 }
 
 @keyframes showSideBar {
@@ -59,4 +60,11 @@
     to {
         width: 0;
     }
+}
+
+.Link {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    font-size: 25px;
 }

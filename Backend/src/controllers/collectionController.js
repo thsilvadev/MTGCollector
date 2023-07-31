@@ -33,7 +33,7 @@ module.exports = {
           "collection.id_collection"
         )
         //COUNT for card quantity. Alias needed to simplify key name to send to frontend.
-        .count('id', {as: 'countById'})
+        .count("id", { as: "countById" })
         //FROM supercards;
         .from("supercards")
         //JOIN collection
@@ -50,7 +50,7 @@ module.exports = {
             if (key === "name") {
               const sanitizedName = value.replace(/\s/g, "");
               builder.where(function () {
-                this.where(key, "like", `%${sanitizedName}%`)
+                this.where(key, "like", `%${sanitizedName}%`);
               });
               //Some Logging for more control
               console.log(`Sanitized name: ${sanitizedName}`);
@@ -59,67 +59,71 @@ module.exports = {
             }
 
             //2)When nothing is typed, color check works as follows: search will return only cards that that match every color selected. But when user types anything, search will then return not only cards that match every color selected, but also cards of each color selected as well.
-          if (key === "colorIdentity") {
-            if (
-              (!query.name || query.name === undefined) &&
-              value !== "B, G, R, U, W"
-            ) {
-              const sanitizedColor = value.replace(/[, ]/g, "");
-              const colorsArr = [...sanitizedColor];
+            if (key === "colorIdentity") {
+              if (
+                (!query.name || query.name === undefined) &&
+                value !== "B, G, R, U, W"
+              ) {
+                const sanitizedColor = value.replace(/[, ]/g, "");
+                const colorsArr = [...sanitizedColor];
 
-              builder.where(function () {
-                this.where(function () {
-                  this.where(key, value);
-                  if (colorsArr.length > 1) {
-                    for (let i = 0; i < colorsArr.length; i++) {
-                      this.orWhere(key, 'like', `%${colorsArr[i]}%`)
+                builder.where(function () {
+                  this.where(function () {
+                    this.where(key, value);
+                    if (colorsArr.length > 1) {
+                      for (let i = 0; i < colorsArr.length; i++) {
+                        this.orWhere(key, "like", `%${colorsArr[i]}%`);
+                      }
                     }
-                  }
-                })
-              })
+                  });
+                });
 
-              console.log(`Sanitized colorzzz: ${colorsArr}`);
-              console.log(`color: ${value}`);
+                console.log(`Sanitized colorzzz: ${colorsArr}`);
+                console.log(`color: ${value}`);
+              } else if (
+                (!query.name || query.name === undefined) &&
+                value === "B, G, R, U, W"
+              ) {
+                const sanitizedColor = value.replace(/[, ]/g, "");
+                const colorsArr = [...sanitizedColor];
+
+                builder.where(function () {
+                  this.where(function () {
+                    this.where(key, value);
+                    if (colorsArr.length > 1) {
+                      for (let i = 0; i < colorsArr.length; i++) {
+                        this.orWhere(key, "like", `%${colorsArr[i]}%`);
+                      }
+                    }
+                    this.orWhere(key, "");
+                  });
+                });
+
+                //Debugging
+                console.log(
+                  `Sanitized colorrr: ${colorsArr} of type:` + typeof colorsArr
+                );
+                console.log(`Value: ${value}`);
+              } else if (query.name) {
+                builder.where(key, value);
+                console.log(`name typed and color selected`);
+              }
+              continue;
             }
-            else if (
-              (!query.name || query.name === undefined) &&
-              value === "B, G, R, U, W"
-            ) {
-              const sanitizedColor = value.replace(/[, ]/g, "");
-              const colorsArr = [...sanitizedColor];
+            //3)When selecting card type in Search Container, bring cards that contains that type, not only those that are strictly of that type (e.g. when selecting Arctifact, bring Creature Artifact as well)
+            if (key === "types") {
+              builder.where(key, "like", `%${value}%`);
+              console.log(`sanitized type: %${value}%`);
+              continue;
 
-              builder.where(function () {
-                this.where(function () {
-                  this.where(key, value);
-                  if (colorsArr.length > 1) {
-                    for (let i = 0; i < colorsArr.length; i++) {
-                      this.orWhere(key, 'like', `%${colorsArr[i]}%`);
-                    }
-                  }
-                  this.orWhere(key, "");
-                })
-              })
-
-              //Debugging
-              console.log(
-                `Sanitized colorrr: ${colorsArr} of type:` + typeof colorsArr
-              );
-              console.log(`Value: ${value}`);
-            } 
-
-            else if (query.name){
+            } else {
+              //General general build
               builder.where(key, value);
-              console.log(`name typed and color selected`)
-            } continue;
-          }
-          else {
-            //General general build
-          builder.where(key, value); 
-            console.log('General general build (no name and no color input)')
-        }
+              console.log("general build (no name, no type and no color input)");
+            }
 
-          //Not necessary anymore because of DB update. Now it counts '' as colorless, and not null value. So by default when no color is selected, it will return colorless cards.
-          /*
+            //Not necessary anymore because of DB update. Now it counts '' as colorless, and not null value. So by default when no color is selected, it will return colorless cards.
+            /*
                 //3) When No color is selected, make it return colorless cards (by default it returns value='' but we need it to return value=null)
                 if (key === 'colorIdentity' && value === 'colorless'){
                   builder.where(key, '')
@@ -127,15 +131,15 @@ module.exports = {
 
                 }
                   */
-        }
-      })
+          }
+        })
 
         //Not showing cards with faulty images or wrong images
         .whereRaw(
           "multiverseId IS NOT NULL AND NOT multiverseId = '580709' AND NOT multiverseId = '580711'"
         )
         //This is for cards not to be repeated if more than one same card present in Collection.
-        .groupBy('supercards.id')
+        .groupBy("supercards.id")
 
         .orderBy("Rarity", "asc")
 
@@ -160,7 +164,7 @@ module.exports = {
     const now = new Date();
     let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
 
-    //This is a body request. Data comes in json and not in params. 
+    //This is a body request. Data comes in json and not in params.
     const body = req.body;
     const { card_id } = body;
     const { card_condition } = body;
@@ -185,34 +189,31 @@ module.exports = {
     }
   },
 
-  //This is a function to get card by ID. This is used to check if card is in Collection or Wishlist.
-  async getById(req, res) {
+  //This is a function to get card by ID. This is used to check if card is in Collection and how many of it there are.
 
+  async getById(req, res) {
     const { id } = req.params;
     //SELECT * FROM cards WHERE id = {id}
     try {
       const result = await knex
-      //SELECT just id
-      .select(
-        "supercards.id")
+        //SELECT just id
+        .select("supercards.id")
 
-      //COUNT (`id`)
-      .count('id', {as: 'countById'})
-      //FROM supercards;
-      .from("supercards")
-      //JOIN collection
-      .join("collection", "collection.card_id", "=", "supercards.id")
-      .where({ id })
-      .groupBy('id');
-      
-    
+        //COUNT (`id`)
+        .count("id", { as: "countById" })
+        //FROM supercards;
+        .from("supercards")
+        //JOIN collection
+        .join("collection", "collection.card_id", "=", "supercards.id")
+        .where({ id })
+        .groupBy("id");
 
-    return res.json(result);
+      return res.json(result);
     } catch (error) {
       console.error(`ip: ${req.ip}, ERROR:`, error);
       return res.status(500).json({
-        error: "TO BE UPDATED"
-      })
+        error: "TO BE UPDATED",
+      });
     }
   },
 
@@ -221,16 +222,15 @@ module.exports = {
     const now = new Date();
     let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
 
-    
     //Params request
     const { id_collection } = req.params;
 
     try {
       const result = await knex
-      .select('id_collection')
-      .from("collection")
-      .where( `id_collection`, id_collection )
-      .del();
+        .select("id_collection")
+        .from("collection")
+        .where(`id_collection`, id_collection)
+        .del();
 
       console.log(
         `Delete successful of card number "${id_collection}" on Collection by ${req.ip} at ${formattedDate}`
@@ -238,12 +238,13 @@ module.exports = {
 
       return res.json(result);
     } catch (error) {
-      console.error(`IP: ${req.ip}, Time: ${formattedDate}, id_collection: ${id_collection} ERROR:`, error);
+      console.error(
+        `IP: ${req.ip}, Time: ${formattedDate}, id_collection: ${id_collection} ERROR:`,
+        error
+      );
       return res.status(500).json({
-        error:
-          "something went wrong",
+        error: "something went wrong",
       });
     }
   },
-
-  };
+};

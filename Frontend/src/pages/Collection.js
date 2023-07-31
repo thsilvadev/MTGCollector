@@ -68,7 +68,7 @@ function Collection () {
           />
         ))}
       </div>
-      <PrevNext onPageChange={handlePage} page={page} cardTotal={cards}/>
+      <PrevNext onPageChange={handlePage} page={page} cardTotal={cards} where='page'/>
         </>
     )
 }

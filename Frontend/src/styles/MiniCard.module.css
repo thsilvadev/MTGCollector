@@ -1,0 +1,12 @@
+.MiniCard {
+    display: flex;
+    height: 24px;
+    border: solid 2px black;
+    background-color: antiquewhite;
+    color: black;
+    justify-content: space-between;
+    margin: 2px;
+    font-family: "BelerenBold";
+    justify-items: center;
+    vertical-align: middle;
+}

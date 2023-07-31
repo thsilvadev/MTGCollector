@@ -174,6 +174,7 @@ function Home() {
               multiverseId={card.multiverseId}
               scryfallId={card.scryfallId}
               name={card.name}
+              cost={card.manaCost}
               types={card.types}
               keywords={card.keywords}
               table="allCards"
@@ -182,7 +183,7 @@ function Home() {
         </div>
       </div>
 
-      <PrevNext onPageChange={handlePage} page={page} cardTotal={cards} />
+      <PrevNext onPageChange={handlePage} page={page} cardTotal={cards} where='page'/>
     </>
   );
 }
