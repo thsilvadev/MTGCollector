@@ -1,11 +1,4 @@
 .titleContainer {
-  /*
-    border: red solid 10px;
-    box-shadow: 5px 5px black;
-    background-color:antiquewhite;
-    color: black;
-    border-radius: 4px;
-    */
   max-width: 500px;
   display: flex;
   margin: 80px auto 40px auto;
@@ -70,11 +63,25 @@
   margin-bottom: 20px;
 }
 
+/* Modal switch */
+
+.upperContainer {
+  width: 100%;
+  margin: auto;
+  animation: hideSideBar .1s;
+}
+
+.upperContainerWithModal {
+  width: 100%;
+  animation: showSideBar .1s;
+}
+
 .cardsContainer {  
     display: flex;
     justify-content: center;
     width: 100%;
     margin: auto;
+    animation: hideSideBar .1s;
   
 }
 
@@ -82,21 +89,62 @@
     display: flex;
     justify-content: center;
     width: 100%;
+    animation: showSideBar .1s;
 
 }
 
+/*Modal Switch Animation */
+
+@keyframes showSideBar {
+  from {
+      margin: auto;
+  }
+  to {
+      margin: 0px;
+  }
+}
+
+@keyframes hideSideBar {
+  from {
+    margin: 0px;
+  }
+  to {
+    margin: auto;
+  }
+}
+
+/* Modal Switch Responsiveness Details */
+
 @media (min-width: 849px) {
 
-    .cardsContainerWithModal {
-        width: 70%;
+    .upperContainer {
+      width: 90%;
     }
+
+    .upperContainerWithModal {
+      width: 70%;
+    }
+    
     .cardsContainer {
         width: 90%;
     }
+
+    .cardsContainerWithModal {
+      width: 70%;
+  }
     
   }
 
   @media (min-width: 992px) {
+
+    .upperContainer {
+      width: 70%;
+    }
+
+    .upperContainerWithModal {
+      width: 70%;
+    }
+
     .cardsContainer {
         width: 70%;
     }
@@ -107,6 +155,18 @@
   }
 
   @media (min-width: 1200px) {
+
+ 
+
+    .upperContainer {
+      width: 80%;
+    }
+
+    .upperContainerWithModal {
+      width: 75%;
+    }
+
+
     .cardsContainer {
         width: 80%;
     }

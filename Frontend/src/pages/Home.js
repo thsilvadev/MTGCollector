@@ -40,6 +40,14 @@ function Home() {
     console.log(superParams);
   };
 
+  //get Refresh from Card
+  //Whenever a card is posted on collection, through Home.js, Card prop `refresh` calls it's function to toggle this state variable `liftedRefreshCards`. That variable is passed on to SideBar and then to SideBox, to trigger re-fetching. RESUME: THIS MAKES NEW CARDS IN COLLECTION IMMEDIATELY SHOW ON SIDEBAR COLLECTION.
+  const [liftedRefreshCards, setLiftedRefreshCards] = useState(false);
+  const handleLiftedRefreshCards = (isRefreshed) => {
+    setLiftedRefreshCards(isRefreshed);
+    console.log("changed liftedRefreshCards:",liftedRefreshCards);
+  }
+
   //get filtered and paginated Cards in real time
   useEffect(() => {
     Axios.get(`http://192.168.0.82:3344/cards/${page}?${superParams}`).then(
@@ -93,79 +101,142 @@ function Home() {
   }, []);
 
   //Modal state
-    const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleModalOpen = (modalState) => {
-      setIsModalOpen(modalState);
+  //Function passed through props
+  const handleModalOpen = (modalState) => {
+    setIsModalOpen(modalState);
+  };
 
+
+  const upperContainerClass = isModalOpen
+    ? styles.upperContainerWithModal
+    : styles.upperContainer;
+
+  const cardsContainerClass = isModalOpen
+    ? styles.cardsContainerWithModal
+    : styles.cardsContainer;
+
+    //Delete by dragging minicards off the sidebox
+
+    //Debounced toggle refresher
+          //Debouncer
+          const debounce = (func, delay) => {
+            let timerId;
+        
+            return (...args) => {
+              clearTimeout(timerId);
+        
+              timerId = setTimeout(() => {
+                func.apply(this, args);
+              }, delay);
+            };
+          };
+    
+      // Function to toggle the refreshCards state
+      const toggleRefresh = () => {
+        debounce(
+          setLiftedRefreshCards((prevRefresh) => !prevRefresh), 450
+        )
+      };
+
+     //Delete from Collection
+  const deleteFromCollection = (cardIdCollection) => {
+    if (
+      window.confirm(`Confirm deletion?`)
+    ) {
+      Axios.delete(`http://192.168.0.82:3344/card/${cardIdCollection}`)
+        .then(console.log(`Card deleted from collection`))
+        .then(toggleRefresh());
+    } else {
+      window.alert("deletion canceled");
     }
+  };
 
-    const containerClass = isModalOpen ? styles.cardsContainerWithModal : styles.cardsContainer;
+    const handleDrop = (e) => {
+      //on drop, get card ID
+      const cardToDelete = e.dataTransfer.getData("cardDeletion");
+      if (cardToDelete){
+        deleteFromCollection(cardToDelete);
+        console.log("card Id:", cardToDelete);
+      } else if (!cardToDelete){
+        console.log('no data was caught')
+      }
+    };
+
+    const handleDragOver = (e) => {
+      e.preventDefault();
+      console.log("drag over");
+    };
 
   return (
     <>
-      <SideBar modalHandler={handleModalOpen}/>
-      <div className={styles.titleContainer}>
-        <img src={welcome} className={styles.title} width="500" alt="Logo" />
-        <div
-          className={styles.chestContainer}
-          onMouseEnter={HandleMouseEnter}
-          onMouseLeave={HandleMouseLeave}
-        >
-          <a href="/collection">
-            {isHovered && isImagesLoaded ? (
-              <div>
-                <img
-                  src={openedchest}
-                  className={styles.chest}
-                  alt="opened chest"
-                />{" "}
-                <img
-                  src={floatingCards}
-                  className={styles.fCards}
-                  alt="cards floating"
-                />
-              </div>
-            ) : (
-              <img src={closedchest} className={styles.chest} alt="chest" />
-            )}
-          </a>
+      <SideBar modalHandler={handleModalOpen} refresh={liftedRefreshCards}/>
+      <div className={upperContainerClass} droppable={true} onDrop={handleDrop}
+        onDragOver={handleDragOver}>
+        <div className={styles.titleContainer}>
+          <img src={welcome} className={styles.title} width="500" alt="Logo" />
+          <div
+            className={styles.chestContainer}
+            onMouseEnter={HandleMouseEnter}
+            onMouseLeave={HandleMouseLeave}
+          >
+            <a href="/collection">
+              {isHovered && isImagesLoaded ? (
+                <div>
+                  <img
+                    src={openedchest}
+                    className={styles.chest}
+                    alt="opened chest"
+                  />{" "}
+                  <img
+                    src={floatingCards}
+                    className={styles.fCards}
+                    alt="cards floating"
+                  />
+                </div>
+              ) : (
+                <img src={closedchest} className={styles.chest} alt="chest" />
+              )}
+            </a>
+          </div>
         </div>
+
+        <p className={styles.Paragraph}>
+          {" "}
+          MTGCollector is the perfect solution for organizing your{" "}
+          <i>Magic: The Gathering</i> cards! Here you'll be able to:
+        </p>
+        <ul className={styles.list}>
+          <li className={styles.listItem}>
+            Mirror your physical cards by adding cards to your collection.
+          </li>
+          <li className={styles.listItem}>
+            Build multiple decks with the same cards that you have so you don't
+            need to take notes on shared cards
+          </li>
+
+          <li className={styles.listItem}>
+            Fill your wishlist and write a description on each card to remember
+            their role in your malevolent strategies in assigned deck
+          </li>
+
+          <li className={styles.listItem}>
+            ... and much more! All this with actual 3rd millenium user
+            interface! We keep it clean, we keep it safe.
+          </li>
+        </ul>
+
+        <h1 className={styles.h1}>
+          All <i>Magic: The Gathering</i> Cards
+        </h1>
+        <SearchContainer
+          baseOfSearch="AllCards"
+          onParamsChange={handleSuperParams}
+        />
       </div>
-
-      <p className={styles.Paragraph}>
-        {" "}
-        MTGCollector is the perfect solution for organizing your{" "}
-        <i>Magic: The Gathering</i> cards! Here you'll be able to:
-      </p>
-      <ul className={styles.list}>
-        <li className={styles.listItem}>
-          Mirror your physical cards by adding cards to your collection.
-        </li>
-        <li className={styles.listItem}>
-          Build multiple decks with the same cards that you have so you don't
-          need to take notes on shared cards
-        </li>
-
-        <li className={styles.listItem}>
-          Fill your wishlist and write a description on each card to remember
-          their role in your malevolent strategies in assigned deck
-        </li>
-
-        <li className={styles.listItem}>
-          ... and much more! All this with actual 3rd millenium user interface!
-          We keep it clean, we keep it safe.
-        </li>
-      </ul>
-
-      <h1 className={styles.h1}>
-        All <i>Magic: The Gathering</i> Cards
-      </h1>
-      <SearchContainer
-        baseOfSearch="AllCards"
-        onParamsChange={handleSuperParams}
-      />
-      <div className={containerClass}>
+      <div className={cardsContainerClass} droppable={true} onDrop={handleDrop}
+        onDragOver={handleDragOver}> 
         <div className="row justify-content-center">
           {cards.map((card, key) => (
             <Card
@@ -178,12 +249,19 @@ function Home() {
               types={card.types}
               keywords={card.keywords}
               table="allCards"
+              refresh={handleLiftedRefreshCards}
+              
             />
           ))}
         </div>
       </div>
 
-      <PrevNext onPageChange={handlePage} page={page} cardTotal={cards} where='page'/>
+      <PrevNext
+        onPageChange={handlePage}
+        page={page}
+        cardTotal={cards}
+        where="page"
+      />
     </>
   );
 }
