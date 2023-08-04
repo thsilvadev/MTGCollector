@@ -4,38 +4,78 @@ import styles from "../styles/SideBox.module.css";
 //Tools
 import React, { useState, useEffect } from "react";
 import Axios from "axios";
+import { Scrollbars } from "react-custom-scrollbars-2";
 
 //Components
 import MiniCard from "./MiniCard";
 import PrevNext from "./PrevNext";
 
-const SideBox = ({ active }) => {
+const SideBox = ({ modalToggler, refresher }) => {
   //change css class when card is being dragged over the sidebar
   const [isDraggedOver, setIsDraggedOver] = useState(false);
 
   const handleDragEnter = () => {
     setIsDraggedOver(true);
+    console.log("drag entered")
   };
 
   const handleDragLeave = () => {
     setIsDraggedOver(false);
+    console.log("drag leaved")
+
   };
 
-  const boxClass = active ? styles.OpenBoxDiv : styles.ClosedBoxDiv;
-  const uponDraggingItem = isDraggedOver
-    ? styles.UponDraggedItem
-    : styles.OpenBoxDiv;
+  //make it a dropzone using `e.dataTransfer.getData`
 
-  //make it a dropzone
+  //postOnCollection
+  const postOnCollection = (cardId) => {
+    //Use prompt() method for card condition. Just for instance.
+    let cardCondition;
+    let userCondition = prompt(
+      `What is the card condition?`,
+      "Undescribed"
+    );
+
+    if (userCondition !== null) {
+      if (userCondition === "") {
+        alert(`no condition info was put along with your new card`);
+        cardCondition = `Undescribed`;
+      } else {
+        cardCondition = userCondition;
+        alert(` ${cardCondition} card was put into your collection!`);
+      }
+
+      Axios.post(`http://192.168.0.82:3344/collection/`, {
+        card_id: cardId,
+        card_condition: cardCondition,
+        id_collection: null /* later implement that. This is for multiple users (multiple collection) */,
+      }).then(
+          console.log(`Card posted of id: ${cardId}`)
+        ).then(
+          toggleRefresh()
+        );
+    }
+  };
 
   const handleDrop = (e) => {
-    const pickedCard = e.dataTransfer.getData("pickedCard");
+    //on drop, get card ID
+    setIsDraggedOver(false);
+    const pickedCard = e.dataTransfer.getData("card");
+    if (pickedCard){
+      postOnCollection(pickedCard);
+      console.log("card Id:", pickedCard);
+    } else if (!pickedCard){
+      console.log('no data was caught')
+    }
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    setIsDraggedOver(true);
     console.log("drag over");
   };
+
+  
 
   //Get cards from collection
 
@@ -54,22 +94,50 @@ const SideBox = ({ active }) => {
   // Add a state variable to trigger card refresh
   const [refreshCards, setRefreshCards] = useState(false);
 
+      //Debouncer
+      const debounce = (func, delay) => {
+        let timerId;
+    
+        return (...args) => {
+          clearTimeout(timerId);
+    
+          timerId = setTimeout(() => {
+            func.apply(this, args);
+          }, delay);
+        };
+      };
+
   // Function to toggle the refreshCards state
   const toggleRefresh = () => {
-    setRefreshCards((prevRefresh) => !prevRefresh);
-    console.log(refreshCards);
+    debounce(
+    setRefreshCards((prevRefresh) => !prevRefresh), 450
+    )
   };
 
+  
+
   useEffect(() => {
+    //This is for adding cards
+    console.log("logging liftedRefreshCards changing:", refresher)
+    //This is for deleting cards
+    console.log("logging refreshCards changing:", refreshCards);
+    //GET 'EM!
     Axios.get(`http://192.168.0.82:3344/collection/${page}`).then(
       (response) => {
         setCards(response.data);
       }
     );
-  }, [page, refreshCards]);
+  }, [page, refreshCards, refresher]);
+
+  //css classes
+
+  const boxClass = modalToggler ? styles.OpenBoxDiv : styles.ClosedBoxDiv;
+  const uponDraggingItem = isDraggedOver
+    ? styles.UponDraggedItem
+    : styles.OpenBoxDiv;
 
   return (
-    <div className="col-12">
+    <div>
       <div
         className={`${boxClass} ${uponDraggingItem}`}
         onDragEnter={handleDragEnter}
@@ -77,28 +145,37 @@ const SideBox = ({ active }) => {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
-        <h6><a className={styles.Link} href="/collection">Collection</a></h6>
-        <PrevNext onPageChange={handlePage} page={page} cardTotal={cards} where='sidebar'/>
-        <div className="row justify-content-around">
-          {cards
-            .map((card, key) => (
-              <MiniCard
-                key={key}
-                id={card.id}
-                cost={card.manaCost}
-                name={card.name}
-                table="collection"
-                id_collection={card.id_collection}
-                isModalOpen={active}
-                count={card.countById}
-                toggle={toggleRefresh}
-              />
-            ))
-            .sort((a, b) => b - a)}
-        </div>
-        
+        <h6>
+          <a className={styles.Link} href="/collection">
+            Collection
+          </a>
+        </h6>
+        <PrevNext
+          onPageChange={handlePage}
+          page={page}
+          cardTotal={cards}
+          where="sidebar"
+        />
+        <Scrollbars style={{ width: "100%", height: "84%" }}>
+          <div>
+            {cards
+              .map((card, key) => (
+                <MiniCard
+                  key={key}
+                  id={card.id}
+                  cost={card.manaCost}
+                  name={card.name}
+                  table="collection"
+                  id_collection={card.id_collection}
+                  isModalOpen={modalToggler}
+                  count={card.countById}
+                  toggle={toggleRefresh}
+                />
+              ))
+              .sort((a, b) => b - a)}
+          </div>
+        </Scrollbars>
       </div>
-      
     </div>
   );
 };

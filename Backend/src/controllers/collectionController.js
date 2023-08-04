@@ -140,8 +140,8 @@ module.exports = {
         )
         //This is for cards not to be repeated if more than one same card present in Collection.
         .groupBy("supercards.id")
-
-        .orderBy("Rarity", "asc")
+        //Recent added cards first
+        .orderBy("collection.id_collection", "desc")
 
         .limit(40)
 

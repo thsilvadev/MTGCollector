@@ -4,7 +4,6 @@
 import { React, useState } from "react";
 import Axios from "axios";
 
-
 //styles
 
 import styles from "../styles/Card.module.css";
@@ -22,6 +21,7 @@ function Card({
   keywords,
   table,
   id_collection,
+  refresh,
 }) {
   //Scryfall ID management
 
@@ -62,6 +62,27 @@ function Card({
     }
   };
 
+  //Debouncer
+  const debounce = (func, delay) => {
+    let timerId;
+
+    return (...args) => {
+      clearTimeout(timerId);
+
+      timerId = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
+    };
+  };
+
+  // Function to toggle the refreshCards state
+  const toggleRefresh = () => {
+    debounce(
+      refresh((prevLiftedRefreshCards) => !prevLiftedRefreshCards),
+      450
+    );
+  };
+
   //Post
 
   //postOnCollection
@@ -70,23 +91,25 @@ function Card({
     let cardCondition;
     let userCondition = prompt(
       `You're adding ${name} to your collection. What's it's condition?`,
-      "Near Mint"
+      "Undescribed"
     );
 
     if (userCondition !== null) {
       if (userCondition === "") {
         alert(`no condition info was put along with your new card`);
-        cardCondition = `undescribed`;
+        cardCondition = `Undescribed`;
       } else {
         cardCondition = userCondition;
-        alert(`Card at the ${cardCondition} was put into your collection!`);
+        alert(`${cardCondition} ${name} card was put into your collection!`);
       }
 
       Axios.post(`http://192.168.0.82:3344/collection/`, {
         card_id: id,
         card_condition: cardCondition,
         id_collection: null /* later implement that */,
-      }).then(console.log(`id postado: ${id}`));
+      })
+        .then(toggleRefresh())
+        .then(console.log(`id postado: ${id}`));
     }
   };
 
@@ -96,9 +119,9 @@ function Card({
     if (
       window.confirm(`You're deleting ${name} from your collection. Confirm?`)
     ) {
-      Axios.delete(`http://192.168.0.82:3344/card/${id_collection}`).then(
-        console.log(`${name} deleted from collection`)
-      );
+      Axios.delete(`http://192.168.0.82:3344/card/${id_collection}`)
+        .then(console.log(`${name} deleted from collection`))
+        .then(toggleRefresh());
     } else {
       window.alert("deletion canceled");
     }
@@ -140,30 +163,15 @@ function Card({
     }
   };
 
-  //Dragging cards
+  //Drag and Drop (e.dataTransfer JS method)
 
-  /*
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleDragStart = () => {
-    setIsDragging(true);
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
-
-  const isBeingDragged = isDragging ? styles.Dragging : styles.Card;
-  */
-
-  const handleOnDrag = (e, data) => {
-    console.log('dragStart')
+  const handleOnDrag = (e, cardId) => {
+    console.log("dragStart");
     e.dataTransfer.clearData();
-    e.dataTransfer.setData("card", data);
-  }
+    e.dataTransfer.setData("card", cardId);
+  };
 
   return (
-
     <div className="col-12 col-sm-6 col-lg-4 col-xl-3">
       <div className={styles.CardContainer}>
         <img
@@ -175,8 +183,7 @@ function Card({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           draggable={true}
-          onDragStart={(e) => handleOnDrag(e, {id, name, cost, table, id_collection})}
-
+          onDragStart={(e) => handleOnDrag(e, id)}
         />
         <div className={styles.CardOverlay}>
           <p>{renderer()}</p>

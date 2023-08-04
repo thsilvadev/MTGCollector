@@ -1,10 +1,10 @@
 .ClosedToggler {
     position: fixed;
-    cursor: grab;
+    cursor: pointer;
     top: 50%;
     right: 0;
     z-index: 3;
-    animation: closing .4s;
+    animation: closing .3s;
     rotate: 180deg;
     border: 2px solid transparent;
     
@@ -12,11 +12,11 @@
 
 .OpenToggler {
     position: fixed;
-    cursor: grab;
+    cursor: pointer;
     top: 50%;
-    right: 235px;
+    right: 252px;
     z-index: 3;
-    animation: opening .4s;
+    animation: opening .3s;
     border: 2px solid transparent;
 
 }
@@ -38,13 +38,13 @@
         right: 0;
     }
     to {
-        right: 235px;
+        right: 252px;
     }
 }
 
 @keyframes closing {
     from {
-        right: 235px;
+        right: 252px;
         
     }
     to {

@@ -4,7 +4,7 @@ import SideBox from "../components/SideBox";
 
 import toggler from "../images/toggler.png";
 
-const SideBar = ({modalHandler}) => {
+const SideBar = ({modalHandler, refresh}) => {
 
     //Modal engine
   const [sideBar, setSideBar] = useState(false);
@@ -52,7 +52,7 @@ const SideBar = ({modalHandler}) => {
         />
       </div> }
       <div className="row">
-        <SideBox active={sideBar} />
+        <SideBox modalToggler={sideBar} refresher={refresh}/>
       </div>
       
     </div>

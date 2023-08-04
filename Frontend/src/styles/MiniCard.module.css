@@ -1,16 +1,44 @@
 .MiniCard {
     display: flex;
     height: 24px;
-    border: solid 2px black;
-    background-color: antiquewhite;
+    width: 249px;
     color: black;
-    justify-content: space-between;
-    margin: 2px;
+    margin: 2px 0px 2px 5px;
+
+    font-size: 13px;
     font-family: "BelerenBold";
     justify-items: center;
     vertical-align: middle;
 }
 
-.MiniCard:hover {
-    border: solid 2px skyblue;
+.Main:hover {
+    border: solid 2px rgb(80, 139, 184);
+    scale: 1.06;
+}
+
+.Count {
+    text-align: start;
+    padding-left: 8px;
+    padding-top: 3px;
+    width: 55px;
+    margin-right: -23px;
+    background-color: black;
+    color: white;
+    background:
+      radial-gradient(circle at right, transparent, transparent 44%, #000000 15%) right;
+  background-size: 100% 100%;
+  background-repeat:no-repeat;
+
+}
+
+
+.Main {
+    align-items: center;
+    padding-left: 3px;
+    border: solid 2px black;
+    border-radius: 2% / 50%;
+    width: 221px;
+    display: flex;
+    justify-content: space-between;
+    background-color: antiquewhite;
 }
