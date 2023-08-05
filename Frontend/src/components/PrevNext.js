@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import styles from "../styles/PrevNext.module.css";
 
 
-function PrevNext({ onPageChange, page, cardTotal, where }) {
+function PrevNext({ onPageChange, page, elementsArray, where }) {
   const [pageData, setPageData] = useState(page);
 
   const handleScrollToTop = () => {
@@ -29,7 +29,7 @@ function PrevNext({ onPageChange, page, cardTotal, where }) {
     //function
 
     
-  const buttonIsNeeded = cardTotal.length > 39 ? styles.Button : styles.Hidden;
+  const buttonIsNeeded = elementsArray.length > 39 ? styles.Button : styles.Hidden;
 
   //Change classes based on where is being rendered
 

@@ -259,7 +259,7 @@ function Home() {
       <PrevNext
         onPageChange={handlePage}
         page={page}
-        cardTotal={cards}
+        elementsArray={cards}
         where="page"
       />
     </>

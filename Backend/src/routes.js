@@ -4,6 +4,7 @@ const express = require('express');
 
 const cardsController = require('./controllers/cardsController');
 const collectionController = require('./controllers/collectionController');
+const decksController = require('./controllers/decksController');
 
 /*
 const collectionController = require('./controllers/collectionController');
@@ -35,21 +36,23 @@ routes.get('/cards/set/:set/:page', cardsController.getBySet);
 
 ///////ROUTES AND REQUISITIONS FOR THE COLLECTION TABLE 
 routes.get('/collection/:page', collectionController.getCollection); // GET collection
-routes.post('/collection/', collectionController.PostOnCollection) // POST on collection
+routes.post('/collection/', collectionController.postOnCollection) // POST on collection
 routes.get('/card/:id', collectionController.getById); // GET card by it's ID number
 routes.delete('/card/:id_collection', collectionController.deleteById); //DELETE card by it's ID number
 
 
 
-/*
+
 
 ///////ROUTES AND REQUISITIONS FOR THE DECKS TABLE
-routes.get('/decks/:id', decksController.getById); // GET decks
-routes.get('/decks', decksController.getAll); // GET decks
-routes.post('/decks', decksController.create); // POST decks
-routes.put('/decks/:id', decksController.update); //PUT decks
-routes.delete('/decks/:id', decksController.delete);//DELETE decks
+//routes.get('/decks/:id', decksController.getById); // GET decks
+routes.get('/decks/:page', decksController.getDecks); // GET decks
+routes.post('/decks', decksController.postDeck); // POST decks
+//routes.put('/decks/:id', decksController.update); //PUT decks
+//routes.delete('/decks/:id', decksController.delete);//DELETE decks
 
+
+/*
 ///////ROUTES AND REQUISITIONS FOR THE EACHDECK TABLE
 routes.get('/eachDeck/:id', eachDeckController.getById); // GET eachDeck
 routes.get('/eachDeck', eachDeckController.getAll); // GET eachDeck

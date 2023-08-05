@@ -62,29 +62,45 @@ module.exports = {
               continue;
             }
 
-            //2)When nothing is typed, color check works as follows: search will return only cards that that match every color selected. But when user types anything, search will then return not only cards that match every color selected, but also cards of each color selected as well.
+            //2)When nothing is typed, color check works as follows: search will return not only cards that match every color selected, but also cards of each color selected as well. But when user types anything, search will then return only cards that that match every color selected.
             if (key === "colorIdentity") {
+
+              //To exclude cards containing colors not selected, we will create an array with all colors and compare it with the array of selected colors. So while we query for all cards containing ("like") the colors we want, we'll exclude all the cards that contains the colors we want but contain also colors we don't want. For example: you check blue and white. It should not show cards that are 'red and blue' or 'red and white'. It should show just cards that are blue, or white, or 'blue and white'.
+              const allColors = ["B", "G", "R", "U", "W"];
+
+
               if (
                 (!query.name || query.name === undefined) &&
                 value !== "B, G, R, U, W"
               ) {
                 const sanitizedColor = value.replace(/[, ]/g, "");
                 const colorsArr = [...sanitizedColor];
-
+                //compare all colors with colors selected => create array of excluded colors.
+                const excludedColors = allColors.filter((color) => !colorsArr.includes(color));
+                //build query of cards containing selected colors 
                 builder.where(function () {
                   this.where(function () {
+                    //this is for cards of all colors selected
                     this.where(key, value);
+                    //this is for cards of any colors selected
                     if (colorsArr.length > 1) {
                       for (let i = 0; i < colorsArr.length; i++) {
                         this.orWhere(key, "like", `%${colorsArr[i]}%`);
                       }
                     }
                   });
+                  //..and this excludes cards that contains the colors selected but also contains colors not selected.
+                  if (excludedColors.length > 0) {
+                    for (let i = 0; i < excludedColors.length; i++) {
+                      this.andWhere(key, "not like", `%${excludedColors[i]}%`);
+                    }
+                  }
                 });
 
                 console.log(`Sanitized colorzzz: ${colorsArr}`);
                 console.log(`color: ${value}`);
               } else if (
+                //In the case of all colors selected, but no name input => bring all cards, including the colorless.
                 (!query.name || query.name === undefined) &&
                 value === "B, G, R, U, W"
               ) {
@@ -94,11 +110,9 @@ module.exports = {
                 builder.where(function () {
                   this.where(function () {
                     this.where(key, value);
-                    if (colorsArr.length > 1) {
                       for (let i = 0; i < colorsArr.length; i++) {
                         this.orWhere(key, "like", `%${colorsArr[i]}%`);
                       }
-                    }
                     this.orWhere(key, "");
                   });
                 });
