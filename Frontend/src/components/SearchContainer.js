@@ -56,7 +56,13 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     if (event.target.value) {
       setSelectedName(`&name=${event.target.value}`);
       //This means that whenever user types anything, it will search for the card in all table, unless new color check.
+      setBlackIsChecked(false);
+      setGreenIsChecked(false);
+      setRedIsChecked(false);
+      setBlueIsChecked(false);
+      setWhiteIsChecked(false);
       setSelectedColor('');
+
     } else {
       setSelectedName("");
     }
