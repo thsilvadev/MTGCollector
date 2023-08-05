@@ -5,9 +5,9 @@
     right: 0;
     width: 268px;
     background-color: rgb(157, 69, 15);
-
+    border-radius: 4px 0 0 20px;
     z-index: 2;
-    opacity: .3;
+    opacity: .7;
     animation: showSideBar .3s;
     @media (max-width: 849px) {
         display: none;
