@@ -1,6 +1,6 @@
 {
   "name": "mtgcollector",
-  "homepage": "https://mtg-chest.vercel.app/",
+  "homepage": ".",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
