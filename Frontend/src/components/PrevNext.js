@@ -22,13 +22,10 @@ function PrevNext({ onPageChange, page, elementsArray, where }) {
     handleScrollToTop();
   };
 
-  onPageChange(pageData);
-
   //Is it necessary to show the button?
 
     //function
 
-    
   const buttonIsNeeded = elementsArray.length > 39 ? styles.Button : styles.Hidden;
 
   //Change classes based on where is being rendered
@@ -67,3 +64,8 @@ function PrevNext({ onPageChange, page, elementsArray, where }) {
 }
 
 export default PrevNext;
+
+PrevNext.defaultProps = {
+  elementsArray: [],
+  page: 0,
+};

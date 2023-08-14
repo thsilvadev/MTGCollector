@@ -110,7 +110,7 @@ const SideBox = ({ modalToggler, refresher }) => {
   // Function to toggle the refreshCards state
   const toggleRefresh = () => {
     debounce(
-    setRefreshCards((prevRefresh) => !prevRefresh), 450
+    setRefreshCards((prevRefresh) => !prevRefresh), 650
     )
   };
 

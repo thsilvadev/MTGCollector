@@ -16,7 +16,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
+      <BrowserRouter basename="/React">
         <Header />
         <Container />
         <Footer />
