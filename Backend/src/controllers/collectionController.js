@@ -191,7 +191,7 @@ module.exports = {
       });
 
       console.log(
-        `Post successful of ${body} on Collection by ${req.ip} at ${formattedDate}`
+        `Post successful of ${card_id} on Collection by ${req.ip} at ${formattedDate}`
       );
 
       return res.json(result);

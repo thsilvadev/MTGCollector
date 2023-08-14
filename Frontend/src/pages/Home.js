@@ -204,7 +204,7 @@ function Home() {
 
         <p className={styles.Paragraph}>
           {" "}
-          MTGCollector is the perfect solution for organizing your{" "}
+          MTG Chest is the perfect solution for organizing your{" "}
           <i>Magic: The Gathering</i> cards! Here you'll be able to:
         </p>
         <ul className={styles.list}>
