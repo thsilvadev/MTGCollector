@@ -18,13 +18,12 @@ module.exports = {
         "decks.name",
         "decks.description",
         "decks.color",
-        "decks.card_count",
         "decks.id_deck"
       )
       .from("decks")
       .orderBy("decks.id_deck", "desc")
-      .limit(40)
-      .offset(page * 40);
+      .limit(20)
+      .offset(page * 20);
 
     console.log(`Successfully got decks. Request by ${req.ip}`)
     return res.json(result);
@@ -51,7 +50,6 @@ module.exports = {
     const { name } = body;
     const { description } = body;
     const {color} = body;
-    const {card_count} = body;
 
     try {
       const result = await knex("decks").insert({
