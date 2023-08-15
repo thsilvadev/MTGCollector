@@ -58,7 +58,9 @@ function Card({
     if (table === "allCards") {
       postOnCollection();
     } else if (table === "collection") {
-      deleteFromCollection();
+      addToDeck(); //this is just for testing, adding cards to deck will be dragging to sidebar.
+      //deleteFromCollection();
+
     }
   };
 
@@ -122,8 +124,6 @@ function Card({
       Axios.delete(`http://192.168.0.82:3344/card/${id_collection}`)
         .then(console.log(`${name} deleted from collection`))
         .then(toggleRefresh());
-    } else {
-      window.alert("deletion canceled");
     }
   };
 
@@ -149,18 +149,39 @@ function Card({
     setIsMouseOver(false);
   };
 
-  const renderer = () => {
-    if (!isMouseOver) {
-      return null; // Return null if the mouse is not over the card
-    }
+  //Deck Interaction
 
-    if (collectionCard.length === 0) {
-      return <span>not obtained</span>;
-    } else {
-      return collectionCard.map((hoveredCard) => (
-        <span key={hoveredCard.id}>on Collection: {hoveredCard.countById}</span>
-      ));
+  const addToDeck = () => {
+    let chosenDeck = prompt(
+      `You're adding ${name} to a deck. What deck id?`,
+      "1"
+    );
+
+    if (chosenDeck !== null) {
+      Axios.post(`http://192.168.0.82:3344/eachDeck/`, {
+        id_card: id_collection,
+        deck: chosenDeck,
+      })
+        .then(toggleRefresh())
+        .then(console.log(`id postado: ${id}`));
     }
+  };
+
+  const renderer = () => {
+
+      if (!isMouseOver) {
+        return null; // Return null if the mouse is not over the card
+      }
+
+      if (collectionCard.length === 0) {
+        return <span>not obtained</span>;
+      } else {
+        return collectionCard.map((hoveredCard) => (
+          <span key={hoveredCard.id}>
+            on Collection: {hoveredCard.countById}
+          </span>
+        ));
+      }
   };
 
   //Drag and Drop (e.dataTransfer JS method)

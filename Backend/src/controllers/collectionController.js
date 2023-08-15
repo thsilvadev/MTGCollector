@@ -148,11 +148,7 @@ module.exports = {
                   */
           }
         })
-
-        //Not showing cards with faulty images or wrong images
-        .whereRaw(
-          "multiverseId IS NOT NULL AND NOT multiverseId = '580709' AND NOT multiverseId = '580711'"
-        )
+        
         //This is for cards not to be repeated if more than one same card present in Collection.
         .groupBy("supercards.id")
         //Recent added cards first

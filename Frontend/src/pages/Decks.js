@@ -81,7 +81,6 @@ function Decks() {
         {decks.map((deck, key) => (
           <Deck
             key={key}
-            cardCount={deck.card_count}
             colorIdentity={deck.color}
             description={deck.description}
             id_deck={deck.id_deck}

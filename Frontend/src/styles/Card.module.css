@@ -153,3 +153,13 @@
     opacity: 1;
     border: solid black 500px;
 }
+
+/* addToDeck */
+
+.addToDeckButton {
+    z-index: 8;
+}
+
+.addToDeckButton:hover {
+    border: solid 2px green;
+}

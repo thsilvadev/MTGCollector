@@ -5,6 +5,7 @@ const express = require('express');
 const cardsController = require('./controllers/cardsController');
 const collectionController = require('./controllers/collectionController');
 const decksController = require('./controllers/decksController');
+const eachDeckController = require('./controllers/eachDeckController')
 
 /*
 const collectionController = require('./controllers/collectionController');
@@ -52,21 +53,21 @@ routes.post('/decks', decksController.postDeck); // POST decks
 //routes.delete('/decks/:id', decksController.delete);//DELETE decks
 
 
-/*
+
 ///////ROUTES AND REQUISITIONS FOR THE EACHDECK TABLE
-routes.get('/eachDeck/:id', eachDeckController.getById); // GET eachDeck
-routes.get('/eachDeck', eachDeckController.getAll); // GET eachDeck
-routes.post('/eachDeck', eachDeckController.create); // POST eachDeck
-routes.put('/eachDeck/:id', eachDeckController.update); //PUT eachDeck
-routes.delete('/eachDeck/:id', eachDeckController.delete);//DELETE eachDeck
+routes.get('/eachDeck/:id', eachDeckController.getDeck); // GET eachDeck
+//routes.get('/eachDeck', eachDeckController.getAll); // GET eachDeck
+routes.post('/eachDeck', eachDeckController.postOnDeck); // POST eachDeck
+//routes.put('/eachDeck/:id', eachDeckController.update); //PUT eachDeck
+//routes.delete('/eachDeck/:id', eachDeckController.delete);//DELETE eachDeck
 
 ///////ROUTES AND REQUISITIONS FOR THE WISHLIST TABLE
-routes.get('/wishlist/:id', wishlistController.getById); // GET wishlist
-routes.get('/wishlist', wishlistController.getAll); // GET wishlist
-routes.post('/wishlist', wishlistController.create); // POST wishlist
-routes.put('/wishlist/:id', wishlistController.update); //PUT wishlist
-routes.delete('/wishlist/:id', wishlistController.delete);//DELETE wishlist
-*/
+//routes.get('/wishlist/:id', wishlistController.getById); // GET wishlist
+//routes.get('/wishlist', wishlistController.getAll); // GET wishlist
+//routes.post('/wishlist', wishlistController.create); // POST wishlist
+//routes.put('/wishlist/:id', wishlistController.update); //PUT wishlist
+//routes.delete('/wishlist/:id', wishlistController.delete);//DELETE wishlist
+
 
 
 

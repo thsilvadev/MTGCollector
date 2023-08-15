@@ -35,6 +35,12 @@ function Collection () {
     console.log(superParams);
   };
 
+  //some refreshToggler
+  const [refresherToggler, setRefresherToggler] = useState(false);
+  const handleRefresherToggler = (wasToggled) => {
+    setRefresherToggler(wasToggled);
+  }
+
 
   //get filtered and paginated Collection Cards in real time
   useEffect(() => {
@@ -42,8 +48,10 @@ function Collection () {
       (response) => {
         setCards(response.data);
       }
+    ).then(
+      console.log(refresherToggler)
     );
-  }, [page, superParams]);
+  }, [page, superParams, refresherToggler]);
 
 
     return (
@@ -65,6 +73,7 @@ function Collection () {
             keywords={card.keywords}
             table='collection'
             id_collection={card.id_collection}
+            refresh={handleRefresherToggler}
           />
         ))}
       </div>
