@@ -3,7 +3,7 @@ import "./App.css";
 import React from "react";
 
 //Routes
-import { HashRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 
 //Layout
 import Header from "./layout/Header";
@@ -16,11 +16,11 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 function App() {
   return (
     <div className="App">
-      <HashRouter>
+      <BrowserRouter>
         <Header />
         <Container />
         <Footer />
-      </HashRouter>
+      </BrowserRouter>
     </div>
   );
 }
