@@ -156,7 +156,7 @@ const SideBox = ({ modalToggler, refresher }) => {
           cardTotal={cards}
           where="sidebar"
         />
-        <Scrollbars style={{ width: "100%", height: "84%" }}>
+        <Scrollbars style={{ width: "100%", height: "90%" }}>
           <div>
             {cards
               .map((card, key) => (
