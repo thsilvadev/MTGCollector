@@ -50,7 +50,7 @@ function Home() {
 
   //get filtered and paginated Cards in real time
   useEffect(() => {
-    Axios.get(`http://192.168.0.82:3344/cards/${page}?${superParams}`).then(
+    Axios.get(`http://api.mtgchest.com/cards/${page}?${superParams}`).then(
       (response) => {
         setCards(response.data);
       }
