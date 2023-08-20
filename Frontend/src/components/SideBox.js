@@ -122,7 +122,7 @@ const SideBox = ({ modalToggler, refresher }) => {
     //This is for deleting cards
     console.log("logging refreshCards changing:", refreshCards);
     //GET 'EM!
-    Axios.get(`https://api.mtgchest.com/collection/${page}`).then(
+    Axios.get(`http://api.mtgchest.com/collection/${page}`).then(
       (response) => {
         setCards(response.data);
       }
