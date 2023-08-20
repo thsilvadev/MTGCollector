@@ -50,7 +50,7 @@ function Home() {
 
   //get filtered and paginated Cards in real time
   useEffect(() => {
-    Axios.get(`http://api.mtgchest.com/cards/${page}?${superParams}`).then(
+    Axios.get(`https://api.mtgchest.com/cards/${page}?${superParams}`).then(
       (response) => {
         setCards(response.data);
       }
@@ -145,7 +145,7 @@ function Home() {
     if (
       window.confirm(`Confirm deletion?`)
     ) {
-      Axios.delete(`http://192.168.0.82:3344/card/${cardIdCollection}`)
+      Axios.delete(`https://api.mtgchest.com/card/${cardIdCollection}`)
         .then(console.log(`Card deleted from collection`))
         .then(toggleRefresh());
     } else {
