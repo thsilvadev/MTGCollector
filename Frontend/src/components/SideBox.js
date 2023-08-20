@@ -45,7 +45,7 @@ const SideBox = ({ modalToggler, refresher }) => {
         alert(` ${cardCondition} card was put into your collection!`);
       }
 
-      Axios.post(`http://192.168.0.82:3344/collection/`, {
+      Axios.post(`https://api.mtgchest.com/collection/`, {
         card_id: cardId,
         card_condition: cardCondition,
         id_collection: null /* later implement that. This is for multiple users (multiple collection) */,
@@ -122,7 +122,7 @@ const SideBox = ({ modalToggler, refresher }) => {
     //This is for deleting cards
     console.log("logging refreshCards changing:", refreshCards);
     //GET 'EM!
-    Axios.get(`http://192.168.0.82:3344/collection/${page}`).then(
+    Axios.get(`https://api.mtgchest.com/collection/${page}`).then(
       (response) => {
         setCards(response.data);
       }

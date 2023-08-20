@@ -105,7 +105,7 @@ function Card({
         alert(`${cardCondition} ${name} card was put into your collection!`);
       }
 
-      Axios.post(`http://192.168.0.82:3344/collection/`, {
+      Axios.post(`https://api.mtgchest.com/collection/`, {
         card_id: id,
         card_condition: cardCondition,
         id_collection: null /* later implement that */,
@@ -121,7 +121,7 @@ function Card({
     if (
       window.confirm(`You're deleting ${name} from your collection. Confirm?`)
     ) {
-      Axios.delete(`http://192.168.0.82:3344/card/${id_collection}`)
+      Axios.delete(`https://api.mtgchest.com/card/${id_collection}`)
         .then(console.log(`${name} deleted from collection`))
         .then(toggleRefresh());
     }
@@ -135,7 +135,7 @@ function Card({
 
   //get
   const inCollection = () => {
-    Axios.get(`http://192.168.0.82:3344/card/${id}`).then((response) => {
+    Axios.get(`https://api.mtgchest.com/card/${id}`).then((response) => {
       setCollectionCard(response.data);
     });
   };
@@ -158,7 +158,7 @@ function Card({
     );
 
     if (chosenDeck !== null) {
-      Axios.post(`http://192.168.0.82:3344/eachDeck/`, {
+      Axios.post(`https://api.mtgchest.com/eachDeck/`, {
         id_card: id_collection,
         deck: chosenDeck,
       })
