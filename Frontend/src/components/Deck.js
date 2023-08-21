@@ -21,7 +21,7 @@ const deckCardCount = deckCards.length;
   }
 
   useEffect(() => {
-    Axios.get(`https://api.mtgchest.com/eachDeck/${id_deck}`).then(
+    Axios.get(`${window.name}/eachDeck/${id_deck}`).then(
       (response) => {
         setDeckCards(response.data);
       }

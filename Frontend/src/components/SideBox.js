@@ -45,15 +45,15 @@ const SideBox = ({ modalToggler, refresher }) => {
         alert(` ${cardCondition} card was put into your collection!`);
       }
 
-      Axios.post(`https://api.mtgchest.com/collection/`, {
+      Axios.post(`${window.name}/collection/`, {
         card_id: cardId,
         card_condition: cardCondition,
         id_collection: null /* later implement that. This is for multiple users (multiple collection) */,
-      }).then(
-          console.log(`Card posted of id: ${cardId}`)
-        ).then(
-          toggleRefresh()
-        );
+      }).then(() => {
+        console.log(`Card posted of id: ${cardId}`);
+        toggleRefresh();
+      });
+        
     }
   };
 
@@ -102,32 +102,37 @@ const SideBox = ({ modalToggler, refresher }) => {
           clearTimeout(timerId);
     
           timerId = setTimeout(() => {
-            func.apply(this, args);
+            func(...args);
           }, delay);
         };
       };
 
   // Function to toggle the refreshCards state
-  const toggleRefresh = () => {
-    debounce(
-    setRefreshCards((prevRefresh) => !prevRefresh), 650
-    )
-  };
+  const toggleRefresh = debounce(() => {
+    setRefreshCards((prevRefresh) => !prevRefresh);
+  }, 650);
+
+  //Have to create a local state variable for refresher to work
+  const [localRefreshCards, setLocalRefreshCards] = useState(false);
+
+  useEffect(() => {
+    setLocalRefreshCards(refresher);
+  }, [refresher]);
 
   
 
   useEffect(() => {
     //This is for adding cards
-    console.log("logging liftedRefreshCards changing:", refresher)
+    console.log("logging liftedRefreshCards changing:", localRefreshCards)
     //This is for deleting cards
     console.log("logging refreshCards changing:", refreshCards);
     //GET 'EM!
-    Axios.get(`http://api.mtgchest.com/collection/${page}`).then(
+    Axios.get(`${window.name}/collection/${page}`).then(
       (response) => {
         setCards(response.data);
       }
     );
-  }, [page, refreshCards, refresher]);
+  }, [page, refreshCards, localRefreshCards]);
 
   //css classes
 

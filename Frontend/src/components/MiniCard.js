@@ -28,7 +28,7 @@ const MiniCard = ({
     if (
       window.confirm(`You're deleting ${name} from your collection. Confirm?`)
     ) {
-      Axios.delete(`https://api.mtgchest.com/card/${id_collection}`).then(
+      Axios.delete(`${window.name}/card/${id_collection}`).then(
         console.log(`requested to delete ${name} from collection`)
       );
       toggle();
