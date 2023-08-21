@@ -44,7 +44,7 @@ function Collection () {
 
   //get filtered and paginated Collection Cards in real time
   useEffect(() => {
-    Axios.get(`https://api.mtgchest.com/collection/${page}?${superParams}`).then(
+    Axios.get(`${window.name}/collection/${page}?${superParams}`).then(
       (response) => {
         setCards(response.data);
       }

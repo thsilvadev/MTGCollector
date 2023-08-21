@@ -43,7 +43,7 @@ function Decks() {
   };
 
   useEffect(() => {
-    Axios.get(`https://api.mtgchest.com/decks/${page}`)
+    Axios.get(`${window.name}/decks/${page}`)
       .then((response) => {
         setDecks(response.data);
       })
@@ -54,7 +54,7 @@ function Decks() {
     let deckName = prompt(`What is the name of the deck?`, "Default");
     let deckDescription = prompt(`Describe your deck`, "...");
     if (deckName !== null && deckDescription !== null) {
-      Axios.post(`https://api.mtgchest.com/decks`, {
+      Axios.post(`${window.name}/decks`, {
         name: deckName,
         description: deckDescription,
         color: "",

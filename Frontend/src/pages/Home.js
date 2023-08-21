@@ -45,12 +45,12 @@ function Home() {
   const [liftedRefreshCards, setLiftedRefreshCards] = useState(false);
   const handleLiftedRefreshCards = (isRefreshed) => {
     setLiftedRefreshCards(isRefreshed);
-    console.log("changed liftedRefreshCards:",liftedRefreshCards);
+    console.log("changed liftedRefreshCards:", liftedRefreshCards);
   }
 
   //get filtered and paginated Cards in real time
   useEffect(() => {
-    Axios.get(`https://api.mtgchest.com/cards/${page}?${superParams}`).then(
+    Axios.get(`${window.name}/cards/${page}?${superParams}`).then(
       (response) => {
         setCards(response.data);
       }
@@ -145,7 +145,7 @@ function Home() {
     if (
       window.confirm(`Confirm deletion?`)
     ) {
-      Axios.delete(`https://api.mtgchest.com/card/${cardIdCollection}`)
+      Axios.delete(`${window.name}/card/${cardIdCollection}`)
         .then(console.log(`Card deleted from collection`))
         .then(toggleRefresh());
     } else {
@@ -172,7 +172,7 @@ function Home() {
   return (
     <>
       <SideBar modalHandler={handleModalOpen} refresh={liftedRefreshCards}/>
-      <div className={upperContainerClass} droppable={true} onDrop={handleDrop}
+      <div className={upperContainerClass} droppable='true' onDrop={handleDrop}
         onDragOver={handleDragOver}>
         <div className={styles.titleContainer}>
           <img src={welcome} className={styles.title} width="500" alt="Logo" />
@@ -234,6 +234,7 @@ function Home() {
           baseOfSearch="AllCards"
           onParamsChange={handleSuperParams}
         />
+        <h5>Click on cards to add to your collection, or drag 'em to the side bar on the right side.</h5>
       </div>
       <div className={cardsContainerClass} droppable={true} onDrop={handleDrop}
         onDragOver={handleDragOver}> 
