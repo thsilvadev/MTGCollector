@@ -2,7 +2,7 @@
 import styles from "../styles/SideBox.module.css";
 
 //Tools
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Axios from "axios";
 import { Scrollbars } from "react-custom-scrollbars-2";
 
@@ -141,6 +141,19 @@ const SideBox = ({ modalToggler, refresher }) => {
     ? styles.UponDraggedItem
     : styles.OpenBoxDiv;
 
+  //managing scroll to top when nextPrev clicked
+
+  
+  const scrollbarsRef = useRef(null);
+  const buttonHandler = () => {
+    
+
+    scrollbarsRef.current.scrollToTop();
+    console.log("scrolling top of sidebar")
+  }
+
+  
+
   return (
     <div>
       <div
@@ -149,6 +162,7 @@ const SideBox = ({ modalToggler, refresher }) => {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        id="sidebar"
       >
         <h6>
           <a className={styles.Link} href="/collection">
@@ -158,10 +172,11 @@ const SideBox = ({ modalToggler, refresher }) => {
         <PrevNext
           onPageChange={handlePage}
           page={page}
-          cardTotal={cards}
+          elementsArray={cards}
           where="sidebar"
+          toggler={buttonHandler}
         />
-        <Scrollbars style={{ width: "100%", height: "90%" }}>
+        <Scrollbars style={{ width: "100%", height: "84%" }} ref={scrollbarsRef}>
           <div>
             {cards
               .map((card, key) => (

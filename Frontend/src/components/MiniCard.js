@@ -31,7 +31,19 @@ const MiniCard = ({
       Axios.delete(`${window.name}/card/${id_collection}`).then(
         console.log(`requested to delete ${name} from collection`)
       );
-      toggle();
+      //toggle();
+    }
+  };
+
+  //Delete from Deck
+  const deleteFromDeck = () => {
+    if (
+      window.confirm(`You're deleting ${name} from your collection. Confirm?`)
+    ) {
+      Axios.delete(`${window.name}/eachDeck/${id_constructed}`).then(
+        console.log(`requested to delete ${name} from collection`)
+      );
+      //toggle();
     }
   };
 
@@ -75,23 +87,53 @@ const MiniCard = ({
           );
         } else if (sanitizedCost[i] === "B") {
           resultElements.push(
-            <img className={styles.coloredIcon} key={i} src={black} width="11" alt="black-logo" />
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={black}
+              width="11"
+              alt="black-logo"
+            />
           );
         } else if (sanitizedCost[i] === "G") {
           resultElements.push(
-            <img className={styles.coloredIcon} key={i} src={green} width="11" alt="green-logo" />
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={green}
+              width="11"
+              alt="green-logo"
+            />
           );
         } else if (sanitizedCost[i] === "R") {
           resultElements.push(
-            <img className={styles.coloredIcon} key={i} src={red} width="11" alt="red-logo" />
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={red}
+              width="11"
+              alt="red-logo"
+            />
           );
         } else if (sanitizedCost[i] === "U") {
           resultElements.push(
-            <img className={styles.coloredIcon} key={i} src={blue} width="11" alt="blue-logo" />
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={blue}
+              width="11"
+              alt="blue-logo"
+            />
           );
         } else if (sanitizedCost[i] === "W") {
           resultElements.push(
-            <img className={styles.coloredIcon} key={i} src={white} width="11" alt="white-logo" />
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={white}
+              width="11"
+              alt="white-logo"
+            />
           );
         }
       }
@@ -125,7 +167,22 @@ const MiniCard = ({
         </div>
       );
     } else if (table === "deck") {
-      <span></span>;
+      return (
+        <div
+          className={styles.MinierCard}
+          onClick={deleteFromDeck}
+          draggable={true}
+          onDragStart={(e) => handleOnDrag(e, id_constructed)}
+        >
+          <div className={styles.Count}>
+            <p>{count}x</p>
+          </div>
+          <div className={styles.Main}>
+            <span>{cardName}</span>
+            <span className={styles.cardCost}>{cardCost}</span>
+          </div>
+        </div>
+      );
     }
   }
 };
