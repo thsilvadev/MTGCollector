@@ -98,6 +98,12 @@
     width: 243px;
 }
 
+.CollectionCardContainer {
+    position: relative;
+    margin: auto;
+    width: 243px;
+}
+
 /* Animations */ 
 
 /* Hover for cards */
