@@ -59,7 +59,7 @@ routes.get('/eachDeck/:id', eachDeckController.getDeck); // GET eachDeck
 //routes.get('/eachDeck', eachDeckController.getAll); // GET eachDeck
 routes.post('/eachDeck', eachDeckController.postOnDeck); // POST eachDeck
 //routes.put('/eachDeck/:id', eachDeckController.update); //PUT eachDeck
-//routes.delete('/eachDeck/:id', eachDeckController.delete);//DELETE eachDeck
+routes.delete('/eachDeck/:id_constructed', eachDeckController.deleteById); //DELETE eachDeck
 
 ///////ROUTES AND REQUISITIONS FOR THE WISHLIST TABLE
 //routes.get('/wishlist/:id', wishlistController.getById); // GET wishlist
