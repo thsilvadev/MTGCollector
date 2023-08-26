@@ -18,6 +18,7 @@ module.exports = {
           "supercards.scryfallId",
           "collection.id_collection",
           "deck.id_card",
+          "deck.id_constructed",
           "decks.id_deck"
         )
         .count("id", { as: "countById" })
@@ -73,6 +74,38 @@ module.exports = {
       return res.status(500).json({
         error:
           "TO BE UPDATE // TO BE UPDATED  // TO BE UPDATED // TO BE UPDATED // TO BE UPDATED // TO BE UPDATED.",
+      });
+    }
+  },
+
+  async deleteById(req, res) {
+    //Console logging with IP and Date (in yellow)
+    const now = new Date();
+    let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+
+    //Params request
+    const { id_constructed } = req.params;
+
+    try {
+      const result = await knex
+        .select("id_constructed")
+        .from("deck")
+        .where(`id_constructed`, id_constructed )
+        .del();
+
+      console.log(
+        `Delete successful of card number "${id_constructed}" by ${req.ip} at ${formattedDate}`
+        //It is possible to inform which deck deleted card was in. Implement later.
+      );
+
+      return res.json(result);
+    } catch (error) {
+      console.error(
+        `IP: ${req.ip}, Time: ${formattedDate}, id_constructed: ${id_constructed} ERROR:`,
+        error
+      );
+      return res.status(500).json({
+        error: "something went wrong",
       });
     }
   },
