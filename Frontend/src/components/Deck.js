@@ -21,7 +21,7 @@ const deckCardCount = deckCards.length;
   }
 
   useEffect(() => {
-    Axios.get(`http://192.168.0.82:3344/eachDeck/${id_deck}`).then(
+    Axios.get(`${window.name}/eachDeck/${id_deck}`).then(
       (response) => {
         setDeckCards(response.data);
       }
