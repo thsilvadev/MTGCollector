@@ -5,10 +5,17 @@
     border: 6px solid #ff8200;
     border-radius: 4px;
     color: rgb(0, 0, 0);
-    max-width: 40%;
+    max-width: 100%;
     min-width: 320px;
-    margin: auto;
     margin-bottom: 95px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+.CollectionSearch {
+    padding: 20px 0 20px 0;
+    color: rgb(255, 255, 255);
+    width: 96%;
+    margin: auto;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 

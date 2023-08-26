@@ -58,9 +58,7 @@ function Card({
     if (table === "allCards") {
       postOnCollection();
     } else if (table === "collection") {
-      addToDeck(); //this is just for testing, adding cards to deck will be dragging to sidebar.
-      //deleteFromCollection();
-
+      deleteFromCollection();
     }
   };
 
@@ -72,18 +70,15 @@ function Card({
       clearTimeout(timerId);
 
       timerId = setTimeout(() => {
-        func.apply(this, args);
+        func(...args);
       }, delay);
     };
   };
 
   // Function to toggle the refreshCards state
-  const toggleRefresh = () => {
-    debounce(
-      refresh((prevLiftedRefreshCards) => !prevLiftedRefreshCards),
-      450
-    );
-  };
+  const toggleRefresh = debounce(() => {
+    refresh((prevLiftedRefreshCards) => !prevLiftedRefreshCards);
+  }, 450);
 
   //Post
 
@@ -105,13 +100,15 @@ function Card({
         alert(`${cardCondition} ${name} card was put into your collection!`);
       }
 
-      Axios.post(`http://192.168.0.82:3344/collection/`, {
+      Axios.post(`${window.name}/collection/`, {
         card_id: id,
         card_condition: cardCondition,
         id_collection: null /* later implement that */,
       })
-        .then(toggleRefresh())
-        .then(console.log(`id postado: ${id}`));
+      .then(() => {
+        console.log(`Card posted of id: ${id}`);
+        toggleRefresh();
+      });
     }
   };
 
@@ -121,7 +118,7 @@ function Card({
     if (
       window.confirm(`You're deleting ${name} from your collection. Confirm?`)
     ) {
-      Axios.delete(`http://192.168.0.82:3344/card/${id_collection}`)
+      Axios.delete(`${window.name}/card/${id_collection}`)
         .then(console.log(`${name} deleted from collection`))
         .then(toggleRefresh());
     }
@@ -135,7 +132,7 @@ function Card({
 
   //get
   const inCollection = () => {
-    Axios.get(`http://192.168.0.82:3344/card/${id}`).then((response) => {
+    Axios.get(`${window.name}/card/${id}`).then((response) => {
       setCollectionCard(response.data);
     });
   };
@@ -158,7 +155,7 @@ function Card({
     );
 
     if (chosenDeck !== null) {
-      Axios.post(`http://192.168.0.82:3344/eachDeck/`, {
+      Axios.post(`${window.name}/eachDeck/`, {
         id_card: id_collection,
         deck: chosenDeck,
       })
@@ -168,20 +165,17 @@ function Card({
   };
 
   const renderer = () => {
+    if (!isMouseOver) {
+      return null; // Return null if the mouse is not over the card
+    }
 
-      if (!isMouseOver) {
-        return null; // Return null if the mouse is not over the card
-      }
-
-      if (collectionCard.length === 0) {
-        return <span>not obtained</span>;
-      } else {
-        return collectionCard.map((hoveredCard) => (
-          <span key={hoveredCard.id}>
-            on Collection: {hoveredCard.countById}
-          </span>
-        ));
-      }
+    if (collectionCard.length === 0) {
+      return <span>not obtained</span>;
+    } else {
+      return collectionCard.map((hoveredCard) => (
+        <span key={hoveredCard.id}>on Collection: {hoveredCard.countById}</span>
+      ));
+    }
   };
 
   //Drag and Drop (e.dataTransfer JS method)
@@ -192,9 +186,16 @@ function Card({
     e.dataTransfer.setData("card", cardId);
   };
 
+  //Conditional CSS classes in spite of table for card container
+
+  const isAllCards = table === "allCards" ? styles.CardContainer : styles.CollectionCardContainer;
+
+  //conditional bootstrap class for the whole component
+  const componentContainer = table === "allCards" ? "col-12 col-sm-6 col-lg-4 col-xl-3" : "col";
+
   return (
-    <div className="col-12 col-sm-6 col-lg-4 col-xl-3">
-      <div className={styles.CardContainer}>
+    <div className={componentContainer}>
+      <div className={isAllCards}>
         <img
           src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
           onClick={clickHandler}

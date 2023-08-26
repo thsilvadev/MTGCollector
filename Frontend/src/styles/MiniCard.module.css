@@ -11,6 +11,19 @@
     vertical-align: middle;
 }
 
+.MinierCard {
+    display: flex;
+    height: 24px;
+    width: 200px;
+    color: black;
+    margin: 2px 0px 2px 5px;
+
+    font-size: 13px;
+    font-family: "BelerenBold";
+    justify-items: center;
+    vertical-align: middle;
+}
+
 .Main:hover {
     border: solid 2px rgb(80, 139, 184);
     scale: 1.06;

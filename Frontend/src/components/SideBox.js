@@ -2,7 +2,7 @@
 import styles from "../styles/SideBox.module.css";
 
 //Tools
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Axios from "axios";
 import { Scrollbars } from "react-custom-scrollbars-2";
 
@@ -45,15 +45,15 @@ const SideBox = ({ modalToggler, refresher }) => {
         alert(` ${cardCondition} card was put into your collection!`);
       }
 
-      Axios.post(`http://192.168.0.82:3344/collection/`, {
+      Axios.post(`${window.name}/collection/`, {
         card_id: cardId,
         card_condition: cardCondition,
         id_collection: null /* later implement that. This is for multiple users (multiple collection) */,
-      }).then(
-          console.log(`Card posted of id: ${cardId}`)
-        ).then(
-          toggleRefresh()
-        );
+      }).then(() => {
+        console.log(`Card posted of id: ${cardId}`);
+        toggleRefresh();
+      });
+        
     }
   };
 
@@ -102,32 +102,37 @@ const SideBox = ({ modalToggler, refresher }) => {
           clearTimeout(timerId);
     
           timerId = setTimeout(() => {
-            func.apply(this, args);
+            func(...args);
           }, delay);
         };
       };
 
   // Function to toggle the refreshCards state
-  const toggleRefresh = () => {
-    debounce(
-    setRefreshCards((prevRefresh) => !prevRefresh), 650
-    )
-  };
+  const toggleRefresh = debounce(() => {
+    setRefreshCards((prevRefresh) => !prevRefresh);
+  }, 650);
+
+  //Have to create a local state variable for refresher to work
+  const [localRefreshCards, setLocalRefreshCards] = useState(false);
+
+  useEffect(() => {
+    setLocalRefreshCards(refresher);
+  }, [refresher]);
 
   
 
   useEffect(() => {
     //This is for adding cards
-    console.log("logging liftedRefreshCards changing:", refresher)
+    console.log("logging liftedRefreshCards changing:", localRefreshCards)
     //This is for deleting cards
     console.log("logging refreshCards changing:", refreshCards);
     //GET 'EM!
-    Axios.get(`http://192.168.0.82:3344/collection/${page}`).then(
+    Axios.get(`${window.name}/collection/${page}`).then(
       (response) => {
         setCards(response.data);
       }
     );
-  }, [page, refreshCards, refresher]);
+  }, [page, refreshCards, localRefreshCards]);
 
   //css classes
 
@@ -135,6 +140,19 @@ const SideBox = ({ modalToggler, refresher }) => {
   const uponDraggingItem = isDraggedOver
     ? styles.UponDraggedItem
     : styles.OpenBoxDiv;
+
+  //managing scroll to top when nextPrev clicked
+
+  
+  const scrollbarsRef = useRef(null);
+  const buttonHandler = () => {
+    
+
+    scrollbarsRef.current.scrollToTop();
+    console.log("scrolling top of sidebar")
+  }
+
+  
 
   return (
     <div>
@@ -144,6 +162,7 @@ const SideBox = ({ modalToggler, refresher }) => {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        id="sidebar"
       >
         <h6>
           <a className={styles.Link} href="/collection">
@@ -153,10 +172,11 @@ const SideBox = ({ modalToggler, refresher }) => {
         <PrevNext
           onPageChange={handlePage}
           page={page}
-          cardTotal={cards}
+          elementsArray={cards}
           where="sidebar"
+          toggler={buttonHandler}
         />
-        <Scrollbars style={{ width: "100%", height: "84%" }}>
+        <Scrollbars style={{ width: "100%", height: "84%" }} ref={scrollbarsRef}>
           <div>
             {cards
               .map((card, key) => (
