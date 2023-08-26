@@ -77,7 +77,7 @@ function Card({
 
   // Function to toggle the refreshCards state
   const toggleRefresh = debounce(() => {
-    refresh((prevLiftedRefreshCards) => !prevLiftedRefreshCards);
+    refresh();
   }, 450);
 
   //Post
@@ -146,24 +146,6 @@ function Card({
     setIsMouseOver(false);
   };
 
-  //Deck Interaction
-
-  const addToDeck = () => {
-    let chosenDeck = prompt(
-      `You're adding ${name} to a deck. What deck id?`,
-      "1"
-    );
-
-    if (chosenDeck !== null) {
-      Axios.post(`${window.name}/eachDeck/`, {
-        id_card: id_collection,
-        deck: chosenDeck,
-      })
-        .then(toggleRefresh())
-        .then(console.log(`id postado: ${id}`));
-    }
-  };
-
   const renderer = () => {
     if (!isMouseOver) {
       return null; // Return null if the mouse is not over the card
@@ -186,6 +168,16 @@ function Card({
     e.dataTransfer.setData("card", cardId);
   };
 
+  //Handle table variation for dragStart event
+  const handleTableDrag = () => {
+    if (table === 'allCards'){
+      return (e) => handleOnDrag(e, id)
+    } else if (table === 'collection') {
+      return (e) => handleOnDrag(e, id_collection)
+    }
+  }
+
+
   //Conditional CSS classes in spite of table for card container
 
   const isAllCards = table === "allCards" ? styles.CardContainer : styles.CollectionCardContainer;
@@ -205,7 +197,7 @@ function Card({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           draggable={true}
-          onDragStart={(e) => handleOnDrag(e, id)}
+          onDragStart={(e) => handleTableDrag()(e)}
         />
         <div className={styles.CardOverlay}>
           <p>{renderer()}</p>

@@ -54,14 +54,16 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   //Input type="search"
   const handleNameChange = (event) => {
     if (event.target.value) {
-      setSelectedName(`&name=${event.target.value}`);
+      
       //This means that whenever user types anything, it will search for the card in all table, unless new color check.
       setBlackIsChecked(false);
       setGreenIsChecked(false);
       setRedIsChecked(false);
       setBlueIsChecked(false);
       setWhiteIsChecked(false);
+      console.log(`colors unchecked: ${whiteIsChecked}`)
       setSelectedColor("");
+      setSelectedName(`&name=${event.target.value}`);
     } else {
       setSelectedName("");
     }
@@ -212,7 +214,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
       clearTimeout(timerId);
 
       timerId = setTimeout(() => {
-        func.apply(this, args);
+        func(...args);
       }, delay);
     };
   };
