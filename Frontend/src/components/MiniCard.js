@@ -31,19 +31,17 @@ const MiniCard = ({
       Axios.delete(`${window.name}/card/${id_collection}`).then(
         console.log(`requested to delete ${name} from collection`)
       );
-      //toggle();
+      toggle();
     }
   };
 
   //Delete from Deck
   const deleteFromDeck = () => {
-    if (
-      window.confirm(`You're deleting ${name} from your collection. Confirm?`)
-    ) {
+    if (window.confirm(`You're deleting ${name} from your deck. Confirm?`)) {
       Axios.delete(`${window.name}/eachDeck/${id_constructed}`).then(
         console.log(`requested to delete ${name} from collection`)
       );
-      //toggle();
+      toggle();
     }
   };
 

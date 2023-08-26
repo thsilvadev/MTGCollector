@@ -37,11 +37,26 @@ function Collection() {
     console.log(superParams);
   };
 
-  //some refreshToggler
+  //Debounced toggle refresher
   const [refresherToggler, setRefresherToggler] = useState(false);
-  const handleRefresherToggler = (wasToggled) => {
-    setRefresherToggler(wasToggled);
+
+  // Debouncer
+  const debounce = (func, delay) => {
+    let timerId;
+  
+    return (...args) => {
+      clearTimeout(timerId);
+  
+      timerId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
   };
+  
+  const handleRefresherToggler = debounce(() => {
+    setRefresherToggler((prevRefresh) => !prevRefresh);
+    console.log(`WOW: ${refresherToggler}`)
+  }, 450);
 
   //get filtered and paginated Collection Cards in real time
   useEffect(() => {
@@ -52,6 +67,8 @@ function Collection() {
       .then(console.log(refresherToggler));
   }, [page, superParams, refresherToggler]);
 
+  //HORIZONTAL SCROLL
+
   // Scroll position state
   const [scrollLeft, setScrollLeft] = useState(0);
 
@@ -61,13 +78,64 @@ function Collection() {
   };
 
   ///////decksContainer////////
+  //Drag handlers
+
+  const [isDraggedOver, setIsDraggedOver] = useState(false);
+  const uponDraggingItem = isDraggedOver
+    ? styles.UponDraggedItem
+    : styles.deckContainer;
+
+  const handleDragEnter = () => {
+    setIsDraggedOver(true);
+    console.log("drag entered");
+  };
+
+  const handleDragLeave = () => {
+    setIsDraggedOver(false);
+    console.log("drag leaved");
+  };
+
+  const handleDrop = (e) => {
+    //on drop, get card ID
+    setIsDraggedOver(false);
+    const pickedCard = e.dataTransfer.getData("card");
+    if (pickedCard) {
+      postOnDeck(pickedCard);
+      console.log("card Id:", pickedCard);
+    } else if (!pickedCard) {
+      console.log("no data was caught");
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDraggedOver(true);
+    console.log("drag over");
+  };
+
+  //make it a dropzone using `e.dataTransfer.getData`
+
+  //postOnDeck
+  const postOnDeck = (collectionId) => {
+    let chosenDeck = selectedDeck;
+
+    if (chosenDeck !== null) {
+      Axios.post(`${window.name}/eachDeck/`, {
+        id_card: collectionId,
+        deck: chosenDeck,
+      })
+        .then(console.log(`id postado: ${collectionId}`))
+        .then(handleRefresherToggler());
+    }
+  };
+
   //selectDeck
 
   const [selectedDeck, setSelectedDeck] = useState(0);
 
   const handleDeckChange = (event) => {
     setSelectedDeck(event.target.value);
-    console.log(`selected deck: ${selectedDeck}`)
+    console.log(`selected deck: ${selectedDeck}`);
   };
 
   //Decks
@@ -83,18 +151,31 @@ function Collection() {
 
   //eachDeck
 
-  const [deckCards, setDeckCards] = useState([])
+  const [deckCards, setDeckCards] = useState([]);
 
-useEffect(() => {
-  Axios.get(`${window.name}/eachDeck/${selectedDeck}`).then(
-    (response) => {
-      setDeckCards(response.data);
+  useEffect(() => {
+    if (selectedDeck) {
+      Axios.get(`${window.name}/eachDeck/${selectedDeck}`)
+        .then((response) => {
+          setDeckCards(response.data);
+        })
+        .then(console.log(`selected deck: ${selectedDeck}`))
+        .then(console.log(`refresherToggler: ${refresherToggler}`));
     }
-  ).then(console.log(`selected deck: ${selectedDeck}`));
-}, [selectedDeck]);
+  }, [selectedDeck, refresherToggler]);
 
-const deckCardCount = deckCards.length;
-
+  //How many cards there are in selected deck?
+  const handleCardCount = () => {
+    if (selectedDeck) {
+      let deckCardsCount = 0;
+      deckCards.forEach((deckCard) => {
+        deckCardsCount += 1 * deckCard.countById;
+      });
+      return deckCardsCount;
+    } else {
+      return "";
+    }
+  };
 
   return (
     <div>
@@ -133,7 +214,13 @@ const deckCardCount = deckCards.length;
           where="collection"
         />
       </div>
-      <div className={styles.deckContainer}>
+      <div
+        className={uponDraggingItem}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         <div className={styles.selectDeck}>
           <select
             value={selectedDeck}
@@ -143,13 +230,15 @@ const deckCardCount = deckCards.length;
           >
             <option selected> </option>
             {decks.map((deck, key) => (
-              <option value={deck.id_deck}>{deck.name}</option>
+              <option key={key} value={deck.id_deck}>
+                {deck.name}
+              </option>
             ))}
           </select>
-          <span>{deckCardCount}</span>
+          <span>{handleCardCount()}</span>
         </div>
         <div className={styles.minicardsContainer}>
-            <div className={styles.minicardsCol}>
+          <div className={styles.minicardsCol}>
             {deckCards
               .map((deckCard, key) => (
                 <MiniCard
@@ -162,16 +251,17 @@ const deckCardCount = deckCards.length;
                   id_constructed={deckCard.id_constructed}
                   count={deckCard.countById}
                   isModalOpen={true}
+                  toggle={handleRefresherToggler}
                 />
               ))
               .sort((a, b) => b - a)}
-            </div>
-            <div className={styles.minicardsCol}></div>
-            <div className={styles.minicardsCol}></div>
-            <div className={styles.minicardsCol}></div>
-            <div className={styles.minicardsCol}></div>
-            <div className={styles.minicardsCol}></div>
-            <div className={styles.minicardsCol}></div>
+          </div>
+          <div className={styles.minicardsCol}></div>
+          <div className={styles.minicardsCol}></div>
+          <div className={styles.minicardsCol}></div>
+          <div className={styles.minicardsCol}></div>
+          <div className={styles.minicardsCol}></div>
+          <div className={styles.minicardsCol}></div>
         </div>
       </div>
     </div>

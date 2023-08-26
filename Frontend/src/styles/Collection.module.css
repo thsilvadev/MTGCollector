@@ -27,6 +27,18 @@
     justify-content: flex-start;
 }
 
+.UponDraggedItem {
+    background-color: rgb(135, 82, 82);
+    height: 100%;
+    margin: 20px auto auto auto;
+    width: 96%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    opacity: 1;
+    z-index: 2;
+}
+
 .selectDeck {
     display: flex;
     flex-wrap: wrap;

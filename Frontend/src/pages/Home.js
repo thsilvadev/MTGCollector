@@ -43,10 +43,10 @@ function Home() {
   //get Refresh from Card
   //Whenever a card is posted on collection, through Home.js, Card prop `refresh` calls it's function to toggle this state variable `liftedRefreshCards`. That variable is passed on to SideBar and then to SideBox, to trigger re-fetching. RESUME: THIS MAKES NEW CARDS IN COLLECTION IMMEDIATELY SHOW ON SIDEBAR COLLECTION.
   const [liftedRefreshCards, setLiftedRefreshCards] = useState(false);
-  const handleLiftedRefreshCards = (isRefreshed) => {
-    setLiftedRefreshCards(isRefreshed);
+  const handleLiftedRefreshCards = () => {
+    toggleRefresh();
     console.log("changed liftedRefreshCards:", liftedRefreshCards);
-  }
+  };
 
   //get filtered and paginated Cards in real time
   useEffect(() => {
@@ -108,7 +108,6 @@ function Home() {
     setIsModalOpen(modalState);
   };
 
-
   const upperContainerClass = isModalOpen
     ? styles.upperContainerWithModal
     : styles.upperContainer;
@@ -117,34 +116,33 @@ function Home() {
     ? styles.cardsContainerWithModal
     : styles.cardsContainer;
 
-    //Delete by dragging minicards off the sidebox
+  //Delete by dragging minicards off the sidebox
 
-    //Debounced toggle refresher
-          //Debouncer
-          const debounce = (func, delay) => {
-            let timerId;
-        
-            return (...args) => {
-              clearTimeout(timerId);
-        
-              timerId = setTimeout(() => {
-                func.apply(this, args);
-              }, delay);
-            };
-          };
-    
-      // Function to toggle the refreshCards state
-      const toggleRefresh = () => {
-        debounce(
-          setLiftedRefreshCards((prevRefresh) => !prevRefresh), 450
-        )
-      };
+  //Debounced toggle refresher
+  //Debouncer
+  const debounce = (func, delay) => {
+    let timerId;
 
-     //Delete from Collection
+    return (...args) => {
+      clearTimeout(timerId);
+
+      timerId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
+
+  // Function to toggle the refreshCards state
+  const toggleRefresh = () => {
+    debounce(
+      setLiftedRefreshCards((prevRefresh) => !prevRefresh),
+      450
+    );
+  };
+
+  //Delete from Collection
   const deleteFromCollection = (cardIdCollection) => {
-    if (
-      window.confirm(`Confirm deletion?`)
-    ) {
+    if (window.confirm(`Confirm deletion?`)) {
       Axios.delete(`${window.name}/card/${cardIdCollection}`)
         .then(console.log(`Card deleted from collection`))
         .then(toggleRefresh());
@@ -153,27 +151,31 @@ function Home() {
     }
   };
 
-    const handleDrop = (e) => {
-      //on drop, get card ID
-      const cardToDelete = e.dataTransfer.getData("cardDeletion");
-      if (cardToDelete){
-        deleteFromCollection(cardToDelete);
-        console.log("card Id:", cardToDelete);
-      } else if (!cardToDelete){
-        console.log('no data was caught')
-      }
-    };
+  const handleDrop = (e) => {
+    //on drop, get card ID
+    const cardToDelete = e.dataTransfer.getData("cardDeletion");
+    if (cardToDelete) {
+      deleteFromCollection(cardToDelete);
+      console.log("card Id:", cardToDelete);
+    } else if (!cardToDelete) {
+      console.log("no data was caught");
+    }
+  };
 
-    const handleDragOver = (e) => {
-      e.preventDefault();
-      console.log("drag over");
-    };
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    console.log("drag over");
+  };
 
   return (
     <>
-      <SideBar modalHandler={handleModalOpen} refresh={liftedRefreshCards}/>
-      <div className={upperContainerClass} droppable='true' onDrop={handleDrop}
-        onDragOver={handleDragOver}>
+      <SideBar modalHandler={handleModalOpen} refresh={liftedRefreshCards} />
+      <div
+        className={upperContainerClass}
+        droppable="true"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         <div className={styles.titleContainer}>
           <img src={welcome} className={styles.title} width="500" alt="Logo" />
           <div
@@ -234,10 +236,17 @@ function Home() {
           baseOfSearch="AllCards"
           onParamsChange={handleSuperParams}
         />
-        <h5>Click on cards to add to your collection, or drag 'em to the side bar on the right side.</h5>
+        <h5>
+          Click on cards to add to your collection, or drag 'em to the side bar
+          on the right side.
+        </h5>
       </div>
-      <div className={cardsContainerClass} droppable={true} onDrop={handleDrop}
-        onDragOver={handleDragOver}> 
+      <div
+        className={cardsContainerClass}
+        droppable={true}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         <div className="row justify-content-center">
           {cards.map((card, key) => (
             <Card
@@ -251,7 +260,6 @@ function Home() {
               keywords={card.keywords}
               table="allCards"
               refresh={handleLiftedRefreshCards}
-              
             />
           ))}
         </div>
