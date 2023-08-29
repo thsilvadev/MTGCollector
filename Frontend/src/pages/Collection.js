@@ -43,19 +43,19 @@ function Collection() {
   // Debouncer
   const debounce = (func, delay) => {
     let timerId;
-  
+
     return (...args) => {
       clearTimeout(timerId);
-  
+
       timerId = setTimeout(() => {
         func(...args);
       }, delay);
     };
   };
-  
+
   const handleRefresherToggler = debounce(() => {
     setRefresherToggler((prevRefresh) => !prevRefresh);
-    console.log(`WOW: ${refresherToggler}`)
+    console.log(`WOW: ${refresherToggler}`);
   }, 450);
 
   //get filtered and paginated Collection Cards in real time
@@ -177,6 +177,29 @@ function Collection() {
     }
   };
 
+  //Dividing this deck in 7 columns
+
+  // Initialize arrays for different categories
+  const manaValueArrays = Array.from({ length: 7 }, () => []);
+  const landCards = [];
+
+  // Categorize cards into different arrays
+  deckCards.forEach((card) => {
+    if (card.manaValue <= 1) {
+      if (card.types.indexOf("Land") === -1) {
+        manaValueArrays[0].push(card);
+      }
+    } else if (card.manaValue <= 5) {
+      manaValueArrays[card.manaValue - 1].push(card);
+    } else {
+      manaValueArrays[5].push(card);
+    }
+
+    if (card.types.includes("Land")) {
+      landCards.push(card);
+    }
+  });
+
   return (
     <div>
       <SearchContainer
@@ -239,7 +262,7 @@ function Collection() {
         </div>
         <div className={styles.minicardsContainer}>
           <div className={styles.minicardsCol}>
-            {deckCards
+            {manaValueArrays[0]
               .map((deckCard, key) => (
                 <MiniCard
                   key={key}
@@ -256,12 +279,114 @@ function Collection() {
               ))
               .sort((a, b) => b - a)}
           </div>
-          <div className={styles.minicardsCol}></div>
-          <div className={styles.minicardsCol}></div>
-          <div className={styles.minicardsCol}></div>
-          <div className={styles.minicardsCol}></div>
-          <div className={styles.minicardsCol}></div>
-          <div className={styles.minicardsCol}></div>
+          <div className={styles.minicardsCol}>
+            {manaValueArrays[1]
+              .map((deckCard, key) => (
+                <MiniCard
+                  key={key}
+                  id={deckCard.id}
+                  cost={deckCard.manaCost}
+                  name={deckCard.name}
+                  table="deck"
+                  id_collection={deckCard.id_collection}
+                  id_constructed={deckCard.id_constructed}
+                  count={deckCard.countById}
+                  isModalOpen={true}
+                  toggle={handleRefresherToggler}
+                />
+              ))
+              .sort((a, b) => b - a)}
+          </div>
+          <div className={styles.minicardsCol}>
+            {manaValueArrays[2]
+              .map((deckCard, key) => (
+                <MiniCard
+                  key={key}
+                  id={deckCard.id}
+                  cost={deckCard.manaCost}
+                  name={deckCard.name}
+                  table="deck"
+                  id_collection={deckCard.id_collection}
+                  id_constructed={deckCard.id_constructed}
+                  count={deckCard.countById}
+                  isModalOpen={true}
+                  toggle={handleRefresherToggler}
+                />
+              ))
+              .sort((a, b) => b - a)}
+          </div>
+          <div className={styles.minicardsCol}>
+            {manaValueArrays[3]
+              .map((deckCard, key) => (
+                <MiniCard
+                  key={key}
+                  id={deckCard.id}
+                  cost={deckCard.manaCost}
+                  name={deckCard.name}
+                  table="deck"
+                  id_collection={deckCard.id_collection}
+                  id_constructed={deckCard.id_constructed}
+                  count={deckCard.countById}
+                  isModalOpen={true}
+                  toggle={handleRefresherToggler}
+                />
+              ))
+              .sort((a, b) => b - a)}
+          </div>
+          <div className={styles.minicardsCol}>
+            {manaValueArrays[4]
+              .map((deckCard, key) => (
+                <MiniCard
+                  key={key}
+                  id={deckCard.id}
+                  cost={deckCard.manaCost}
+                  name={deckCard.name}
+                  table="deck"
+                  id_collection={deckCard.id_collection}
+                  id_constructed={deckCard.id_constructed}
+                  count={deckCard.countById}
+                  isModalOpen={true}
+                  toggle={handleRefresherToggler}
+                />
+              ))
+              .sort((a, b) => b - a)}
+          </div>
+          <div className={styles.minicardsCol}>
+            {manaValueArrays[5]
+              .map((deckCard, key) => (
+                <MiniCard
+                  key={key}
+                  id={deckCard.id}
+                  cost={deckCard.manaCost}
+                  name={deckCard.name}
+                  table="deck"
+                  id_collection={deckCard.id_collection}
+                  id_constructed={deckCard.id_constructed}
+                  count={deckCard.countById}
+                  isModalOpen={true}
+                  toggle={handleRefresherToggler}
+                />
+              ))
+              .sort((a, b) => b - a)}
+          </div>
+          <div className={styles.minicardsCol}>
+            {landCards
+              .map((deckCard, key) => (
+                <MiniCard
+                  key={key}
+                  id={deckCard.id}
+                  cost={deckCard.manaCost}
+                  name={deckCard.name}
+                  table="deck"
+                  id_collection={deckCard.id_collection}
+                  id_constructed={deckCard.id_constructed}
+                  count={deckCard.countById}
+                  isModalOpen={true}
+                  toggle={handleRefresherToggler}
+                />
+              ))
+              .sort((a, b) => b - a)}
+          </div>
         </div>
       </div>
     </div>

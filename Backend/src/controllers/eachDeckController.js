@@ -14,6 +14,8 @@ module.exports = {
           "supercards.id",
           "supercards.name",
           "supercards.manaCost",
+          "supercards.manaValue",
+          "supercards.types",
           "supercards.uuid",
           "supercards.scryfallId",
           "collection.id_collection",
