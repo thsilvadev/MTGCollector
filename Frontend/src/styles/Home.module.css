@@ -62,7 +62,7 @@
 .list {
   font-weight: 600;
   max-width: 900px;
-  margin: auto;
+  margin: auto 5px auto auto;
   line-height: 25px;
   list-style: disc;
   text-align: start;
@@ -87,6 +87,7 @@
 }
 
 .upperContainerWithModal {
+  padding: 0 10px 0 10px;
   width: 100%;
   animation: showSideBar .1s;
 }
@@ -101,6 +102,7 @@
 }
 
 .cardsContainerWithModal {
+  padding: 0 10px 0 10px;
     display: flex;
     justify-content: center;
     width: 100%;
@@ -137,7 +139,7 @@
     }
 
     .upperContainerWithModal {
-      width: 70%;
+      width: 69%;
     }
     
     .cardsContainer {
@@ -145,7 +147,7 @@
     }
 
     .cardsContainerWithModal {
-      width: 70%;
+      width: 69%;
   }
     
   }

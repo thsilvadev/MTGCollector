@@ -167,6 +167,34 @@ function Home() {
     console.log("drag over");
   };
 
+  //Tips change when modal is unavailable
+  //modal won't work below certain resolution
+
+  const [isWideScreen, setIsWideScreen] = useState(true);
+
+  const updateScreenSize = () => {
+    const screenWidth = window.innerWidth;
+    const breakpoint = 850; // Set your desired breakpoint in pixels here
+
+    setIsWideScreen(screenWidth >= breakpoint);
+  };
+
+  // Add a resize event listener to update the state on window resize
+  useEffect(() => {
+    updateScreenSize(); // Initial update
+    window.addEventListener("resize", updateScreenSize);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", updateScreenSize);
+    };
+  }, []);
+
+  const guideChangesWithModal = isWideScreen
+    ? `Click on cards to add to your collection, or drag 'em to the side bar
+    on the right side.`
+    : `Click on cards to add to your collection.`;
+
   return (
     <>
       <SideBar modalHandler={handleModalOpen} refresh={liftedRefreshCards} />
@@ -237,8 +265,7 @@ function Home() {
           onParamsChange={handleSuperParams}
         />
         <h5>
-          Click on cards to add to your collection, or drag 'em to the side bar
-          on the right side.
+        {guideChangesWithModal}
         </h5>
       </div>
       <div

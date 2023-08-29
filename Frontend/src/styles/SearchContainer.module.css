@@ -5,9 +5,9 @@
     border: 6px solid #ff8200;
     border-radius: 4px;
     color: rgb(0, 0, 0);
-    max-width: 100%;
+    max-width: 60%;
     min-width: 320px;
-    margin-bottom: 95px;
+    margin: auto auto 95px auto;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 

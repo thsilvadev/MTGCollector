@@ -64,10 +64,10 @@
     flex-direction: row;
     gap: 10px;
     height: 100%;
+    min-height: 400px;
 }
 
 .minicardsCol {
     min-width: 200px;
     min-height: 200px;
-    border: 3px yellow solid;
 }
