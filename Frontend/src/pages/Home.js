@@ -58,16 +58,22 @@ function Home() {
   }, [page, superParams]);
 
   //Image Switcher
-
-  const [isHovered, setIsHovered] = useState(false);
   const [isImagesLoaded, setIsImagesLoaded] = useState(false);
 
+  /*
+  const [isHovered, setIsHovered] = useState(false);
+  
+
   const HandleMouseEnter = () => {
-    setIsHovered(true);
+    if(isVeryWideScreen){
+      setIsHovered(true);
+    }
+    
   };
   const HandleMouseLeave = () => {
     setIsHovered(false);
   };
+  */
 
   useEffect(() => {
     const preloadImages = async () => {
@@ -171,12 +177,17 @@ function Home() {
   //modal won't work below certain resolution
 
   const [isWideScreen, setIsWideScreen] = useState(true);
+  
+  //const [isVeryWideScreen, setIsVeryWideScreen] = useState(true);
 
   const updateScreenSize = () => {
     const screenWidth = window.innerWidth;
     const breakpoint = 850; // Set your desired breakpoint in pixels here
-
     setIsWideScreen(screenWidth >= breakpoint);
+    /*
+    const veryBreakpoint = 1101;
+    setIsVeryWideScreen(screenWidth > veryBreakpoint)
+    */
   };
 
   // Add a resize event listener to update the state on window resize
@@ -205,30 +216,30 @@ function Home() {
         onDragOver={handleDragOver}
       >
         <div className={styles.titleContainer}>
-          <img src={welcome} className={styles.title} width="500" alt="Logo" />
-          <div
-            className={styles.chestContainer}
-            onMouseEnter={HandleMouseEnter}
-            onMouseLeave={HandleMouseLeave}
-          >
-            <a href="/collection">
-              {isHovered && isImagesLoaded ? (
-                <div>
-                  <img
-                    src={openedchest}
-                    className={styles.chest}
-                    alt="opened chest"
-                  />{" "}
-                  <img
-                    src={floatingCards}
-                    className={styles.fCards}
-                    alt="cards floating"
-                  />
-                </div>
-              ) : (
-                <img src={closedchest} className={styles.chest} alt="chest" />
-              )}
-            </a>
+          <img src={welcome} className={styles.title} alt="Logo" />
+          <div className={styles.chestContainer}>
+            <div
+              className={styles.chestWrapper}
+            >
+              <a href="/collection">
+                {isImagesLoaded ? (
+                  <div className={styles.chestContent}>
+                    <img
+                      src={openedchest}
+                      className={styles.chest}
+                      alt="opened chest"
+                    />{" "}
+                    <img
+                      src={floatingCards}
+                      className={styles.fCards}
+                      alt="cards floating"
+                    />
+                  </div>
+                ) : (
+                  <img src={closedchest} className={styles.chest} alt="chest" />
+                )}
+              </a>
+            </div>
           </div>
         </div>
 
@@ -264,13 +275,11 @@ function Home() {
           baseOfSearch="AllCards"
           onParamsChange={handleSuperParams}
         />
-        <h5>
-        {guideChangesWithModal}
-        </h5>
+        <h5>{guideChangesWithModal}</h5>
       </div>
       <div
         className={cardsContainerClass}
-        droppable={true}
+        droppable="true"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >

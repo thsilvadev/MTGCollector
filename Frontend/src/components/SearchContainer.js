@@ -382,7 +382,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   } else if (baseOfSearch === "collection") {
     return (
       <div className={styles.CollectionSearch}>
-        <div className="d-flex justify-content-start">
+        <div className="d-flex justify-content-center">
           <div className="row align-items-center">
             <div className="col-sm">
               <form role="search">
@@ -464,9 +464,9 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           </div>
         </div>
 
-        <div className={`d-${isAdvanced} justify-content-start mb-2`}>
+        <div className={`d-${isAdvanced} justify-content-center mb-2`}>
           <div className="row">
-            <div className="col">
+            <div className="col-12 col-sm-12 col-lg-4">
               <h4 className={styles.Filters}>Type</h4>
               <select
                 value={selectedType}
@@ -486,7 +486,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </select>
             </div>
 
-            <div className="col">
+            <div className="col-12 col-sm-12 col-lg-4">
               <h4 className={styles.Filters}>Set</h4>
               <select
                 value={selectedSet}
@@ -505,7 +505,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </select>
             </div>
 
-            <div className="col">
+            <div className="col-12 col-sm-12 col-lg-4">
               <h4 className={styles.Filters}>Rarity</h4>
               <select
                 value={selectedRarity}

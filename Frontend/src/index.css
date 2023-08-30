@@ -1,3 +1,22 @@
+/* Dark mode */
+:root {
+  --bodyBackground: #eeefe7;
+  --bodyBackgroundActive: #cdd0c0;
+  --textColor: #5A5353;
+  --linkColor: cyan;
+  --sideBar: rgb(157, 69, 15);
+}
+
+[data-theme="dark"] {
+  --bodyBackground: #1f1f1f;
+  --bodyBackgroundActive: #000000;
+  --textColor: white;
+  --linkColor: navy;
+  --sideBar: rgb(157, 69, 15);
+}
+
+
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -12,6 +31,8 @@ code {
     monospace;
 }
 
+
+/* MTG font */
 @font-face {
   font-family: "BelerenBold";
   src: local("BelerenBold"),
