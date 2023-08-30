@@ -201,7 +201,7 @@ function Collection() {
   });
 
   return (
-    <div>
+    <div className={styles.Background}>
       <SearchContainer
         baseOfSearch="collection"
         onParamsChange={handleSuperParams}
@@ -245,6 +245,11 @@ function Collection() {
         onDragOver={handleDragOver}
       >
         <div className={styles.selectDeck}>
+          <div className={styles.even}>
+          <span>color</span>
+          </div>
+          
+          <div>
           <select
             value={selectedDeck}
             className={styles.selectInput}
@@ -258,7 +263,12 @@ function Collection() {
               </option>
             ))}
           </select>
+          </div>
+          <div className={styles.even}>
           <span>{handleCardCount()}</span>
+          </div>
+          
+          
         </div>
         <div className={styles.minicardsContainer}>
           <div className={styles.minicardsCol}>

@@ -4,9 +4,9 @@
 }
 
 .Container {
-    color: white;
+    color: var(--textColor);
     background-size: auto;
-    background-color: #000000;
+    background-color:var(--bodyBackground);
 
     transition: background-color 0.9s ease;
     /* This inhibits the Container to be pushed down in case of the first element of the page being top-marged*/
@@ -16,7 +16,25 @@
 }
 
 .Container.active {
-    color: white;
-    background-color: #0a0903;
+    color: var(--textColor);
+    background-color: var(--bodyBackgroundActive);
 }
 
+/* 
+:root {
+  --bodyBackground: #ffffff;
+  --bodyBackgroundActive: tomato;
+  --textColor: rgb(0, 0, 0);
+  --linkColor: cyan;
+  --sideBar: rgb(57, 22, 0);
+}
+
+[data-theme="dark"] {
+  --bodyBackground: #000000;
+  --bodyBackgroundActive: #0a0903;
+  --textColor: white;
+  --linkColor: navy;
+  --sideBar: rgb(157, 69, 15);
+}
+
+*/

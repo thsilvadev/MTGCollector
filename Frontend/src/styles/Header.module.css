@@ -2,3 +2,34 @@ a:hover {
     color: green !important;
     font-weight: bold;
 }
+/*
+.hidden {
+    height: 0%;
+    animation: hide .3s;
+    display: inline !important;
+}
+
+@keyframes hide {
+    from {
+        height: 100%;
+    }
+    to {
+        height: 0%;
+    }
+}
+
+.showing {
+    height: 100%;
+    animation: show .3s;
+    display: inline !important;
+}
+
+@keyframes show {
+    from {
+        height: 0%;
+    }
+    to {
+        height: 100%;
+    }
+}
+*/

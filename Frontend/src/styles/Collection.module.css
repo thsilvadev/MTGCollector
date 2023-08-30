@@ -1,10 +1,13 @@
+.Background {
+    background-color: var(--bodyBackground);
+}
+
 .title {
     font-size: 50px;
 }
 
 .cardsContainer {
     margin: auto;
-    background-color: brown;
     height: 550px;
     width: 96%;
     align-items: center;
@@ -43,10 +46,13 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin: 5px 0 5px 0;
 }
 
 .selectInput {
-    margin: 5px 0 5px 5px;
     text-align: center;
     font-size: 23px;
     font-family: "BelerenBold";
@@ -62,12 +68,30 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
+    justify-content: flex-start;
     gap: 10px;
     height: 100%;
-    min-height: 400px;
+    min-height: 193px;
+    margin: auto;
 }
 
 .minicardsCol {
     min-width: 200px;
-    min-height: 200px;
+    min-height: 91px;
+    margin: 0;
+}
+
+@media (max-width: 454px) {
+    .minicardsCol {
+      margin: auto;
+    }
+
+    .selectDeck {
+        justify-content: space-around;
+
+      }
+}
+
+.even {
+    width: 45px;
 }
