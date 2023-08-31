@@ -208,7 +208,7 @@ function Collection() {
       />
 
       <div className={styles.cardsContainer}>
-        <Scrollbars style={{ width: "90%", height: "100%" }}>
+        <Scrollbars style={{ width: "90%", height: "95%" }}>
           <div
             className={`d-flex flex-nowrap ${styles.cardsRow}`}
             onWheel={handleHorizontalScroll}

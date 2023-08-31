@@ -7,7 +7,6 @@
     color: var(--textColor);
     background-size: auto;
     background-color:var(--bodyBackground);
-
     transition: background-color 0.9s ease;
     /* This inhibits the Container to be pushed down in case of the first element of the page being top-marged*/
     float: left;

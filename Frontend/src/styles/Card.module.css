@@ -1,171 +1,163 @@
-
-
 .Card {
-    margin: 15px 0px 15px 0px;
-    transition: border 0.1s;
-    height: 300px;
-    border-radius: 12px;
-    z-index: 1;
-    position: relative;
-    
+  margin: 15px 0px 15px 0px;
+  transition: border 0.1s;
+  height: 300px;
+  border-radius: 12px;
+  z-index: 1;
+  position: relative;
 }
-  
 
 .Card:hover {
-    margin: 15px 0px 15px 0px;
-    border: 8px solid lightskyblue;
-    border-radius: 25px;
-    border-top: solid 42px lightskyblue;
-    border-top-left-radius: 47px;
-    border-top-right-radius: 47px;
-    animation: hover-animation .4s forwards;
-    cursor: grab;
-    z-index: 4;
-
-
-
+  margin: 15px 0px 15px 0px;
+  border: 8px solid lightskyblue;
+  border-radius: 25px;
+  border-top: solid 42px lightskyblue;
+  border-top-left-radius: 47px;
+  border-top-right-radius: 47px;
+  animation: hover-animation 0.4s forwards;
+  cursor: grab;
+  z-index: 4;
 }
 
 .Card:hover ~ .CardOverlay {
-    animation: opacity-animation .4s forwards;
+  animation: opacity-animation 0.4s forwards;
 }
 
 /* Battle Cards are read horizontally, so mouseovering it rotates it to display properly (battle-hover-animation). As it's the same for Fuse Cards, they're being assumed as Battle class. */
 
 .Battle {
-    margin: 15px 0px 15px 0px;
-    transition: border 0.1s;
-    height: 300px;
-    border-radius: 11px;
-    z-index: 1;
-
+  margin: 15px 0px 15px 0px;
+  transition: border 0.1s;
+  height: 300px;
+  border-radius: 11px;
+  z-index: 1;
 }
 
 .Battle:hover {
-    border: solid 12px lightskyblue;
-    border-radius: 25px;
-    border-left: solid 42px lightskyblue;
-    border-top-left-radius: 47px;
-    border-bottom-left-radius: 47px;
-    animation: battle-hover-animation 0.4s forwards;
-    cursor: grab;
-    z-index: 4;
+  border: solid 8px lightskyblue;
+  border-radius: 25px;
+  border-left: solid 42px lightskyblue;
+  border-top-left-radius: 47px;
+  border-bottom-left-radius: 47px;
+  animation: battle-hover-animation 0.4s forwards;
+  cursor: grab;
+  z-index: 4;
 }
-
-
 
 /* Plane Cards are read horizontally, but unlike Battles they are already wide-long by default. To maintain pattern, it's getting rotated before hover and on mouseover it turns horizontal.  */
-.Plane { 
-    margin: 15px 0px 15px 0px;
-    transition: border 0.1s;
-    height: 300px;
-    border-radius: 14px;
-    z-index: 1;
-
+.Plane {
+  margin: 15px 0px 15px 0px;
+  transition: border 0.1s;
+  height: 300px;
+  border-radius: 14px;
+  z-index: 1;
 }
 
-.Plane:hover { 
-    border: solid 12px lightskyblue;
-    border-radius: 25px;
-    border-left: solid 42px lightskyblue;
-    border-top-left-radius: 47px;
-    border-bottom-left-radius: 47px;
-    animation: battle-hover-animation 0.4s forwards;
-    cursor: grab;
-    z-index: 4;
-
+.Plane:hover {
+  border: solid 8px lightskyblue;
+  border-radius: 25px;
+  border-left: solid 42px lightskyblue;
+  border-top-left-radius: 47px;
+  border-bottom-left-radius: 47px;
+  animation: battle-hover-animation 0.4s forwards;
+  cursor: grab;
+  z-index: 4;
 }
+
+.Collected {
+  height: 250px !important;
+  
+}
+
+
+
 
 .CardOverlay {
-    position: absolute;
-    top: -44px;
-    left: 30px;
-    height: 16px;
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-    z-index: 5;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.8s ease-in-out;
-    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
-
+  position: absolute;
+  top: -44px;
+  left: 30px;
+  height: 16px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
 
 .CardContainer {
-    position: relative;
-    margin: auto;
-    width: 243px;
+  position: relative;
+  margin: auto;
+  width: 243px;
 }
 
 .CollectionCardContainer {
-    position: relative;
-    margin: auto;
-    width: 243px;
+  position: relative;
+  margin: auto;
+  width: 243px;
 }
 
-/* Animations */ 
+/* Animations */
 
 /* Hover for cards */
 @keyframes hover-animation {
+  0% {
+    transform: scale(1.11);
+  }
 
-    0% {
-        transform: scale(1.11);
-    }
-    
-    50% {
-        transform: scale(1.11);
+  50% {
+    transform: scale(1.11);
+  }
 
-    }
-    
-    100% {
-        transform: scale(1.7);
-    }
-    
+  100% {
+    transform: scale(1.7);
+  }
 }
 
 /* Hover for Battle, Plane and Fuse cards*/
 @keyframes battle-hover-animation {
-    0%{
-        transform: scale(1.11);
-    }
+  0% {
+    transform: scale(1.11);
+  }
 
-    50%{
-        transform: scale(1.11);
-    }
+  50% {
+    transform: scale(1.11);
+  }
 
-    100%{
-        transform: scale(1.7)  rotate(90deg);
-    }
+  100% {
+    transform: scale(1.7) rotate(90deg);
+  }
 }
 
 /* Opacity for Card Overlay*/
 @keyframes opacity-animation {
-    0% {
-      opacity: 0;
-    }
-    60% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
+  0% {
+    opacity: 0;
   }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 
 /* Dragging */
 
 .Dragging {
-    cursor: grabbing;
-    opacity: 1;
-    border: solid black 500px;
+  cursor: grabbing;
+  opacity: 1;
+  border: solid black 500px;
 }
 
 /* addToDeck */
 
 .addToDeckButton {
-    z-index: 8;
+  z-index: 8;
 }
 
 .addToDeckButton:hover {
-    border: solid 2px green;
+  border: solid 2px green;
 }
