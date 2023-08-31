@@ -1,3 +1,7 @@
+.Background {
+    background-color: var(--bodyBackground);
+}
+
 .title {
     font-size: 80px;
 }

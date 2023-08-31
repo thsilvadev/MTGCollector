@@ -65,36 +65,38 @@ function Decks() {
   };
 
   return (
-    <div className="container">
-      <h1 className={styles.title}>Decks</h1>
-      <div className="row justify-content-start">
-        <div className="col-12 col-sm-6 col-lg-4 col-xl-3">
-          <div className={styles.addDeck} onClick={createDeck}>
-            <img
-              src={newDeck}
-              className={styles.newDeckImg}
-              alt="create your deck"
-            />
+    <div className={styles.Background}>
+      <div className="container">
+        <h1 className={styles.title}>Decks</h1>
+        <div className="row justify-content-start">
+          <div className="col-12 col-sm-6 col-lg-4 col-xl-3">
+            <div className={styles.addDeck} onClick={createDeck}>
+              <img
+                src={newDeck}
+                className={styles.newDeckImg}
+                alt="create your deck"
+              />
+            </div>
           </div>
+
+          {decks.map((deck, key) => (
+            <Deck
+              key={key}
+              colorIdentity={deck.color}
+              description={deck.description}
+              id_deck={deck.id_deck}
+              name={deck.name}
+            />
+          ))}
         </div>
 
-        {decks.map((deck, key) => (
-          <Deck
-            key={key}
-            colorIdentity={deck.color}
-            description={deck.description}
-            id_deck={deck.id_deck}
-            name={deck.name}
-          />
-        ))}
+        <PrevNext
+          onPageChange={handlePage}
+          page={page}
+          elementsArray={decks}
+          where="page"
+        />
       </div>
-
-      <PrevNext
-        onPageChange={handlePage}
-        page={page}
-        elementsArray={decks}
-        where="page"
-      />
     </div>
   );
 }

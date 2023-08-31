@@ -36,9 +36,11 @@ function Card({
 
   const [battle, setBattle] = useState(false);
   const [plane, setPlane] = useState(false);
+  const [collected, setCollected] = useState(false);
 
   const isBattle = battle ? styles.Battle : styles.Card;
   const isPlane = plane ? styles.Plane : styles.Card;
+  const isCollected = collected ? styles.Collected : '';
 
   const changeCardClass = () => {
     if (types === "Battle" || keywords === "Fuse") {
@@ -51,6 +53,11 @@ function Card({
     } else {
       setPlane(false);
     } //Fuse cards act just like Battle cards so it's using the same class.
+    if (table === "collection"){
+      setCollected(true)
+    } else {
+      setCollected(false);
+    }
   };
 
   //Click Handler
@@ -192,7 +199,7 @@ function Card({
           src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
           onClick={clickHandler}
           alt="card"
-          className={`${isBattle} ${isPlane}`}
+          className={`${isBattle} ${isPlane} ${isCollected}`}
           onLoad={changeCardClass}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
