@@ -54,14 +54,13 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   //Input type="search"
   const handleNameChange = (event) => {
     if (event.target.value) {
-      
       //This means that whenever user types anything, it will search for the card in all table, unless new color check.
       setBlackIsChecked(false);
       setGreenIsChecked(false);
       setRedIsChecked(false);
       setBlueIsChecked(false);
       setWhiteIsChecked(false);
-      console.log(`colors unchecked: ${whiteIsChecked}`)
+      console.log(`colors unchecked: ${whiteIsChecked}`);
       setSelectedColor("");
       setSelectedName(`&name=${event.target.value}`);
     } else {
@@ -222,10 +221,10 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const debouncedHandleNameChange = debounce(handleNameChange, 450);
 
   //Advanced Toggler (Collection only)
-  const [advancedSearch, setAdvancedSearch] = useState(false)
+  const [advancedSearch, setAdvancedSearch] = useState(false);
   const advancedToggler = () => {
-    setAdvancedSearch((previousValue) => !previousValue)
-  }
+    setAdvancedSearch((previousValue) => !previousValue);
+  };
 
   const isAdvanced = advancedSearch ? "flex" : "none";
 
@@ -236,16 +235,16 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
       <div className={styles.SearchContainer}>
         <h3> Filter by:</h3>
         <div className="container">
-          <div className="row justify-content-around mb-2">
+          <div className="row justify-content-around mb-4 gap-3">
             <div className="col-12">
-              <h4 className={styles.Filters}>Type</h4>
               <select
+                defaultValue={""}
                 value={selectedType}
                 className={styles.FilterBox}
                 onChange={handleTypeChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">Select Type </option>
                 <option value="&types=Creature">Creature</option>
                 <option value="&types=Artifact">Artifact</option>
                 <option value="&types=Land">Land</option>
@@ -258,14 +257,14 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
             </div>
 
             <div className="col-12">
-              <h4 className={styles.Filters}>Set</h4>
               <select
+                defaultValue={""}
                 value={selectedSet}
                 className={styles.FilterBox}
                 onChange={handleSetChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">Select Set</option>
                 <option value="&setCode=MOM">March of the Machine</option>
                 <option value="&setCode=MAT">
                   March of the Machine: The Aftermath
@@ -277,14 +276,14 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
             </div>
 
             <div className="col-12">
-              <h4 className={styles.Filters}>Rarity</h4>
               <select
+                defaultValue={""}
                 value={selectedRarity}
                 className={styles.FilterBox}
                 onChange={handleRarityChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">Select Rarity</option>
                 <option value="&rarity=common">Common</option>
                 <option value="&rarity=uncommon">Uncommon</option>
                 <option value="&rarity=rare">Rare</option>
@@ -297,7 +296,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
           <div className="row justify-content-center">
             <div className="col-12">
-              <h4 className={styles.Filters}>Color</h4>
               <div className="row">
                 <div className="col ps-0 pe-0">
                   <input
@@ -467,14 +465,16 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
         <div className={`d-${isAdvanced} justify-content-center mb-2`}>
           <div className="row">
             <div className="col-12 col-sm-12 col-lg-4">
-              <h4 className={styles.Filters}>Type</h4>
               <select
+                defaultValue=""
                 value={selectedType}
                 className={styles.FilterBox}
                 onChange={handleTypeChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">
+                  Select Type
+                </option>
                 <option value="&types=Creature">Creature</option>
                 <option value="&types=Artifact">Artifact</option>
                 <option value="&types=Land">Land</option>
@@ -487,14 +487,16 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
             </div>
 
             <div className="col-12 col-sm-12 col-lg-4">
-              <h4 className={styles.Filters}>Set</h4>
               <select
+                defaultValue=""
                 value={selectedSet}
                 className={styles.FilterBox}
                 onChange={handleSetChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">
+                  Select Set
+                </option>
                 <option value="&setCode=MOM">March of the Machine</option>
                 <option value="&setCode=MAT">
                   March of the Machine: The Aftermath
@@ -506,14 +508,16 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
             </div>
 
             <div className="col-12 col-sm-12 col-lg-4">
-              <h4 className={styles.Filters}>Rarity</h4>
               <select
+                defaultValue=""
                 value={selectedRarity}
                 className={styles.FilterBox}
                 onChange={handleRarityChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">
+                  Select Rarity
+                </option>
                 <option value="&rarity=common">Common</option>
                 <option value="&rarity=uncommon">Uncommon</option>
                 <option value="&rarity=rare">Rare</option>

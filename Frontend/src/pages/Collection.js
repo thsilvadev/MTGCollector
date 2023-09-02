@@ -208,7 +208,7 @@ function Collection() {
       />
 
       <div className={styles.cardsContainer}>
-        <Scrollbars style={{ width: "90%", height: "95%" }}>
+        <Scrollbars style={{ width: "90%", height: "96%" }}>
           <div
             className={`d-flex flex-nowrap ${styles.cardsRow}`}
             onWheel={handleHorizontalScroll}
@@ -251,12 +251,13 @@ function Collection() {
           
           <div>
           <select
+            defaultValue={'Default'}
             value={selectedDeck}
             className={styles.selectInput}
             onChange={handleDeckChange}
             aria-label="Default select example"
           >
-            <option selected> </option>
+            <option value='Default'>Select Deck</option>
             {decks.map((deck, key) => (
               <option key={key} value={deck.id_deck}>
                 {deck.name}

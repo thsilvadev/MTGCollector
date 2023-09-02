@@ -1,9 +1,10 @@
 .SearchContainer {
     padding: 20px 0 20px 0;
-    background-color: #6184d8;
-    background-image: linear-gradient(#b8b8b8, rgb(82, 82, 82));
-    border: 6px solid #ff8200;
-    border-radius: 4px;
+    background-color: #a1a1a1;
+    /*background-image: linear-gradient(#b8b8b8, rgb(82, 82, 82));*/
+    box-shadow: 0.5em 0.5em #000000;
+    border: solid #ede194 3px;
+    border-radius: 0px;
     color: rgb(0, 0, 0);
     max-width: 60%;
     min-width: 320px;
@@ -43,6 +44,7 @@
 .FilterBox{
     min-width: 287px;
     max-width: 320px;
+    text-align: center;
 
 }
 
@@ -66,7 +68,7 @@ label img {
 }
 
 :checked + label img {
-    border: 4px #ffffff solid;
+    border: 4px #000000 solid;
     border-radius: 100%;
     box-sizing: border-box;
 }
