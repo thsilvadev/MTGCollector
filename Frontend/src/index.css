@@ -1,7 +1,7 @@
 /* Dark mode */
 :root {
-  --bodyBackground: #eeefe7;
-  --bodyBackgroundActive: #cdd0c0;
+  --bodyBackground: #ede2f1;
+  --bodyBackgroundActive: #c7c5e7;
   --textColor: #5A5353;
   --linkColor: cyan;
   --sideBar: rgb(157, 69, 15);
