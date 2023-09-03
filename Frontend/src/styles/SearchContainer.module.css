@@ -1,86 +1,81 @@
 .SearchContainer {
-    padding: 20px 0 20px 0;
-    background-color: #a1a1a1;
-    /*background-image: linear-gradient(#b8b8b8, rgb(82, 82, 82));*/
-    box-shadow: 0.5em 0.5em #000000;
-    border: solid #ede194 3px;
-    border-radius: 0px;
-    color: rgb(0, 0, 0);
-    max-width: 60%;
-    min-width: 320px;
-    margin: auto auto 95px auto;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  padding: 20px 0 20px 0;
+  background-color: #a1a1a1;
+  /*background-image: linear-gradient(#b8b8b8, rgb(82, 82, 82));*/
+  box-shadow: 0.5em 0.5em #000000;
+  border: solid #ede194 3px;
+  border-radius: 0px;
+  color: rgb(0, 0, 0);
+  max-width: 60%;
+  min-width: 320px;
+  margin: auto auto 95px auto;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
 }
 
 .CollectionSearch {
-    padding: 20px 0 0 0;
-    color: rgb(255, 255, 255);
-    width: 96%;
-    margin: auto;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  padding: 20px 0 0 0;
+  color: rgb(255, 255, 255);
+  width: 96%;
+  margin: auto;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
 }
 
 .Input {
-    width: 170px;
+  width: 170px;
 }
 
 .Input::placeholder {
-    font-style: italic;
-    color: #77868f;
-    text-align: start;
+  font-style: italic;
+  color: #77868f;
+  text-align: center;
 }
 
 .Input:focus::placeholder {
-    color:transparent;
+  color: transparent;
 }
 
-.Filters{
-    text-align: center;
-    align-items: center;
-    justify-items: center;
-    padding: 0px;
+.Filters {
+  text-align: center;
+  align-items: center;
+  justify-items: center;
+  padding: 0px;
 }
 
-.FilterBox{
-    min-width: 287px;
-    max-width: 320px;
-    text-align: center;
+.FilterBox {
+  width: 287px;
 
+  text-align: center;
 }
 
 /* Checkbox */
 
 input[type="checkbox"] {
-    display: none;
+  display: none;
 }
 
 label {
-    border: 4px solid transparent;
-    border-radius: 100%;
-    cursor: pointer;
-
+  border: 4px solid transparent;
+  border-radius: 100%;
+  cursor: pointer;
 }
 
-
 label img {
-    transition-duration: 0.08s;
-    border: 4px solid transparent;
+  transition-duration: 0.08s;
+  border: 4px solid transparent;
 }
 
 :checked + label img {
-    border: 4px #000000 solid;
-    border-radius: 100%;
-    box-sizing: border-box;
+  border: 4px #000000 solid;
+  border-radius: 100%;
+  box-sizing: border-box;
 }
 
 /* Orange borders for double check*/
 
 .Typing {
-    border: 4px solid transparent;
+  border: 4px solid transparent;
 }
 
 .Blank {
-    border: 4px orange solid;
+  border: 4px orange solid;
 }
-
-
