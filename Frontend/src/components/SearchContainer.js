@@ -3,6 +3,7 @@ import styles from "../styles/SearchContainer.module.css";
 
 //imports
 import React, { useCallback, useEffect, useState } from "react";
+import Axios from "axios";
 
 //imgs
 import black from "../images/black.png";
@@ -228,6 +229,38 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   const isAdvanced = advancedSearch ? "flex" : "none";
 
+  //Getting Sets
+
+  /* 
+1)We use JSON.parse to parse the stored data from localStorage and set localSets to an empty array [] if it's null.
+
+2) In the useEffect, we check if localSets is an empty array [] instead of null. If it's empty, we make the Axios request to fetch the data, and then we store it in localStorage as a JSON string using JSON.stringify(response.data).
+
+  */
+  //Local Storage will be used to not fetch data everytime component is rendered.
+  //Also we will locally control LocalSets version, so whenever there are any updates in the database, we re-fetch on client side.
+  const [localSets, setLocalSets] = useState([]);
+
+
+  useEffect(() => {
+    const storedSets = localStorage.getItem("localSets");
+    const storedSetsVersion = localStorage.getItem("localSetsVersion");
+    if (storedSets && storedSetsVersion === "1") {
+        setLocalSets(JSON.parse(storedSets));
+    } else {
+      Axios.get(`${window.name}/sets`)
+        .then((response) => {
+          const sets = response.data;
+          localStorage.setItem("localSets", JSON.stringify(sets));
+          localStorage.setItem("localSetsVersion", "1");
+          setLocalSets(sets); // Update localSets and trigger a re-render
+        })
+        .then(() => {
+          console.log(`localSets has just been set`);
+        });
+    }
+  }, []);
+
   //Returns
 
   if (baseOfSearch === "AllCards") {
@@ -265,13 +298,21 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 aria-label="Default select example"
               >
                 <option value="">Select Set</option>
-                <option value="&setCode=MOM">March of the Machine</option>
-                <option value="&setCode=MAT">
-                  March of the Machine: The Aftermath
-                </option>
-                <option value="&setCode=ONE">Phyrexia: All Will Be One</option>
-                <option value="&setCode=BRO">The Brothers' War</option>
-                {/*have to continue... long work.*/}
+                {localSets
+                  .sort((a, b) => {
+                    if (a.name < b.name) {
+                      return -1;
+                    }
+                    if (a.name > b.name) {
+                      return 1;
+                    }
+                    return 0;
+                  })
+                  .map((set, key) => (
+                    <option key={key} value={`&setCode=${set.keyruneCode}`}>
+                      {set.name}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -463,7 +504,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
         </div>
 
         <div className={`d-${isAdvanced} justify-content-center mb-2`}>
-          <div className="row">
+          <div className="row justify-content-around">
             <div className="col-12 col-sm-12 col-lg-4">
               <select
                 defaultValue=""
@@ -472,9 +513,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleTypeChange}
                 aria-label="Default select example"
               >
-                <option value="">
-                  Select Type
-                </option>
+                <option value="">Select Type</option>
                 <option value="&types=Creature">Creature</option>
                 <option value="&types=Artifact">Artifact</option>
                 <option value="&types=Land">Land</option>
@@ -494,16 +533,22 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleSetChange}
                 aria-label="Default select example"
               >
-                <option value="">
-                  Select Set
-                </option>
-                <option value="&setCode=MOM">March of the Machine</option>
-                <option value="&setCode=MAT">
-                  March of the Machine: The Aftermath
-                </option>
-                <option value="&setCode=ONE">Phyrexia: All Will Be One</option>
-                <option value="&setCode=BRO">The Brothers' War</option>
-                {/*have to continue... long work.*/}
+                <option value="">Select Set</option>
+                {localSets
+                  .sort((a, b) => {
+                    if (a.name < b.name) {
+                      return -1;
+                    }
+                    if (a.name > b.name) {
+                      return 1;
+                    }
+                    return 0;
+                  })
+                  .map((set, key) => (
+                    <option key={key} value={`&setCode=${set.keyruneCode}`}>
+                      {set.name}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -515,9 +560,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleRarityChange}
                 aria-label="Default select example"
               >
-                <option value="">
-                  Select Rarity
-                </option>
+                <option value="">Select Rarity</option>
                 <option value="&rarity=common">Common</option>
                 <option value="&rarity=uncommon">Uncommon</option>
                 <option value="&rarity=rare">Rare</option>

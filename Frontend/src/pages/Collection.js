@@ -272,114 +272,29 @@ function Collection() {
           
         </div>
         <div className={styles.minicardsContainer}>
-          <div className={styles.minicardsCol}>
-            {manaValueArrays[0]
-              .map((deckCard, key) => (
-                <MiniCard
-                  key={key}
-                  id={deckCard.id}
-                  cost={deckCard.manaCost}
-                  name={deckCard.name}
-                  table="deck"
-                  id_collection={deckCard.id_collection}
-                  id_constructed={deckCard.id_constructed}
-                  count={deckCard.countById}
-                  isModalOpen={true}
-                  toggle={handleRefresherToggler}
-                />
-              ))
-              .sort((a, b) => b - a)}
-          </div>
-          <div className={styles.minicardsCol}>
-            {manaValueArrays[1]
-              .map((deckCard, key) => (
-                <MiniCard
-                  key={key}
-                  id={deckCard.id}
-                  cost={deckCard.manaCost}
-                  name={deckCard.name}
-                  table="deck"
-                  id_collection={deckCard.id_collection}
-                  id_constructed={deckCard.id_constructed}
-                  count={deckCard.countById}
-                  isModalOpen={true}
-                  toggle={handleRefresherToggler}
-                />
-              ))
-              .sort((a, b) => b - a)}
-          </div>
-          <div className={styles.minicardsCol}>
-            {manaValueArrays[2]
-              .map((deckCard, key) => (
-                <MiniCard
-                  key={key}
-                  id={deckCard.id}
-                  cost={deckCard.manaCost}
-                  name={deckCard.name}
-                  table="deck"
-                  id_collection={deckCard.id_collection}
-                  id_constructed={deckCard.id_constructed}
-                  count={deckCard.countById}
-                  isModalOpen={true}
-                  toggle={handleRefresherToggler}
-                />
-              ))
-              .sort((a, b) => b - a)}
-          </div>
-          <div className={styles.minicardsCol}>
-            {manaValueArrays[3]
-              .map((deckCard, key) => (
-                <MiniCard
-                  key={key}
-                  id={deckCard.id}
-                  cost={deckCard.manaCost}
-                  name={deckCard.name}
-                  table="deck"
-                  id_collection={deckCard.id_collection}
-                  id_constructed={deckCard.id_constructed}
-                  count={deckCard.countById}
-                  isModalOpen={true}
-                  toggle={handleRefresherToggler}
-                />
-              ))
-              .sort((a, b) => b - a)}
-          </div>
-          <div className={styles.minicardsCol}>
-            {manaValueArrays[4]
-              .map((deckCard, key) => (
-                <MiniCard
-                  key={key}
-                  id={deckCard.id}
-                  cost={deckCard.manaCost}
-                  name={deckCard.name}
-                  table="deck"
-                  id_collection={deckCard.id_collection}
-                  id_constructed={deckCard.id_constructed}
-                  count={deckCard.countById}
-                  isModalOpen={true}
-                  toggle={handleRefresherToggler}
-                />
-              ))
-              .sort((a, b) => b - a)}
-          </div>
-          <div className={styles.minicardsCol}>
-            {manaValueArrays[5]
-              .map((deckCard, key) => (
-                <MiniCard
-                  key={key}
-                  id={deckCard.id}
-                  cost={deckCard.manaCost}
-                  name={deckCard.name}
-                  table="deck"
-                  id_collection={deckCard.id_collection}
-                  id_constructed={deckCard.id_constructed}
-                  count={deckCard.countById}
-                  isModalOpen={true}
-                  toggle={handleRefresherToggler}
-                />
-              ))
-              .sort((a, b) => b - a)}
-          </div>
+        {manaValueArrays.map((manaArray, index) => (
+    // Check if the manaArray is not empty
+    manaArray.length > 0 && (
+      <div className={styles.minicardsCol} key={index}>
+        {manaArray
+          .map((deckCard, key) => (
+            <MiniCard
+              key={key}
+              id={deckCard.id}
+              cost={deckCard.manaCost}
+              name={deckCard.name}
+              table="deck"
+              id_collection={deckCard.id_collection}
+              id_constructed={deckCard.id_constructed}
+              count={deckCard.countById}
+              isModalOpen={true}
+              toggle={handleRefresherToggler}
+            />
+          ))
+          .sort((a, b) => b - a)}
+      </div>
+    )
+  ))}
           <div className={styles.minicardsCol}>
             {landCards
               .map((deckCard, key) => (
