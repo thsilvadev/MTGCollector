@@ -1,27 +1,26 @@
 .Card {
   margin: 15px 0px 15px 0px;
-  transition: border 0.1s;
+  transition: border .1s;
   height: 300px;
   border-radius: 12px;
   z-index: 1;
   position: relative;
 }
 
+
+
 .Card:hover {
-  margin: 15px 0px 15px 0px;
-  border: 8px solid lightskyblue;
-  border-radius: 25px;
-  border-top: solid 42px lightskyblue;
-  border-top-left-radius: 47px;
-  border-top-right-radius: 47px;
-  animation: hover-animation 0.4s forwards;
+  border: 1px solid lightskyblue;
+  border-radius: 14px;
   cursor: grab;
-  z-index: 4;
 }
+
 
 .Card:hover ~ .CardOverlay {
   animation: opacity-animation 0.4s forwards;
 }
+
+
 
 /* Battle Cards are read horizontally, so mouseovering it rotates it to display properly (battle-hover-animation). As it's the same for Fuse Cards, they're being assumed as Battle class. */
 
@@ -65,16 +64,27 @@
 }
 
 .Collected {
+  margin: 15px 0px 15px 0px;
+  transition: border 0.1s;
+  border-radius: 12px;
+  z-index: 1;
+  position: relative;
   height: 250px !important;
-  
 }
 
+.Collected:hover{
+  border: 1px solid lightskyblue;
+  border-radius: 14px;
+  cursor: grab;
+}
 
-
+.Collected:hover ~ .CardOverlay {
+  animation: opacity-animation 0.4s forwards;
+}
 
 .CardOverlay {
   position: absolute;
-  top: -44px;
+  top: -24px;
   left: 30px;
   height: 16px;
   color: white;
@@ -99,20 +109,67 @@
   width: 243px;
 }
 
+.Left {
+  position: absolute;
+  left: 75px;
+  top: -300px;
+  scale: 0.45;
+  z-index: 10;
+}
+
+.LeftPlaneOrBattle {
+  position: absolute;
+  left: 150px;
+  top: -300px;
+  scale: 0.45;
+  z-index: 10;
+}
+
+.Right {
+  position: absolute;
+  right: 75px;
+  top: -300px;
+  scale: 0.45;
+  z-index: 10;
+}
+
+
+.RightPlaneOrBattle {
+  position: absolute;
+  right: 150px;
+  top: -300px;
+  scale: 0.45;
+  z-index: 10;
+}
+
+.scaledCard {
+  border-radius: 30px;
+  animation: hover-animation 0.3s forwards;
+  z-index: 10;
+}
+
+.scaledPlaneOrBattle {
+  border-radius: 30px;
+  animation: battle-hover-animation 0.3s forwards;
+  z-index: 10;
+}
+
 /* Animations */
 
 /* Hover for cards */
 @keyframes hover-animation {
   0% {
     transform: scale(1.11);
+    opacity: 0;
   }
 
   50% {
     transform: scale(1.11);
+    opacity: 1;
   }
 
   100% {
-    transform: scale(1.7);
+    transform: scale(1.2);
   }
 }
 
@@ -120,14 +177,16 @@
 @keyframes battle-hover-animation {
   0% {
     transform: scale(1.11);
+    opacity: 0;
   }
 
   50% {
     transform: scale(1.11);
+    opacity: 1;
   }
 
   100% {
-    transform: scale(1.7) rotate(90deg);
+    transform: scale(1.2) rotate(90deg);
   }
 }
 

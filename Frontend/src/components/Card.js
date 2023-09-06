@@ -38,9 +38,8 @@ function Card({
   const [plane, setPlane] = useState(false);
   const [collected, setCollected] = useState(false);
 
-  const isBattle = battle ? styles.Battle : styles.Card;
-  const isPlane = plane ? styles.Plane : styles.Card;
-  const isCollected = collected ? styles.Collected : '';
+  const isBattleOrPlane = battle || plane ? styles.scaledPlaneOrBattle : styles.scaledCard;
+  const isCollected = collected ? styles.Collected : styles.Card;
 
   const changeCardClass = () => {
     if (types === "Battle" || keywords === "Fuse") {
@@ -53,8 +52,8 @@ function Card({
     } else {
       setPlane(false);
     } //Fuse cards act just like Battle cards so it's using the same class.
-    if (table === "collection"){
-      setCollected(true)
+    if (table === "collection") {
+      setCollected(true);
     } else {
       setCollected(false);
     }
@@ -111,8 +110,7 @@ function Card({
         card_id: id,
         card_condition: cardCondition,
         id_collection: null /* later implement that */,
-      })
-      .then(() => {
+      }).then(() => {
         console.log(`Card posted of id: ${id}`);
         toggleRefresh();
       });
@@ -177,20 +175,67 @@ function Card({
 
   //Handle table variation for dragStart event
   const handleTableDrag = () => {
-    if (table === 'allCards'){
-      return (e) => handleOnDrag(e, id)
-    } else if (table === 'collection') {
-      return (e) => handleOnDrag(e, id_collection)
+    if (table === "allCards") {
+      return (e) => handleOnDrag(e, id);
+    } else if (table === "collection") {
+      return (e) => handleOnDrag(e, id_collection);
     }
-  }
-
+  };
 
   //Conditional CSS classes in spite of table for card container
 
-  const isAllCards = table === "allCards" ? styles.CardContainer : styles.CollectionCardContainer;
+  const isAllCards =
+    table === "allCards"
+      ? styles.CardContainer
+      : styles.CollectionCardContainer;
 
   //conditional bootstrap class for the whole component
-  const componentContainer = table === "allCards" ? "col-12 col-sm-6 col-lg-4 col-xl-3" : "col";
+  const componentContainer =
+    table === "allCards" ? "col-12 col-sm-6 col-lg-4 col-xl-3" : "col";
+
+
+  //Handling Scaled Copy on hover offset 
+
+  const [scaledCardClass, setScaledCardClass] = useState('');
+
+  const HandleOffset = (e) => {
+
+    const card = e.currentTarget; // Get the hovered card element
+
+    // Get the position of the hovered card relative to the viewport
+    const cardRect = card.getBoundingClientRect();
+  
+    // Calculate the X position of the card
+    const cardX = cardRect.left;
+  
+    // Get the width of the viewport
+    const viewportWidth = window.innerWidth;
+  
+    // Check if the hovered card is on the left side of the screen
+    const isOnLeftSide = cardX < viewportWidth / 2;
+  
+    // Check if the hovered card is on the right side of the screen
+  
+    // Now you can use isOnLeftSide and isOnRightSide to determine the position
+    // and apply different styles or logic based on its position.
+
+    if (isOnLeftSide){
+      if (battle || plane) {
+        setScaledCardClass(styles.LeftPlaneOrBattle);
+      } else {
+        setScaledCardClass(styles.Left);
+      }
+    }
+    else {
+      if (battle || plane) {
+        setScaledCardClass(styles.RightPlaneOrBattle);
+      } else {
+        setScaledCardClass(styles.Right);
+      }
+    }
+   
+    console.log(scaledCardClass)
+  }
 
   return (
     <div className={componentContainer}>
@@ -199,13 +244,30 @@ function Card({
           src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
           onClick={clickHandler}
           alt="card"
-          className={`${isBattle} ${isPlane} ${isCollected}`}
+          className={`${isCollected}`}
           onLoad={changeCardClass}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           draggable={true}
           onDragStart={(e) => handleTableDrag()(e)}
+          onMouseMove={HandleOffset}
+          onTouchStart={handleMouseEnter}
+          onTouchEnd={handleMouseLeave}
         />
+        <div
+          className={scaledCardClass}
+          style={{
+           
+            display: isMouseOver ? "block" : "none",
+          }}
+        >
+          <img
+          className={`${isBattleOrPlane}`}
+            src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+            alt="card"
+          />
+        </div>
+
         <div className={styles.CardOverlay}>
           <p>{renderer()}</p>
         </div>

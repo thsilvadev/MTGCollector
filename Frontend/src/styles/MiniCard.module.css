@@ -12,12 +12,12 @@
 }
 
 .MinierCard {
+    position: relative;
     display: flex;
     height: 24px;
     width: 200px;
     color: black;
     margin: 2px 0px 2px 5px;
-
     font-size: 11px;
     font-family: "BelerenBold";
     justify-items: center;
@@ -82,3 +82,87 @@
     border-radius: 100%;
     box-shadow: rgb(0, 0, 0) -1px 1px 2px;
 }
+
+/* Hovering */
+
+.Left {
+    position: absolute;
+    left: 35px;
+    top: -400px;
+    scale: 0.35;
+    z-index: 10;
+  }
+  
+  .LeftPlaneOrBattle {
+    position: absolute;
+    left: 75px;
+    top: -350px;
+    scale: 0.35;
+    z-index: 10;
+  }
+  
+  .Right {
+    position: absolute;
+    right: 35px;
+    top: -400px;
+    scale: 0.35;
+    z-index: 10;
+  }
+  
+  
+  .RightPlaneOrBattle {
+    position: absolute;
+    right: 75px;
+    top: -350px;
+    scale: 0.35;
+    z-index: 10;
+  }
+  
+  .scaledCard {
+    border-radius: 30px;
+    animation: hover-animation 0.3s forwards;
+    z-index: 10;
+  }
+  
+  .scaledPlaneOrBattle {
+    border-radius: 30px;
+    animation: battle-hover-animation 0.3s forwards;
+    z-index: 10;
+  }
+
+/* Animations */
+
+/* Hover for cards */
+@keyframes hover-animation {
+    0% {
+      transform: scale(1.11);
+      opacity: 0;
+    }
+  
+    50% {
+      transform: scale(1.11);
+      opacity: 1;
+    }
+  
+    100% {
+      transform: scale(1.2);
+    }
+  }
+  
+  /* Hover for Battle, Plane and Fuse cards*/
+  @keyframes battle-hover-animation {
+    0% {
+      transform: scale(1.11);
+      opacity: 0;
+    }
+  
+    50% {
+      transform: scale(1.11) rotate(90deg);
+      
+      opacity: 1;
+    }
+  
+    100% {
+      transform: scale(1.2) rotate(90deg);
+    }
+  }

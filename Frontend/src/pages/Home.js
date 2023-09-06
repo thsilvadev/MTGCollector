@@ -275,7 +275,7 @@ function Home() {
           baseOfSearch="AllCards"
           onParamsChange={handleSuperParams}
         />
-        <h5>{guideChangesWithModal}</h5>
+        <h5 className="mb-5">{guideChangesWithModal}</h5>
       </div>
       <div
         className={cardsContainerClass}
