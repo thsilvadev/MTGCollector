@@ -3,6 +3,7 @@ import styles from "../styles/MiniCard.module.css";
 
 //Tools
 import Axios from "axios";
+import { React, useState } from "react";
 
 //imgs
 import black from "../images/black.png";
@@ -21,6 +22,9 @@ const MiniCard = ({
   isModalOpen,
   count,
   toggle,
+  scryfallId,
+  types,
+  keywords
 }) => {
   //Delete
   //Delete from Collection
@@ -144,6 +148,86 @@ const MiniCard = ({
 
   const cardCost = costIconHandler(cost);
 
+  //Handling Scaled Copy on hover offset
+
+  const [scaledCardClass, setScaledCardClass] = useState("");
+
+  const HandleOffset = (e) => {
+    const card = e.currentTarget; // Get the hovered card element
+
+    // Get the position of the hovered card relative to the viewport
+    const cardRect = card.getBoundingClientRect();
+
+    // Calculate the X position of the card
+    const cardX = cardRect.left;
+
+    // Get the width of the viewport
+    const viewportWidth = window.innerWidth;
+
+    // Check if the hovered card is on the left side of the screen
+    const isOnLeftSide = cardX < viewportWidth / 2;
+
+    // Check if the hovered card is on the right side of the screen
+
+    // Now you can use isOnLeftSide and isOnRightSide to determine the position
+    // and apply different styles or logic based on its position.
+
+    if (isOnLeftSide) {
+      if (battle || plane) {
+        setScaledCardClass(styles.LeftPlaneOrBattle);
+      } else {
+        setScaledCardClass(styles.Left);
+      }
+    } else {
+      if (battle || plane) {
+        setScaledCardClass(styles.RightPlaneOrBattle);
+      } else {
+        setScaledCardClass(styles.Right);
+      }
+    }
+
+    console.log(scaledCardClass);
+  };
+
+  //Scryfall ID management
+
+  const fileFace = "front";
+  const fileType = "large";
+  const fileFormat = ".jpg";
+  const fileName = scryfallId;
+  const dir1 = fileName.charAt(0);
+  const dir2 = fileName.charAt(1);
+
+  //Conditional CSS classes for exotic type cards
+
+  const [battle, setBattle] = useState(false);
+  const [plane, setPlane] = useState(false);
+
+  const isBattleOrPlane = battle || plane ? styles.scaledPlaneOrBattle : styles.scaledCard;
+
+  const changeCardClass = () => {
+    if (types === "Battle" || keywords === "Fuse") {
+      setBattle(true);
+    } else {
+      setBattle(false);
+    }
+    if (types === "Plane") {
+      setPlane(true);
+    } else {
+      setPlane(false);
+    }
+  }
+
+  const [isMouseOver, setIsMouseOver] = useState(false); // State to manage mouse hover
+
+  const handleMouseEnter = () => {
+    setIsMouseOver(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsMouseOver(false);
+  };
+
   //Render
 
   if (isModalOpen) {
@@ -151,9 +235,15 @@ const MiniCard = ({
       return (
         <div
           className={styles.MiniCard}
+          onLoad={changeCardClass}
           onClick={deleteFromCollection}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           draggable={true}
           onDragStart={(e) => handleOnDrag(e, id_collection)}
+          onMouseMove={HandleOffset}
+          onTouchStart={handleMouseEnter}
+          onTouchEnd={handleMouseLeave}
         >
           <div className={styles.Count}>
             <p>{count}x</p>
@@ -161,6 +251,18 @@ const MiniCard = ({
           <div className={styles.Main}>
             <span>{cardName}</span>
             <span className={styles.cardCost}>{cardCost}</span>
+          </div>
+          <div
+            className={scaledCardClass}
+            style={{
+              display: isMouseOver ? "block" : "none",
+            }}
+          >
+            <img
+              className={`${isBattleOrPlane}`}
+              src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+              alt="card"
+            />
           </div>
         </div>
       );
@@ -168,16 +270,36 @@ const MiniCard = ({
       return (
         <div
           className={styles.MinierCard}
+          onLoad={changeCardClass}
           onClick={deleteFromDeck}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           draggable={true}
           onDragStart={(e) => handleOnDrag(e, id_constructed)}
+          onMouseMove={HandleOffset}
+          onTouchStart={handleMouseEnter}
+          onTouchEnd={handleMouseLeave}
         >
           <div className={styles.Count}>
             <p>{count}x</p>
           </div>
+
           <div className={styles.Main}>
             <span>{cardName}</span>
             <span className={styles.cardCost}>{cardCost}</span>
+          </div>
+
+          <div
+            className={scaledCardClass}
+            style={{
+              display: isMouseOver ? "block" : "none",
+            }}
+          >
+            <img
+              className={`${isBattleOrPlane}`}
+              src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+              alt="card"
+            />
           </div>
         </div>
       );

@@ -135,7 +135,7 @@ function Collection() {
 
   const handleDeckChange = (event) => {
     setSelectedDeck(event.target.value);
-    window.scrollTo({ top: 200, behavior: "smooth" });
+    window.scrollTo({ top: 140, behavior: "smooth" });
     handleDeckColor();
     console.log(`selected deck: ${selectedDeck}`);
   };
@@ -202,21 +202,21 @@ function Collection() {
     }
   });
 
-// Deck Color Handling
+  // Deck Color Handling
 
-const handleDeckColor = () => {
+  const handleDeckColor = () => {
     const uniqueColorIdentities = new Set();
 
     deckCards.forEach((card) => {
-        if (card && typeof card.colorIdentity === 'string') {
-            // Split the colorIdentity string into individual colors (e.g., "G, U" -> ["G", "U"])
-            const colors = card.colorIdentity.split(', ');
+      if (card && typeof card.colorIdentity === "string") {
+        // Split the colorIdentity string into individual colors (e.g., "G, U" -> ["G", "U"])
+        const colors = card.colorIdentity.split(", ");
 
-            // Add each color to the Set to ensure uniqueness
-            colors.forEach((color) => {
-                uniqueColorIdentities.add(color);
-            });
-        }
+        // Add each color to the Set to ensure uniqueness
+        colors.forEach((color) => {
+          uniqueColorIdentities.add(color);
+        });
+      }
     });
 
     // Convert the unique colors to an array
@@ -224,64 +224,64 @@ const handleDeckColor = () => {
 
     // Determine the deck combination name
     const res = getDeckNotation(uniqueColorsArray);
-    console.log('color:', res);
+    console.log("color:", res);
     console.log(deckCards);
     return res;
-};
+  };
 
-function getDeckNotation(deckColors) {
+  function getDeckNotation(deckColors) {
     const colorCombinations = {
-        Azorius: ["U", "W"],
-        Boros: ["R", "W"],
-        Dimir: ["U", "B"],
-        Golgari: ["B", "G"],
-        Gruul: ["R", "G"],
-        Izzet: ["U", "R"],
-        Orzhov: ["W", "B"],
-        Rakdos: ["R", "B"],
-        Selesnya: ["W", "G"],
-        Simic: ["U", "G"],
-        Abzan: ["W", "B", "G"],
-        Bant: ["W", "U", "G"],
-        Esper: ["W", "U", "B"],
-        Grixis: ["U", "B", "R"],
-        Jeskai: ["W", "U", "R"],
-        Jund: ["B", "R", "G"],
-        Mardu: ["W", "B", "R"],
-        Naya: ["W", "R", "G"],
-        Sultai: ["U", "B", "G"],
-        Temur: ["U", "R", "G"],
-        Dune: ["W", "B", "R", "G"],
-        Glint: ["U", "B", "R", "G"],
-        Ink: ["W", "U", "R", "G"],
-        Witch: ["W", "U", "B", "G"],
-        Yore: ["W", "U", "B", "R"],
-        FiveColored: ["W", "U", "B", "R", "G"]
+      Azorius: ["U", "W"],
+      Boros: ["R", "W"],
+      Dimir: ["U", "B"],
+      Golgari: ["B", "G"],
+      Gruul: ["R", "G"],
+      Izzet: ["U", "R"],
+      Orzhov: ["W", "B"],
+      Rakdos: ["R", "B"],
+      Selesnya: ["W", "G"],
+      Simic: ["U", "G"],
+      Abzan: ["W", "B", "G"],
+      Bant: ["W", "U", "G"],
+      Esper: ["W", "U", "B"],
+      Grixis: ["U", "B", "R"],
+      Jeskai: ["W", "U", "R"],
+      Jund: ["B", "R", "G"],
+      Mardu: ["W", "B", "R"],
+      Naya: ["W", "R", "G"],
+      Sultai: ["U", "B", "G"],
+      Temur: ["U", "R", "G"],
+      Dune: ["W", "B", "R", "G"],
+      Glint: ["U", "B", "R", "G"],
+      Ink: ["W", "U", "R", "G"],
+      Witch: ["W", "U", "B", "G"],
+      Yore: ["W", "U", "B", "R"],
+      FiveColored: ["W", "U", "B", "R", "G"],
     };
 
-    let bestMatch = 'Custom'; // Initialize with a default value
+    let bestMatch = "Custom"; // Initialize with a default value
 
     // Iterate through each color combination
     for (const deck in colorCombinations) {
-        const colors = colorCombinations[deck];
-        let isMatch = true;
+      const colors = colorCombinations[deck];
+      let isMatch = true;
 
-        // Check if all colors in the combination are present in the deckColors array
-        for (const color of colors) {
-            if (!deckColors.includes(color)) {
-                isMatch = false;
-                break;
-            }
+      // Check if all colors in the combination are present in the deckColors array
+      for (const color of colors) {
+        if (!deckColors.includes(color)) {
+          isMatch = false;
+          break;
         }
+      }
 
-        // If it's a match and the combination is longer than the current best match
-        if (isMatch && colors.length > bestMatch.split(', ').length) {
-            bestMatch = deck;
-        }
+      // If it's a match and the combination is longer than the current best match
+      if (isMatch && colors.length > bestMatch.split(", ").length) {
+        bestMatch = deck;
+      }
     }
 
     return bestMatch;
-}
+  }
 
   return (
     <div className={styles.Background}>
@@ -291,7 +291,7 @@ function getDeckNotation(deckColors) {
       />
 
       <div className={styles.cardsContainer}>
-        <Scrollbars style={{ width: "90%", height: "96%" }}>
+        <Scrollbars style={{ width: "90%", height: "100%" }}>
           <div
             className={`d-flex flex-nowrap ${styles.cardsRow}`}
             onWheel={handleHorizontalScroll}
@@ -371,6 +371,9 @@ function getDeckNotation(deckColors) {
                         count={deckCard.countById}
                         isModalOpen={true}
                         toggle={handleRefresherToggler}
+                        scryfallId={deckCard.scryfallId}
+                        types={deckCard.types}
+                        keywords={deckCard.keywords}
                       />
                     ))
                     .sort((a, b) => b - a)}
@@ -391,6 +394,9 @@ function getDeckNotation(deckColors) {
                   count={deckCard.countById}
                   isModalOpen={true}
                   toggle={handleRefresherToggler}
+                  scryfallId={deckCard.scryfallId}
+                  types={deckCard.types}
+                  keywords={deckCard.keywords}
                 />
               ))
               .sort((a, b) => b - a)}
