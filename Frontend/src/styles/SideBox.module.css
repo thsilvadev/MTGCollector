@@ -1,4 +1,4 @@
-.OpenBoxDiv{
+.OpenBoxDiv {
     height: 80%;
     position: fixed;
     top: 10%;
@@ -10,10 +10,17 @@
     z-index: 2;
     opacity: .7;
     animation: showSideBar .3s;
+    
+    /* Media query for screens with a minimum width of 1920px */
+    @media (min-width: 1920px) {
+        top: 25%;
+        height: 50%;
+    }
+
+    /* Media query for screens with a maximum width of 849px */
     @media (max-width: 849px) {
         display: none;
-      }
-
+    }
 }
 
 .OpenBoxDiv:hover {

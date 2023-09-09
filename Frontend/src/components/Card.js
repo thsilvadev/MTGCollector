@@ -166,7 +166,7 @@ function Card({
   };
 
   const renderer = () => {
-    if (!isMouseOver) {
+    if (!isMouseOver || !istouchOver) {
       return null; // Return null if the mouse is not over the card
     }
 
@@ -189,6 +189,8 @@ function Card({
 
   //Handle table variation for dragStart event
   const handleTableDrag = () => {
+    setIsMouseOver(false);
+    setIsTouchOver(false);
     if (table === "allCards") {
       return (e) => handleOnDrag(e, id);
     } else if (table === "collection") {
@@ -211,6 +213,21 @@ function Card({
 
   const [scaledCardClass, setScaledCardClass] = useState("");
 
+  const [scaledCardPosition, setScaledCardPosition] = useState({
+    x: -9999,
+    y: -9999,
+  });
+
+  const [styleToggler, setStyleToggler] = useState(false);
+
+  const scaledStyle = styleToggler ? {
+    position: "absolute",
+    left: `${scaledCardPosition.x}px`,
+    top: `${scaledCardPosition.y}px`,
+    display: isMouseOver || istouchOver ? "block" : "none",
+  } : { display: isMouseOver || istouchOver ? "block" : "none",
+} ;
+
   const HandleOffset = (e) => {
     const card = e.currentTarget; // Get the hovered card element
 
@@ -226,7 +243,7 @@ function Card({
     const viewportWidth = window.innerWidth;
 
     // Calculate the amount by which the scaled copy should be shifted to the center
-    const shift = cardWidth / 2;
+    const shift = cardWidth / 2 ;
 
     // Calculate the X position where the scaled copy should be centered
     const centerX = viewportWidth / 2;
@@ -238,44 +255,55 @@ function Card({
     // and apply different styles or logic based on its position.
     // 363 is the width of the scaledCard.
 
-    const scaledCardXRight = cardX + cardWidth + 363;
-    const scaledCardXLeft = cardX - 363;
+    //for mouse position hover
+    const x = e.clientX - cardRect.left - card.offsetWidth / 2 + 50;
+    const y = e.clientY - cardRect.top - card.offsetHeight / 2 - 50;
+    const xRight = e.clientX - cardRect.left - card.offsetWidth / 2 - 250;
+
+    
 
     if (table === "allCards") {
-      if (viewportWidth < 576) {
-        //Disable Scaled Copy
-        setScaledCardClass(styles.Disabled);
-        //Enable Hover
-        setIsHoverable(true);
+      if (viewportWidth < 1064) {
+        if (viewportWidth < 576) {
+          //Disable Style Toggler
+          setStyleToggler(false);
+          //Disable Scaled Copy
+          setScaledCardClass(styles.Disabled);
+          //Enable Hover
+          setIsHoverable(true);
+        } else {
+          setStyleToggler(true);
+          setScaledCardClass(styles.Default)
+          setIsHoverable(false);
+          if (isOnLeftSide) {
+            setScaledCardPosition({ x, y });
+            console.log("isOnLeftSide");
+          } else {
+            setScaledCardPosition({ x: xRight, y });
+            console.log("isNotOnLeftSide");
+          }
+        }
       } else {
+        setStyleToggler(false);
         setIsHoverable(false);
         if (isOnLeftSide) {
-          // Check if the scaled card is getting cut off and add a centering class if needed
-          if (scaledCardXRight > viewportWidth) {
-            setScaledCardClass(styles.LeftCentered);
+          if (battle || plane) {
+            setScaledCardClass(styles.LeftPlaneOrBattle);
           } else {
-            if (battle || plane) {
-              setScaledCardClass(styles.LeftPlaneOrBattle);
-            } else {
-              setScaledCardClass(styles.Left);
-            }
+            setScaledCardClass(styles.Left);
           }
         } else {
-          // Check if the scaled card is getting cut off and add a centering class if needed
-          if (scaledCardXLeft < 0) {
-            setScaledCardClass(styles.RightCentered);
+          if (battle || plane) {
+            setScaledCardClass(styles.RightPlaneOrBattle);
           } else {
-            if (battle || plane) {
-              setScaledCardClass(styles.RightPlaneOrBattle);
-            } else {
-              setScaledCardClass(styles.Right);
-            }
+            setScaledCardClass(styles.Right);
           }
         }
       }
 
       console.log(scaledCardClass, isHoverable);
     } else if (table === "collection") {
+      setStyleToggler(false);
       if (viewportWidth < 972) {
         //Disable Scaled Copy
         setScaledCardClass(styles.Disabled);
@@ -326,9 +354,7 @@ function Card({
         />
         <div
           className={scaledCardClass}
-          style={{
-            display: isMouseOver || istouchOver ? "block" : "none",
-          }}
+          style={scaledStyle}
         >
           <img
             className={`${isBattleOrPlane}`}
