@@ -135,7 +135,7 @@ function Collection() {
 
   const handleDeckChange = (event) => {
     setSelectedDeck(event.target.value);
-    window.scrollTo({ top: 140, behavior: "smooth" });
+    window.scrollTo({ top: 120, behavior: "smooth" });
     handleDeckColor();
     console.log(`selected deck: ${selectedDeck}`);
   };
@@ -327,12 +327,12 @@ function Collection() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
-        <div className={styles.selectDeck}>
-          <div className={styles.even}>
+        <div  className={styles.selectDeck}>
+          <div id="lol" className={styles.even}>
             <span>{handleDeckColor()}</span>
           </div>
 
-          <div>
+          <div className={styles.odd}>
             <select
               defaultValue={"Default"}
               value={selectedDeck}
@@ -348,7 +348,7 @@ function Collection() {
               ))}
             </select>
           </div>
-          <div className={styles.even}>
+          <div id="3" className={styles.even}>
             <span>{handleCardCount()} Cards</span>
           </div>
         </div>

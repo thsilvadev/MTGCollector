@@ -85,6 +85,24 @@
 
 /* Hovering */
 
+.Card {
+  margin: 15px 0px 15px 0px;
+  transition: border .1s;
+  border-radius: 12px;
+  z-index: 1;
+  position: relative;
+  cursor: grab;
+}
+
+.Centered {
+
+  position: absolute;
+  right: -232px;
+  top: -170px;
+  scale: 0.45;
+  z-index: 10;
+}
+
 .Left {
     position: absolute;
     left: 35px;
@@ -119,13 +137,13 @@
   }
   
   .scaledCard {
-    border-radius: 30px;
+    border-radius: 10px;
     animation: hover-animation 0.3s forwards;
     z-index: 10;
   }
   
   .scaledPlaneOrBattle {
-    border-radius: 30px;
+    border-radius: 10px;
     animation: battle-hover-animation 0.3s forwards;
     z-index: 10;
   }

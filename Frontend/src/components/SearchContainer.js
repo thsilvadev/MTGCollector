@@ -26,7 +26,12 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   //Statelifting queryParams
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;
-  onParamsChange(queryParams);
+
+    // Use useEffect to call modalHandler when sideBar changes
+    useEffect(() => {
+      onParamsChange(queryParams);
+    }, [queryParams, onParamsChange]);
+  
 
   // Handle inputs
 
@@ -271,7 +276,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           <div className="row justify-content-around mb-4 gap-3">
             <div className="col-12">
               <select
-                defaultValue={""}
+                
                 value={selectedType}
                 className={styles.FilterBox}
                 onChange={handleTypeChange}
@@ -291,7 +296,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
             <div className="col-12">
               <select
-                defaultValue={""}
+                
                 value={selectedSet}
                 className={styles.FilterBox}
                 onChange={handleSetChange}
@@ -318,7 +323,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
             <div className="col-12">
               <select
-                defaultValue={""}
+                
                 value={selectedRarity}
                 className={styles.FilterBox}
                 onChange={handleRarityChange}
@@ -345,7 +350,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="black"
                   />
-                  <label className={`${blackIsTyping}`} for="black">
+                  <label className={`${blackIsTyping}`} htmlFor="black">
                     <img src={black} width="30" alt="black-logo" />
                   </label>
                 </div>
@@ -357,7 +362,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="green"
                   />
-                  <label className={`${greenIsTyping}`} for="green">
+                  <label className={`${greenIsTyping}`} htmlFor="green">
                     <img src={green} width="30" alt="green-logo" />
                   </label>
                 </div>
@@ -369,7 +374,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="red"
                   />
-                  <label className={`${redIsTyping}`} for="red">
+                  <label className={`${redIsTyping}`} htmlFor="red">
                     <img src={red} width="30" alt="red-logo" />
                   </label>
                 </div>
@@ -381,7 +386,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="blue"
                   />
-                  <label className={`${blueIsTyping}`} for="blue">
+                  <label className={`${blueIsTyping}`} htmlFor="blue">
                     <img src={blue} width="30" alt="blue-logo" />
                   </label>
                 </div>
@@ -393,7 +398,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="white"
                   />
-                  <label className={`${whiteIsTyping}`} for="white">
+                  <label className={`${whiteIsTyping}`} htmlFor="white">
                     <img src={white} width="30" alt="white-logo" />
                   </label>
                 </div>
@@ -443,7 +448,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="black"
                   />
-                  <label className={`${blackIsTyping}`} for="black">
+                  <label className={`${blackIsTyping}`} htmlFor="black">
                     <img src={black} width="30" alt="black-logo" />
                   </label>
                 </div>
@@ -455,7 +460,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="green"
                   />
-                  <label className={`${greenIsTyping}`} for="green">
+                  <label className={`${greenIsTyping}`} htmlFor="green">
                     <img src={green} width="30" alt="green-logo" />
                   </label>
                 </div>
@@ -467,7 +472,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="red"
                   />
-                  <label className={`${redIsTyping}`} for="red">
+                  <label className={`${redIsTyping}`} htmlFor="red">
                     <img src={red} width="30" alt="red-logo" />
                   </label>
                 </div>
@@ -479,7 +484,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="blue"
                   />
-                  <label className={`${blueIsTyping}`} for="blue">
+                  <label className={`${blueIsTyping}`} htmlFor="blue">
                     <img src={blue} width="30" alt="blue-logo" />
                   </label>
                 </div>
@@ -491,7 +496,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="white"
                   />
-                  <label className={`${whiteIsTyping}`} for="white">
+                  <label className={`${whiteIsTyping}`} htmlFor="white">
                     <img src={white} width="30" alt="white-logo" />
                   </label>
                 </div>
@@ -507,7 +512,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           <div className="row justify-content-around">
             <div className="col-12 col-sm-12 col-lg-4">
               <select
-                defaultValue=""
+                
                 value={selectedType}
                 className={styles.FilterBox}
                 onChange={handleTypeChange}
@@ -527,7 +532,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
             <div className="col-12 col-sm-12 col-lg-4">
               <select
-                defaultValue=""
+                
                 value={selectedSet}
                 className={styles.FilterBox}
                 onChange={handleSetChange}
@@ -554,7 +559,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
             <div className="col-12 col-sm-12 col-lg-4">
               <select
-                defaultValue=""
+                
                 value={selectedRarity}
                 className={styles.FilterBox}
                 onChange={handleRarityChange}

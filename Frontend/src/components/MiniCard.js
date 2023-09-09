@@ -24,7 +24,7 @@ const MiniCard = ({
   toggle,
   scryfallId,
   types,
-  keywords
+  keywords,
 }) => {
   //Delete
   //Delete from Collection
@@ -148,45 +148,56 @@ const MiniCard = ({
 
   const cardCost = costIconHandler(cost);
 
-  //Handling Scaled Copy on hover offset
+  // Mousemove event handler
 
-  const [scaledCardClass, setScaledCardClass] = useState("");
+  const [scaledCardPosition, setScaledCardPosition] = useState({
+    x: -9999,
+    y: -9999,
+  });
 
-  const HandleOffset = (e) => {
+  const handleMouseMove = (e) => {
+    // Calculate the X and Y positions for the scaled card
     const card = e.currentTarget; // Get the hovered card element
 
     // Get the position of the hovered card relative to the viewport
     const cardRect = card.getBoundingClientRect();
 
+    const cardWidth = cardRect.width;
+
     // Calculate the X position of the card
     const cardX = cardRect.left;
+    // Calculate the amount by which the scaled copy should be shifted to the center
+    const shift = cardWidth / 2;
 
     // Get the width of the viewport
     const viewportWidth = window.innerWidth;
+    // Calculate the X position where the scaled copy should be centered
+    const centerX = viewportWidth / 2;
 
     // Check if the hovered card is on the left side of the screen
-    const isOnLeftSide = cardX < viewportWidth / 2;
+    const isOnLeftSide = cardX < centerX - shift;
 
-    // Check if the hovered card is on the right side of the screen
+    const x = e.clientX - cardRect.left - card.offsetWidth / 2 + 150;
+    const y = e.clientY - cardRect.top - card.offsetHeight / 2;
+    const xRight = e.clientX - cardRect.left - card.offsetWidth / 2 - 150;
+    const z = e.clientY - cardRect.top - card.offsetHeight / 2 + 70;
+    const w = e.clientX - cardRect.left - card.offsetWidth / 2 - 12;
 
-    // Now you can use isOnLeftSide and isOnRightSide to determine the position
-    // and apply different styles or logic based on its position.
+    // Update the scaled card's position
 
-    if (isOnLeftSide) {
-      if (battle || plane) {
-        setScaledCardClass(styles.LeftPlaneOrBattle);
+    if (table === "deck") {
+      if (viewportWidth < 576) {
+        setScaledCardPosition({ x: w, y: z });
       } else {
-        setScaledCardClass(styles.Left);
+        if (isOnLeftSide) {
+          setScaledCardPosition({ x, y });
+        } else {
+          setScaledCardPosition({ x: xRight, y });
+        }
       }
     } else {
-      if (battle || plane) {
-        setScaledCardClass(styles.RightPlaneOrBattle);
-      } else {
-        setScaledCardClass(styles.Right);
-      }
+      setScaledCardPosition({ x: w, y: z });
     }
-
-    console.log(scaledCardClass);
   };
 
   //Scryfall ID management
@@ -203,7 +214,8 @@ const MiniCard = ({
   const [battle, setBattle] = useState(false);
   const [plane, setPlane] = useState(false);
 
-  const isBattleOrPlane = battle || plane ? styles.scaledPlaneOrBattle : styles.scaledCard;
+  const isBattleOrPlane =
+    battle || plane ? styles.scaledPlaneOrBattle : styles.scaledCard;
 
   const changeCardClass = () => {
     if (types === "Battle" || keywords === "Fuse") {
@@ -216,16 +228,27 @@ const MiniCard = ({
     } else {
       setPlane(false);
     }
-  }
+  };
 
   const [isMouseOver, setIsMouseOver] = useState(false); // State to manage mouse hover
+  const [istouchOver, setIsTouchOver] = useState(false); // State to manage touch hover
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (e) => {
+    handleMouseMove(e);
     setIsMouseOver(true);
   };
 
   const handleMouseLeave = () => {
     setIsMouseOver(false);
+  };
+
+  const handleTouchEnter = (e) => {
+    handleMouseMove(e);
+    setIsTouchOver(true);
+  };
+
+  const handleTouchLeave = () => {
+    setIsTouchOver(false);
   };
 
   //Render
@@ -239,11 +262,12 @@ const MiniCard = ({
           onClick={deleteFromCollection}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          onMouseMove={handleMouseMove}
           draggable={true}
           onDragStart={(e) => handleOnDrag(e, id_collection)}
-          onMouseMove={HandleOffset}
-          onTouchStart={handleMouseEnter}
-          onTouchEnd={handleMouseLeave}
+          onTouchStart={handleTouchEnter}
+          onTouchEnd={handleTouchLeave}
+          onTouchMove={handleMouseMove}
         >
           <div className={styles.Count}>
             <p>{count}x</p>
@@ -253,12 +277,18 @@ const MiniCard = ({
             <span className={styles.cardCost}>{cardCost}</span>
           </div>
           <div
-            className={scaledCardClass}
+            className={styles.Card}
             style={{
-              display: isMouseOver ? "block" : "none",
+              position: "fixed",
+              left: `${scaledCardPosition.x}px`,
+              top: `${scaledCardPosition.y}px`,
+              display: isMouseOver || istouchOver ? "block" : "none",
             }}
           >
             <img
+              style={{
+                height: "300px",
+              }}
               className={`${isBattleOrPlane}`}
               src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
               alt="card"
@@ -274,11 +304,12 @@ const MiniCard = ({
           onClick={deleteFromDeck}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          onMouseMove={handleMouseMove}
           draggable={true}
           onDragStart={(e) => handleOnDrag(e, id_constructed)}
-          onMouseMove={HandleOffset}
-          onTouchStart={handleMouseEnter}
-          onTouchEnd={handleMouseLeave}
+          onTouchStart={handleTouchEnter}
+          onTouchEnd={handleTouchLeave}
+          onTouchMove={handleMouseMove}
         >
           <div className={styles.Count}>
             <p>{count}x</p>
@@ -290,12 +321,18 @@ const MiniCard = ({
           </div>
 
           <div
-            className={scaledCardClass}
+            className={styles.Card}
             style={{
-              display: isMouseOver ? "block" : "none",
+              position: "absolute",
+              left: `${scaledCardPosition.x}px`,
+              top: `${scaledCardPosition.y}px`,
+              display: isMouseOver || istouchOver ? "block" : "none",
             }}
           >
             <img
+              style={{
+                height: "300px",
+              }}
               className={`${isBattleOrPlane}`}
               src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
               alt="card"

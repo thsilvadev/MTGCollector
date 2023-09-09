@@ -4,6 +4,7 @@
     top: 10%;
     right: 0;
     width: 268px;
+    overflow: visible;  /* This is the key to making the child element visible outside the container */
     background-color: var(--sideBar);
     border-radius: 4px 0 0 20px;
     z-index: 2;

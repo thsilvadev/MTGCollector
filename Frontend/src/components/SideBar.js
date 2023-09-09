@@ -13,7 +13,10 @@ const SideBar = ({modalHandler, refresh}) => {
 
   //Statelifting modal
 
-  modalHandler(sideBar);
+  // Use useEffect to call modalHandler when sideBar changes
+  useEffect(() => {
+    modalHandler(sideBar);
+  }, [sideBar, modalHandler]);
 
   //Toggler CSS class change
 
