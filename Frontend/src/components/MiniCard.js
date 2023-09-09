@@ -67,7 +67,6 @@ const MiniCard = ({
   //Drag and Drop (e.dataTransfer JS method)
 
   const handleOnDrag = (e, cardId) => {
-    console.log("dragStart");
     e.dataTransfer.clearData();
     e.dataTransfer.setData("cardDeletion", cardId);
   };
@@ -162,15 +161,21 @@ const MiniCard = ({
     // Get the position of the hovered card relative to the viewport
     const cardRect = card.getBoundingClientRect();
 
-    const cardWidth = cardRect.width;
+    const cardWidth = 258;
+    const cardHeight = 360;
 
     // Calculate the X position of the card
     const cardX = cardRect.left;
+
+    // Calculate the X position of the card
+    const cardY = cardRect.top;
     // Calculate the amount by which the scaled copy should be shifted to the center
     const shift = cardWidth / 2;
 
     // Get the width of the viewport
     const viewportWidth = window.innerWidth;
+    // Get the height of the viewport
+    const viewportHeight = window.innerHeight;
     // Calculate the X position where the scaled copy should be centered
     const centerX = viewportWidth / 2;
 
@@ -180,23 +185,36 @@ const MiniCard = ({
     const x = e.clientX - cardRect.left - card.offsetWidth / 2 + 150;
     const y = e.clientY - cardRect.top - card.offsetHeight / 2;
     const xRight = e.clientX - cardRect.left - card.offsetWidth / 2 - 150;
-    const z = e.clientY - cardRect.top - card.offsetHeight / 2 + 70;
+    const z = e.clientY - cardRect.top - card.offsetHeight / 2 + 50;
+    const s = e.clientY - cardRect.top - card.offsetHeight / 2 - 350;
+
     const w = e.clientX - cardRect.left - card.offsetWidth / 2 - 12;
 
     // Update the scaled card's position
 
     if (table === "deck") {
-      if (viewportWidth < 576) {
-        setScaledCardPosition({ x: w, y: z });
+      if (viewportWidth < 445) {
+        if (viewportHeight < cardY + 30 + cardHeight) {
+          setScaledCardPosition({ x: w, y: s });
+        } else setScaledCardPosition({ x: w, y: z });
       } else {
-        if (isOnLeftSide) {
-          setScaledCardPosition({ x, y });
+        if (viewportHeight < cardY + 30 + cardHeight) {
+          if (isOnLeftSide) {
+            setScaledCardPosition({ x, y: s + 70 });
+          } else {
+            setScaledCardPosition({ x: xRight, y: s + 70 });
+          }
         } else {
-          setScaledCardPosition({ x: xRight, y });
+          if (isOnLeftSide) {
+            setScaledCardPosition({ x, y });
+          } else {
+            setScaledCardPosition({ x: xRight, y });
+          }
         }
       }
     } else {
-      setScaledCardPosition({ x: w, y: z });
+      //the case for SideBox
+      setScaledCardPosition({ x: 350, y: z + 150 });
     }
   };
 
@@ -256,31 +274,33 @@ const MiniCard = ({
   if (isModalOpen) {
     if (table === "collection") {
       return (
-        <div
-          className={styles.MiniCard}
-          onLoad={changeCardClass}
-          onClick={deleteFromCollection}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onMouseMove={handleMouseMove}
-          draggable={true}
-          onDragStart={(e) => handleOnDrag(e, id_collection)}
-          onTouchStart={handleTouchEnter}
-          onTouchEnd={handleTouchLeave}
-          onTouchMove={handleMouseMove}
-        >
-          <div className={styles.Count}>
-            <p>{count}x</p>
-          </div>
-          <div className={styles.Main}>
-            <span>{cardName}</span>
-            <span className={styles.cardCost}>{cardCost}</span>
+        <div>
+          <div
+            className={styles.MiniCard}
+            onLoad={changeCardClass}
+            onClick={deleteFromCollection}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onMouseMove={handleMouseMove}
+            draggable="true"
+            onDragStart={(e) => handleOnDrag(e, id_collection)}
+            onTouchStart={handleTouchEnter}
+            onTouchEnd={handleTouchLeave}
+            onTouchMove={handleMouseMove}
+          >
+            <div className={styles.Count}>
+              <p>{count}x</p>
+            </div>
+            <div className={styles.Main}>
+              <span>{cardName}</span>
+              <span className={styles.cardCost}>{cardCost}</span>
+            </div>
           </div>
           <div
             className={styles.Card}
             style={{
               position: "fixed",
-              left: `${scaledCardPosition.x}px`,
+              right: `${scaledCardPosition.x}px`,
               top: `${scaledCardPosition.y}px`,
               display: isMouseOver || istouchOver ? "block" : "none",
             }}
@@ -305,7 +325,7 @@ const MiniCard = ({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onMouseMove={handleMouseMove}
-          draggable={true}
+          draggable="true"
           onDragStart={(e) => handleOnDrag(e, id_constructed)}
           onTouchStart={handleTouchEnter}
           onTouchEnd={handleTouchLeave}
