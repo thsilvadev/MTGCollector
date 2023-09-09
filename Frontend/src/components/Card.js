@@ -38,7 +38,8 @@ function Card({
   const [plane, setPlane] = useState(false);
   const [collected, setCollected] = useState(false);
 
-  const isBattleOrPlane = battle || plane ? styles.scaledPlaneOrBattle : styles.scaledCard;
+  const isBattleOrPlane =
+    battle || plane ? styles.scaledPlaneOrBattle : styles.scaledCard;
   const isCollected = collected ? styles.Collected : styles.Card;
 
   const changeCardClass = () => {
@@ -134,6 +135,7 @@ function Card({
   //Quantity owned in collection and in wishlist
   const [collectionCard, setCollectionCard] = useState([]);
   const [isMouseOver, setIsMouseOver] = useState(false); // State to manage mouse hover
+  const [istouchOver, setIsTouchOver] = useState(false); // State to manage touch hover
 
   //get
   const inCollection = () => {
@@ -142,13 +144,25 @@ function Card({
     });
   };
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (e) => {
+    HandleOffset(e);
     inCollection(); // Fetch data when mouse enters the card
     setIsMouseOver(true);
   };
 
   const handleMouseLeave = () => {
     setIsMouseOver(false);
+    setIsHoverable(false);
+  };
+
+  const handleTouchEnter = (e) => {
+    HandleOffset(e);
+    inCollection(); // Fetch data when Touch enters the card
+    setIsTouchOver(true);
+  };
+
+  const handleTouchLeave = () => {
+    setIsTouchOver(false);
   };
 
   const renderer = () => {
@@ -193,76 +207,131 @@ function Card({
   const componentContainer =
     table === "allCards" ? "col-12 col-sm-6 col-lg-4 col-xl-3" : "col";
 
+  //Handling Scaled Copy on hover offset
 
-  //Handling Scaled Copy on hover offset 
-
-  const [scaledCardClass, setScaledCardClass] = useState('');
+  const [scaledCardClass, setScaledCardClass] = useState("");
 
   const HandleOffset = (e) => {
-
     const card = e.currentTarget; // Get the hovered card element
 
     // Get the position of the hovered card relative to the viewport
     const cardRect = card.getBoundingClientRect();
-  
+
     // Calculate the X position of the card
     const cardX = cardRect.left;
-  
+
+    const cardWidth = cardRect.width;
+
     // Get the width of the viewport
     const viewportWidth = window.innerWidth;
-  
-    // Check if the hovered card is on the left side of the screen
-    const isOnLeftSide = cardX < viewportWidth / 2;
-  
-    // Check if the hovered card is on the right side of the screen
-  
-    // Now you can use isOnLeftSide and isOnRightSide to determine the position
-    // and apply different styles or logic based on its position.
 
-    if (isOnLeftSide){
-      if (battle || plane) {
-        setScaledCardClass(styles.LeftPlaneOrBattle);
+    // Calculate the amount by which the scaled copy should be shifted to the center
+    const shift = cardWidth / 2;
+
+    // Calculate the X position where the scaled copy should be centered
+    const centerX = viewportWidth / 2;
+
+    // Check if the hovered card is on the left side of the screen
+    const isOnLeftSide = cardX < centerX - shift;
+
+    // Now you can use isOnLeftSide to determine the position
+    // and apply different styles or logic based on its position.
+    // 363 is the width of the scaledCard.
+
+    const scaledCardXRight = cardX + cardWidth + 363;
+    const scaledCardXLeft = cardX - 363;
+
+    if (table === "allCards") {
+      if (viewportWidth < 576) {
+        //Disable Scaled Copy
+        setScaledCardClass(styles.Disabled);
+        //Enable Hover
+        setIsHoverable(true);
       } else {
-        setScaledCardClass(styles.Left);
+        setIsHoverable(false);
+        if (isOnLeftSide) {
+          // Check if the scaled card is getting cut off and add a centering class if needed
+          if (scaledCardXRight > viewportWidth) {
+            setScaledCardClass(styles.LeftCentered);
+          } else {
+            if (battle || plane) {
+              setScaledCardClass(styles.LeftPlaneOrBattle);
+            } else {
+              setScaledCardClass(styles.Left);
+            }
+          }
+        } else {
+          // Check if the scaled card is getting cut off and add a centering class if needed
+          if (scaledCardXLeft < 0) {
+            setScaledCardClass(styles.RightCentered);
+          } else {
+            if (battle || plane) {
+              setScaledCardClass(styles.RightPlaneOrBattle);
+            } else {
+              setScaledCardClass(styles.Right);
+            }
+          }
+        }
+      }
+
+      console.log(scaledCardClass, isHoverable);
+    } else if (table === "collection") {
+      if (viewportWidth < 972) {
+        //Disable Scaled Copy
+        setScaledCardClass(styles.Disabled);
+        //Enable Hover
+        setIsHoverable(true);
+      } else {
+        setIsHoverable(false);
+        if (isOnLeftSide) {
+          if (battle || plane) {
+            setScaledCardClass(styles.LeftPlaneOrBattle);
+          } else {
+            setScaledCardClass(styles.Left);
+          }
+        } else {
+          if (battle || plane) {
+            setScaledCardClass(styles.RightPlaneOrBattle);
+          } else {
+            setScaledCardClass(styles.Right);
+          }
+        }
+
+        console.log(scaledCardClass);
       }
     }
-    else {
-      if (battle || plane) {
-        setScaledCardClass(styles.RightPlaneOrBattle);
-      } else {
-        setScaledCardClass(styles.Right);
-      }
-    }
-   
-    console.log(scaledCardClass)
-  }
+  };
+
+  //Toggle hover on whenever scaledCard is disabled.
+  const [isHoverable, setIsHoverable] = useState(false);
+  const hoverableClass = isHoverable ? styles.Hover : "";
 
   return (
     <div className={componentContainer}>
-      <div className={isAllCards}>
+      <div className={`${isAllCards}`}>
         <img
           src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
           onClick={clickHandler}
           alt="card"
-          className={`${isCollected}`}
+          className={`${isCollected} ${hoverableClass}`}
           onLoad={changeCardClass}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           draggable={true}
           onDragStart={(e) => handleTableDrag()(e)}
           onMouseMove={HandleOffset}
-          onTouchStart={handleMouseEnter}
-          onTouchEnd={handleMouseLeave}
+          onTouchStart={handleTouchEnter}
+          onTouchEnd={handleTouchLeave}
+          onTouchMove={HandleOffset}
         />
         <div
           className={scaledCardClass}
           style={{
-           
-            display: isMouseOver ? "block" : "none",
+            display: isMouseOver || istouchOver ? "block" : "none",
           }}
         >
           <img
-          className={`${isBattleOrPlane}`}
+            className={`${isBattleOrPlane}`}
             src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
             alt="card"
           />

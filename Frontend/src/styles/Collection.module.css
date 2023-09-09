@@ -94,4 +94,9 @@
 
 .even {
     width: 95px;
+    flex-shrink: 0;
+}
+
+.odd {
+    flex-shrink: 1;
 }
