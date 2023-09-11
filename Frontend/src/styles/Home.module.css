@@ -1,6 +1,7 @@
 .titleContainer {
   max-width: 80%;
   display: flex;
+  flex-direction: column;
   margin: 80px auto 40px auto;
   box-sizing: border-box;
   vertical-align: middle;
@@ -12,12 +13,13 @@
 .title {
   max-width: 100%;
     min-width: 368px;
-  margin-right: 80px;
     
 }
 
 .chestContainer {
-
+    /* Reset width for the second inner div to take full width */
+    width: 200px;
+    margin: 0px auto -100px auto;
 display: flex;
 }
 
@@ -30,66 +32,24 @@ display: flex;
 }
 
 .chest {
-  position: absolute;
-  top: -81px;
-  left: 8px;
-  width: 175px;
-  rotate: 5deg;
+  position: relative;
+  top: 0;
+  left: auto;
+  width: 100%; /* Adjust as needed */
+  rotate: 0deg;
 
-}
-
-
-
-/* Add a media query to adjust the layout for smaller screens */
-@media (max-width: 1101px) {
-  .titleContainer {
-    /* Change flex direction to column for smaller screens */
-    flex-direction: column;
-  }
-  
-  .chestContainer {
-    /* Reset width for the second inner div to take full width */
-    width: 200px;
-    margin: 0px auto -100px auto;
-  }
-
-  .chest {
-    position: relative;
-    top: 0;
-    left: auto;
-    width: 100%; /* Adjust as needed */
-    rotate: 0deg;
-  }
-
-  .chestContainer .fCards {
-    
-    position: relative;
-    left: auto;
-    max-width: 80px;
-    top: -175px;
-  rotate: 5deg;
-  overflow: hidden;
-    transform: translatey(0px);
-    animation: float 5s ease-in-out infinite;
-
-  
-  }
-
-  .title {
-    margin-right: 0;
-  }
 }
 
 /* This is for the cards image on the logo, not the actual cards (components) */
 .fCards {
-  position: absolute;
-  width: 80px;
-  left: 58px;
-  top: -83px;
-  rotate: 5deg;
-  overflow: hidden;
-    transform: translatey(0px);
-    animation: float 5s ease-in-out infinite;
+  position: relative;
+  left: auto;
+  max-width: 80px;
+  top: -175px;
+rotate: 5deg;
+overflow: hidden;
+  transform: translatey(0px);
+  animation: float 5s ease-in-out infinite;
 }
 
 /* Float animation */

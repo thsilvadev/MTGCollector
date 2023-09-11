@@ -19,6 +19,9 @@ import React, { useState, useEffect } from "react";
 
 //imgs
 import welcome from "../images/welcome.png";
+import welcome3 from "../images/welcome3.png";
+import welcome2white from "../images/welcome2white.png";
+import logo2 from "../images/logo2white.png";
 import closedchest from "../images/closed-chest.png";
 import openedchest from "../images/opened-chest.png";
 import floatingCards from "../images/cards.png";
@@ -216,7 +219,7 @@ function Home() {
         onDragOver={handleDragOver}
       >
         <div className={styles.titleContainer}>
-          <img src={welcome} className={styles.title} alt="Logo" />
+          <img src={welcome3} className={styles.title} alt="Logo" />
           <div className={styles.chestContainer}>
             <div
               className={styles.chestWrapper}

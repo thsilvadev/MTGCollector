@@ -15,10 +15,10 @@
     position: relative;
     display: flex;
     height: 24px;
-    width: 200px;
+    width: 260px;
     color: black;
     margin: 2px 0px 2px 5px;
-    font-size: 11px;
+    font-size: 14px;
     font-family: "BelerenBold";
     justify-items: center;
     vertical-align: middle;
@@ -91,7 +91,6 @@
   border-radius: 12px;
   z-index: 1;
   position: relative;
-  cursor: grab;
 }
 
 .Centered {

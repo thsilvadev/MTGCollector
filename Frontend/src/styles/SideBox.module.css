@@ -1,74 +1,78 @@
 .OpenBoxDiv {
-    height: 80%;
-    position: fixed;
-    top: 10%;
-    right: 0;
-    width: 268px;
-    overflow: visible;  /* This is the key to making the child element visible outside the container */
-    background-color: var(--sideBar);
-    border-radius: 4px 0 0 20px;
-    z-index: 2;
-    opacity: .7;
-    animation: showSideBar .3s;
-    
-    /* Media query for screens with a minimum width of 1920px */
-    @media (min-width: 1920px) {
-        top: 25%;
-        height: 50%;
-    }
+  height: 80%;
+  position: fixed;
+  top: 10%;
+  right: 0;
+  width: 268px;
+  overflow: visible; /* This is the key to making the child element visible outside the container */
+  background-color: var(--sideBar);
+  border-radius: 4px 0 0 20px;
+  z-index: 2;
+  opacity: 0.7;
+  animation: showSideBar 0.3s;
+}
 
-    /* Media query for screens with a maximum width of 849px */
-    @media (max-width: 849px) {
-        display: none;
-    }
+/* Media query for screens with a minimum width of 1920px */
+@media (min-width: 2420px) {
+  .OpenBoxDiv {
+    top: 25%;
+    height: 50%;
+  }
+}
+
+/* Media query for screens with a maximum width of 849px */
+@media (max-width: 849px) {
+  .OpenBoxDiv {
+    display: none;
+  }
 }
 
 .OpenBoxDiv:hover {
-    opacity: 1;
+  opacity: 1;
 }
 
 .UponDraggedItem {
-    opacity: 1;
-    z-index: 2;
+  opacity: 1;
+  z-index: 2;
 }
 
 @keyframes showSideBar {
-    from {
-        right: -258px;
-    }
-    to {
-        right: 0;
-    }
+  from {
+    right: -258px;
+  }
+  to {
+    right: 0;
+  }
 }
 
 .ClosedBoxDiv {
-    height: 80%;
-    position: fixed;
-    top: 10%;
-    right: -258px;
-    background-color: rgb(214, 159, 63);
-    z-index: 2;
-    clear: bottom;
-    opacity: .4;
-    animation: hideSideBar .3s;
+  height: 80%;
+  position: fixed;
+  top: 10%;
+  right: -258px;
+  background-color: rgb(214, 159, 63);
+  z-index: 2;
+  clear: bottom;
+  opacity: 0.4;
+  animation: hideSideBar 0.3s;
 
-    @media (max-width: 849px) {
-        display: none;
-      }
+  @media (max-width: 849px) {
+    display: none;
+  }
 }
 
 @keyframes hideSideBar {
-    from {
-        right: 0;
-    }
-    to {
-        right: -258px;
-    }
+  from {
+    right: 0;
+  }
+  to {
+    right: -258px;
+  }
 }
 
 .Link {
-    text-decoration: none;
-    color: white;
-    font-weight: bold;
-    font-size: 25px;
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  font-size: 25px;
 }
