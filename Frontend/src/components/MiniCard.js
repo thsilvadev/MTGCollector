@@ -318,46 +318,49 @@ const MiniCard = ({
       );
     } else if (table === "deck") {
       return (
-        <div
-          className={styles.MinierCard}
-          onLoad={changeCardClass}
-          onClick={deleteFromDeck}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onMouseMove={handleMouseMove}
-          draggable="true"
-          onDragStart={(e) => handleOnDrag(e, id_constructed)}
-          onTouchStart={handleTouchEnter}
-          onTouchEnd={handleTouchLeave}
-          onTouchMove={handleMouseMove}
-        >
-          <div className={styles.Count}>
-            <p>{count}x</p>
-          </div>
-
-          <div className={styles.Main}>
-            <span>{cardName}</span>
-            <span className={styles.cardCost}>{cardCost}</span>
-          </div>
-
+        <div>
           <div
-            className={styles.Card}
-            style={{
-              position: "absolute",
-              left: `${scaledCardPosition.x}px`,
-              top: `${scaledCardPosition.y}px`,
-              display: isMouseOver || istouchOver ? "block" : "none",
-            }}
+            className={styles.MinierCard}
+            onLoad={changeCardClass}
+            onClick={deleteFromDeck}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onMouseMove={handleMouseMove}
+            draggable="true"
+            onDragStart={(e) => handleOnDrag(e, id_constructed)}
+            onTouchStart={handleTouchEnter}
+            onTouchEnd={handleTouchLeave}
+            onTouchMove={handleMouseMove}
           >
-            <img
-              style={{
-                height: "300px",
-              }}
-              className={`${isBattleOrPlane}`}
-              src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
-              alt="card"
-            />
+            <div className={styles.Count}>
+              <p>{count}x</p>
+            </div>
+
+            <div className={styles.Main}>
+              <span>{cardName}</span>
+              <span className={styles.cardCost}>{cardCost}</span>
+            </div>
+
+            
           </div>
+          <div
+              className={styles.Card}
+              style={{
+                position: "absolute",
+                left: `${scaledCardPosition.x}px`,
+                top: `${scaledCardPosition.y}px`,
+                display: isMouseOver || istouchOver ? "block" : "none",
+              }}
+            >
+              <img
+                style={{
+                  height: "300px",
+                }}
+                className={`${isBattleOrPlane}`}
+                src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+                alt="card"
+              />
+            </div>
         </div>
       );
     }
