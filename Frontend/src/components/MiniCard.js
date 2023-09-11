@@ -182,7 +182,7 @@ const MiniCard = ({
     // Check if the hovered card is on the left side of the screen
     const isOnLeftSide = cardX < centerX - shift;
 
-    const x = e.clientX - cardRect.left - card.offsetWidth / 2 + 150;
+    const x = e.clientX - cardRect.left - card.offsetWidth / 2 + 175;
     const y = e.clientY - cardRect.top - card.offsetHeight / 2;
     const xRight = e.clientX - cardRect.left - card.offsetWidth / 2 - 150;
     const z = e.clientY - cardRect.top - card.offsetHeight / 2 + 50;
@@ -307,7 +307,7 @@ const MiniCard = ({
           >
             <img
               style={{
-                height: "300px",
+                height: "350px",
               }}
               className={`${isBattleOrPlane}`}
               src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}

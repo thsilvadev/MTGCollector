@@ -3,6 +3,8 @@ import styles from '../styles/Header.module.css'
 
 //imgs
 import MTG from '../images/MTGcardvault.png';
+import logo2 from '../images/logo2white.png';
+import logo2dark from '../images/logo2dark.png';
 
 //tools
 import React, { useState } from "react";
@@ -24,13 +26,15 @@ function Header() {
     setIsDarkMode(darkModeToggle)
   }
 
+
+  const darkIcon = isDarkMode ? logo2 : logo2dark ;
   const darkNavbar = isDarkMode ? 'navbar-dark bg-dark' : 'navbar bg-light' ;
 
   return (
     <nav className={`navbar navbar-expand-md ${darkNavbar} ps-3 pe-3`}>
       <div className="container-fluid">
         <a className="navbar-brand" href="/">
-          <span><img src={MTG} className={styles.title} width="105" alt="Logo" /></span>
+          <span><img src={darkIcon} className={styles.title} width="40" alt="Logo" /></span>
         </a>
         
         <button

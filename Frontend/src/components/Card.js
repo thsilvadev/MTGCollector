@@ -159,24 +159,32 @@ function Card({
     HandleOffset(e);
     inCollection(); // Fetch data when Touch enters the card
     setIsTouchOver(true);
+    console.log(istouchOver)
   };
 
   const handleTouchLeave = () => {
+    setIsHoverable(false);
     setIsTouchOver(false);
+    console.log(istouchOver)
   };
 
   const renderer = () => {
-    if (!isMouseOver || !istouchOver) {
-      return null; // Return null if the mouse is not over the card
-    }
-
-    if (collectionCard.length === 0) {
-      return <span>not obtained</span>;
+  
+    if (isMouseOver || istouchOver){
+      if (collectionCard.length === 0) {
+        return <span>not obtained</span>;
+      } else {
+        console.log('overlay rendered');
+        return collectionCard.map((hoveredCard) => (
+          <span key={hoveredCard.id}>on Collection: {hoveredCard.countById}</span>
+        ));
+        
+      }
     } else {
-      return collectionCard.map((hoveredCard) => (
-        <span key={hoveredCard.id}>on Collection: {hoveredCard.countById}</span>
-      ));
+      return null;
     }
+      
+    
   };
 
   //Drag and Drop (e.dataTransfer JS method)
@@ -256,7 +264,7 @@ function Card({
     // 363 is the width of the scaledCard.
 
     //for mouse position hover
-    const x = e.clientX - cardRect.left - card.offsetWidth / 2 + 50;
+    const x = e.clientX - cardRect.left - card.offsetWidth / 2 - 50;
     const y = e.clientY - cardRect.top - card.offsetHeight / 2 - 50;
     const xRight = e.clientX - cardRect.left - card.offsetWidth / 2 - 250;
 
