@@ -156,10 +156,6 @@
   scale: 0.45;
   z-index: 10;
 
-  @media (min-width: 1920px){
-    scale: 0.60;
-    left: 175px;
-  }
 }
 
 .LeftPlaneOrBattle {
@@ -169,10 +165,6 @@
   scale: 0.45;
   z-index: 10;
 
-  @media (min-width: 1920px){
-    scale: 0.60;
-    left: 250px;
-  }
 }
 
 .Right {
@@ -182,10 +174,6 @@
   scale: 0.45;
   z-index: 10;
 
-  @media (min-width: 1920px){
-    scale: 0.60;
-    right: 175px;
-  }
 }
 
 
@@ -196,10 +184,6 @@
   scale: 0.45;
   z-index: 10;
 
-  @media (min-width: 1920px){
-    scale: 0.60;
-    right: 250px;
-  }
 }
 
 .scaledCard {
