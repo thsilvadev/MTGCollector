@@ -67,6 +67,8 @@ const MiniCard = ({
   //Drag and Drop (e.dataTransfer JS method)
 
   const handleOnDrag = (e, cardId) => {
+    setIsMouseOver(false);
+    setIsTouchOver(false);
     e.dataTransfer.clearData();
     e.dataTransfer.setData("cardDeletion", cardId);
   };
@@ -318,7 +320,9 @@ const MiniCard = ({
       );
     } else if (table === "deck") {
       return (
-        <div>
+        <div style={{
+          position: 'relative'
+        }}>
           <div
             className={styles.MinierCard}
             onLoad={changeCardClass}

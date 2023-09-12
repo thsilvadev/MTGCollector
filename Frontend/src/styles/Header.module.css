@@ -2,6 +2,21 @@ a:hover {
     color: green !important;
     font-weight: bold;
 }
+
+.Login {
+    position: absolute;
+    right: 93px;
+    top: 11px;
+}
+
+.LoginImg {
+    padding-right: 10px;
+}
+
+.toggled_Login {
+        display: flex;
+        justify-content: center;
+}
 /*
 .hidden {
     height: 0%;
@@ -33,3 +48,12 @@ a:hover {
     }
 }
 */
+
+.title {
+    scale: 1;
+    transition: scale .3s;
+}
+
+.title:hover {
+     scale: 1.3;
+}

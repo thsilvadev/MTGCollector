@@ -184,7 +184,6 @@ function Card({
       return null;
     }
       
-    
   };
 
   //Drag and Drop (e.dataTransfer JS method)
@@ -341,6 +340,7 @@ function Card({
   //Toggle hover on whenever scaledCard is disabled.
   const [isHoverable, setIsHoverable] = useState(false);
   const hoverableClass = isHoverable ? styles.Hover : "";
+  const battleClass = isHoverable && (battle || plane) ? styles.scaledPlaneOrBattle : "";
 
   return (
     <div className={componentContainer}>
@@ -349,7 +349,7 @@ function Card({
           src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
           onClick={clickHandler}
           alt="card"
-          className={`${isCollected} ${hoverableClass}`}
+          className={`${isCollected} ${hoverableClass} ${battleClass}`}
           onLoad={changeCardClass}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}

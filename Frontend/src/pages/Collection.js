@@ -99,18 +99,35 @@ function Collection() {
     //on drop, get card ID
     setIsDraggedOver(false);
     const pickedCard = e.dataTransfer.getData("card");
-    if (pickedCard) {
-      postOnDeck(pickedCard);
-      console.log("card Id:", pickedCard);
-    } else if (!pickedCard) {
-      console.log("no data was caught");
+    const pickedMiniCard = e.dataTransfer.getData("cardDeletion");
+    if (e.currentTarget.id === "lower") {
+      if (pickedCard) {
+        postOnDeck(pickedCard);
+        console.log("card Id:", pickedCard);
+      } else {
+        console.log("no data was caught");
+      }
+    } else if (e.currentTarget.id === "upper") {
+      if (pickedMiniCard) {
+        deleteFromDeck(pickedMiniCard);
+        console.log("card id_constructed: ", pickedMiniCard);
+      } else {
+        console.log("no data was caught");
+      }
     }
   };
 
   const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDraggedOver(true);
-    console.log("drag over");
+      e.preventDefault();
+      if (e.currentTarget.id === "lower"){
+        setIsDraggedOver(true);
+      } else {
+        setIsDraggedOver(false);
+      }
+
+      console.log("drag over");
+
+    
   };
 
   //make it a dropzone using `e.dataTransfer.getData`
@@ -127,6 +144,15 @@ function Collection() {
         .then(console.log(`id postado: ${collectionId}`))
         .then(handleRefresherToggler());
     }
+  };
+
+  //Delete from Deck
+  const deleteFromDeck = (cardIdConstructed) => {
+    
+      Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`)
+        .then(console.log(`requested to delete card from deck`))
+        .then(handleRefresherToggler());
+    
   };
 
   //selectDeck
@@ -224,8 +250,6 @@ function Collection() {
 
     // Determine the deck combination name
     const res = getDeckNotation(uniqueColorsArray);
-    console.log("color:", res);
-    console.log(deckCards);
     return res;
   };
 
@@ -285,40 +309,42 @@ function Collection() {
 
   return (
     <div className={styles.Background}>
-      <SearchContainer
-        baseOfSearch="collection"
-        onParamsChange={handleSuperParams}
-      />
-
-      <div className={styles.cardsContainer}>
-        <Scrollbars style={{ width: "90%", height: "100%" }}>
-          <div
-            className={`d-flex flex-nowrap ${styles.cardsRow}`}
-            onWheel={handleHorizontalScroll}
-            scrollLeft={scrollLeft}
-          >
-            {cards.map((card, key) => (
-              <Card
-                key={key}
-                id={card.id}
-                multiverseId={card.multiverseId}
-                scryfallId={card.scryfallId}
-                name={card.name}
-                types={card.types}
-                keywords={card.keywords}
-                table="collection"
-                id_collection={card.id_collection}
-                refresh={handleRefresherToggler}
-              />
-            ))}
-          </div>
-        </Scrollbars>
-        <PrevNext
-          onPageChange={handlePage}
-          page={page}
-          elementsArray={cards}
-          where="collection"
+      <div onDrop={handleDrop} id="upper" droppable="true" onDragOver={handleDragOver}>
+        <SearchContainer
+          baseOfSearch="collection"
+          onParamsChange={handleSuperParams}
         />
+
+        <div className={styles.cardsContainer}>
+          <Scrollbars style={{ width: "90%", height: "100%" }}>
+            <div
+              className={`d-flex flex-nowrap ${styles.cardsRow}`}
+              onWheel={handleHorizontalScroll}
+              scrollLeft={scrollLeft}
+            >
+              {cards.map((card, key) => (
+                <Card
+                  key={key}
+                  id={card.id}
+                  multiverseId={card.multiverseId}
+                  scryfallId={card.scryfallId}
+                  name={card.name}
+                  types={card.types}
+                  keywords={card.keywords}
+                  table="collection"
+                  id_collection={card.id_collection}
+                  refresh={handleRefresherToggler}
+                />
+              ))}
+            </div>
+          </Scrollbars>
+          <PrevNext
+            onPageChange={handlePage}
+            page={page}
+            elementsArray={cards}
+            where="collection"
+          />
+        </div>
       </div>
       <div
         className={uponDraggingItem}
@@ -326,8 +352,9 @@ function Collection() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        id="lower"
       >
-        <div  className={styles.selectDeck}>
+        <div className={styles.selectDeck}>
           <div id="lol" className={styles.even}>
             <span>{handleDeckColor()}</span>
           </div>

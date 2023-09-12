@@ -2,9 +2,10 @@
 import styles from '../styles/Header.module.css'
 
 //imgs
-import MTG from '../images/MTGcardvault.png';
 import logo2 from '../images/logo2white.png';
 import logo2dark from '../images/logo2dark.png';
+import loginDark from '../images/login-dark.png';
+import loginWhite from '../images/login-white.png';
 
 //tools
 import React, { useState } from "react";
@@ -28,6 +29,8 @@ function Header() {
 
 
   const darkIcon = isDarkMode ? logo2 : logo2dark ;
+  const darkLogin = isDarkMode ? loginWhite : loginDark;
+  const loginClass = isCollapsed ? styles.Login : styles.toggledLogin ;
   const darkNavbar = isDarkMode ? 'navbar-dark bg-dark' : 'navbar bg-light' ;
 
   return (
@@ -70,6 +73,12 @@ function Header() {
             <li className="nav-item">
               <a className="nav-link" href="/contact">
                 Contact
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className={`nav-link ${loginClass}`} href="/login">
+              <img src={darkLogin} className={styles.LoginImg} width="40" alt="Logo" />
+                Register or Log-in
               </a>
             </li>
             <li className="nav-item">

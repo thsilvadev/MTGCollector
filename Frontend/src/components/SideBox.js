@@ -129,7 +129,7 @@ const SideBox = ({ modalToggler, refresher }) => {
   const boxClass = modalToggler ? styles.OpenBoxDiv : styles.ClosedBoxDiv;
   const uponDraggingItem = isDraggedOver
     ? styles.UponDraggedItem
-    : styles.OpenBoxDiv;
+    : '';
 
   //managing scroll to top when nextPrev clicked
 
