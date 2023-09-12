@@ -155,9 +155,7 @@ function Home() {
       Axios.delete(`${window.name}/card/${cardIdCollection}`)
         .then(console.log(`Card deleted from collection`))
         .then(toggleRefresh());
-    } else {
-      window.alert("deletion canceled");
-    }
+    } 
   };
 
   const handleDrop = (e) => {
