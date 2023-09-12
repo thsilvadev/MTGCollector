@@ -174,7 +174,6 @@ function Card({
       if (collectionCard.length === 0) {
         return <span>not obtained</span>;
       } else {
-        console.log('overlay rendered');
         return collectionCard.map((hoveredCard) => (
           <span key={hoveredCard.id}>on Collection: {hoveredCard.countById}</span>
         ));
@@ -190,6 +189,7 @@ function Card({
 
   const handleOnDrag = (e, cardId) => {
     console.log("dragStart");
+    console.log("settinData: ", cardId)
     e.dataTransfer.clearData();
     e.dataTransfer.setData("card", cardId);
   };
@@ -284,10 +284,10 @@ function Card({
           setIsHoverable(false);
           if (isOnLeftSide) {
             setScaledCardPosition({ x, y });
-            console.log("isOnLeftSide");
+
           } else {
             setScaledCardPosition({ x: xRight, y });
-            console.log("isNotOnLeftSide");
+
           }
         }
       } else {
@@ -331,8 +331,6 @@ function Card({
             setScaledCardClass(styles.Right);
           }
         }
-
-        console.log(scaledCardClass);
       }
     }
   };

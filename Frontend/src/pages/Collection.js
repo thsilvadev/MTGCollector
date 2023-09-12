@@ -87,12 +87,10 @@ function Collection() {
 
   const handleDragEnter = () => {
     setIsDraggedOver(true);
-    console.log("drag entered");
   };
 
   const handleDragLeave = () => {
     setIsDraggedOver(false);
-    console.log("drag leaved");
   };
 
   const handleDrop = (e) => {
@@ -118,16 +116,14 @@ function Collection() {
   };
 
   const handleDragOver = (e) => {
-      e.preventDefault();
-      if (e.currentTarget.id === "lower"){
-        setIsDraggedOver(true);
-      } else {
-        setIsDraggedOver(false);
-      }
+    e.preventDefault();
+    if (e.currentTarget.id === "lower") {
+      setIsDraggedOver(true);
+    } else {
+      setIsDraggedOver(false);
+    }
 
-      console.log("drag over");
-
-    
+    console.log("drag over");
   };
 
   //make it a dropzone using `e.dataTransfer.getData`
@@ -137,22 +133,64 @@ function Collection() {
     let chosenDeck = selectedDeck;
 
     if (chosenDeck !== null) {
-      Axios.post(`${window.name}/eachDeck/`, {
-        id_card: collectionId,
-        deck: chosenDeck,
-      })
-        .then(console.log(`id postado: ${collectionId}`))
-        .then(handleRefresherToggler());
+      let collectionIdString = collectionId.toString();
+
+      let onDeckCard = deckCards.find(
+        (card) => card.id_card.toString() === collectionIdString
+      );
+      let onCollectionCard = cards.find(
+        (card) => card.id_collection.toString() === collectionIdString
+      );
+
+      let onDeckCounter = onDeckCard ? onDeckCard.countById : 0;
+      console.log("how many on deck: ", onDeckCounter);
+      let onCollectionCounter = onCollectionCard
+        ? onCollectionCard.countById
+        : 0;
+      console.log("how many on collection: ", onCollectionCounter);
+
+      let CardName = onCollectionCard.name;
+      console.log("card name: ", CardName);
+      let nameCounter = 0;
+
+      deckCards.forEach((card) => {
+        if (card.name === CardName) {
+          nameCounter += card.countById;
+        }
+      });
+
+      let onCollectionSuperType = onCollectionCard.supertypes;
+      console.log("cards with the same name on deck: ", nameCounter);
+
+      console.log("decksize: ", DeckSize);
+
+      if (onCollectionCounter - onDeckCounter <= 0) {
+        alert(
+          "You don't own that many of this card to put on your deck! First, add it to your collection."
+        );
+      } else if (
+        (onDeckCounter >= 4 || nameCounter >= 4) &&
+        onCollectionSuperType !== "Basic"
+      ) {
+        alert("You have already 4 cards of this in the deck!");
+      } else if (DeckSize >= 60) {
+        alert("Your deck already has 60 cards! (Commander available soon)");
+      } else {
+        Axios.post(`${window.name}/eachDeck/`, {
+          id_card: collectionId,
+          deck: chosenDeck,
+        })
+          .then(console.log(`id postado: ${collectionId}`))
+          .then(handleRefresherToggler());
+      }
     }
   };
 
   //Delete from Deck
   const deleteFromDeck = (cardIdConstructed) => {
-    
-      Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`)
-        .then(console.log(`requested to delete card from deck`))
-        .then(handleRefresherToggler());
-    
+    Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`)
+      .then(console.log(`requested to delete card from deck`))
+      .then(handleRefresherToggler());
   };
 
   //selectDeck
@@ -193,6 +231,7 @@ function Collection() {
   }, [selectedDeck, refresherToggler]);
 
   //How many cards there are in selected deck?
+
   const handleCardCount = () => {
     if (selectedDeck) {
       let deckCardsCount = 0;
@@ -204,6 +243,8 @@ function Collection() {
       return "";
     }
   };
+
+  let DeckSize = handleCardCount();
 
   //Dividing this deck in up to 7 columns
 
@@ -309,7 +350,12 @@ function Collection() {
 
   return (
     <div className={styles.Background}>
-      <div onDrop={handleDrop} id="upper" droppable="true" onDragOver={handleDragOver}>
+      <div
+        onDrop={handleDrop}
+        id="upper"
+        droppable="true"
+        onDragOver={handleDragOver}
+      >
         <SearchContainer
           baseOfSearch="collection"
           onParamsChange={handleSuperParams}
@@ -376,7 +422,7 @@ function Collection() {
             </select>
           </div>
           <div id="3" className={styles.even}>
-            <span>{handleCardCount()} Cards</span>
+            <span>{DeckSize} Cards</span>
           </div>
         </div>
         <div className={styles.minicardsContainer}>
@@ -386,6 +432,8 @@ function Collection() {
               manaArray.length > 0 && (
                 <div className={styles.minicardsCol} key={index}>
                   {manaArray
+                    .slice() // Create a shallow copy of the array to avoid mutating the original
+                    .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by 'name'
                     .map((deckCard, key) => (
                       <MiniCard
                         key={key}
@@ -402,8 +450,7 @@ function Collection() {
                         types={deckCard.types}
                         keywords={deckCard.keywords}
                       />
-                    ))
-                    .sort((a, b) => b - a)}
+                    ))}
                 </div>
               )
           )}
