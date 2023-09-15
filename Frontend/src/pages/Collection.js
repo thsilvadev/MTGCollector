@@ -1,6 +1,9 @@
 //styles
 import styles from "../styles/Collection.module.css";
 
+//imgs
+import deckColorsImg from "../images/deckColorsImg.jpg";
+
 //Imports
 
 import Card from "../components/Card";
@@ -173,8 +176,6 @@ function Collection() {
         onCollectionSuperType !== "Basic"
       ) {
         alert("You have already 4 cards of this in the deck!");
-      } else if (DeckSize >= 60) {
-        alert("Your deck already has 60 cards! (Commander available soon)");
       } else {
         Axios.post(`${window.name}/eachDeck/`, {
           id_card: collectionId,
@@ -245,6 +246,8 @@ function Collection() {
   };
 
   let DeckSize = handleCardCount();
+  const RenderedDeckSize = DeckSize > 0 ? DeckSize + " Cards" : "";
+  const isLessThanSixty = DeckSize < 60 && DeckSize !== "" ? styles.Red : styles.Normal;
 
   //Dividing this deck in up to 7 columns
 
@@ -324,7 +327,7 @@ function Collection() {
       FiveColored: ["W", "U", "B", "R", "G"],
     };
 
-    let bestMatch = "Custom"; // Initialize with a default value
+    let bestMatch = ""; // Initialize with a default value
 
     // Iterate through each color combination
     for (const deck in colorCombinations) {
@@ -402,7 +405,8 @@ function Collection() {
       >
         <div className={styles.selectDeck}>
           <div id="lol" className={styles.even}>
-            <span>{handleDeckColor()}</span>
+            <span className={styles.DeckColor}>{handleDeckColor()}</span>
+            <div className={styles.hide}><img src={deckColorsImg} width="250" alt="a list of all color combination names" /></div>
           </div>
 
           <div className={styles.odd}>
@@ -422,7 +426,7 @@ function Collection() {
             </select>
           </div>
           <div id="3" className={styles.even}>
-            <span>{DeckSize} Cards</span>
+            <span className={isLessThanSixty}>{RenderedDeckSize}</span>
           </div>
         </div>
         <div className={styles.minicardsContainer}>
