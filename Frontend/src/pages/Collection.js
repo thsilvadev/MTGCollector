@@ -18,6 +18,8 @@ import React, { useState, useEffect } from "react";
 
 import { Scrollbars } from "react-custom-scrollbars-2";
 
+import { useAuthHeader } from "react-auth-kit";
+
 import MiniCard from "../components/MiniCard";
 
 //Component
@@ -62,8 +64,20 @@ function Collection() {
   }, 450);
 
   //get filtered and paginated Collection Cards in real time
+
+
+  //Headers configuration
+  const authHeader = useAuthHeader()
+  
+  const config = {
+    headers:{
+      authorization: authHeader()
+    }
+  }
+
+
   useEffect(() => {
-    Axios.get(`${window.name}/collection/${page}?${superParams}`)
+    Axios.get(`${window.name}/collection/${page}?${superParams}`, config)
       .then((response) => {
         setCards(response.data);
       })
