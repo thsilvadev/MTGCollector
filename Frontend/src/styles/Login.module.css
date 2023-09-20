@@ -1,9 +1,9 @@
 .loginContainer {
-    width: 250px;
+    width: 400px;
     height: max-content;
     margin: auto;
     background-color: #bcbcbc;
-    padding: 20px 15px;
+    padding: 20px 50px;
     margin-top: 120px;
     margin-bottom: 120px;
     border-radius: 7px;
@@ -48,7 +48,7 @@ h1 h2 {
     transition: 0.4s;
 }
 
-button:hover {
+.button:hover {
     color: white;
     box-shadow: 0 0 20px rgba(104, 85, 224, 0.6);
     background-color: rgba(104, 85, 224, 1);
