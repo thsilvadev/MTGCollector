@@ -5,6 +5,7 @@ import styles from "../styles/SideBox.module.css";
 import React, { useState, useEffect, useRef } from "react";
 import Axios from "axios";
 import { Scrollbars } from "react-custom-scrollbars-2";
+import { useAuthHeader } from "react-auth-kit";
 
 //Components
 import MiniCard from "./MiniCard";
@@ -113,13 +114,23 @@ const SideBox = ({ modalToggler, refresher }) => {
     setLocalRefreshCards(refresher);
   }, [refresher]);
 
+
+    //Headers configuration
+    const authHeader = useAuthHeader()
+  
+    const config = {
+      headers:{
+        authorization: authHeader()
+      }
+    }
+
   useEffect(() => {
     //This is for adding cards
     console.log("logging liftedRefreshCards changing:", localRefreshCards);
     //This is for deleting cards
     console.log("logging refreshCards changing:", refreshCards);
     //GET 'EM!
-    Axios.get(`${window.name}/collection/${page}`).then((response) => {
+    Axios.get(`${window.name}/collection/${page}`, config).then((response) => {
       setCards(response.data);
     });
   }, [page, refreshCards, localRefreshCards]);
