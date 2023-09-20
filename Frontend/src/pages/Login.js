@@ -1,11 +1,16 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as yup from "yup"; //yup needs to be imported like that or destructured for specific resources.
 import Axios from "axios";
+import { useNavigate } from 'react-router-dom';
+import { useSignIn } from "react-auth-kit";
 
 //styles
 import styles from "../styles/Login.module.css";
 
 function Login() {
+  const navigate = useNavigate();
+  const signIn = useSignIn();
+
   const handleClickLogin = (values) => {
     Axios.post(`${window.name}/login`, {
         email: values.email,
@@ -18,12 +23,20 @@ function Login() {
         } else {
           // Handle the success case
           alert(response.data.message);
+          //get Json Web Token and store it
+          signIn({
+            token: response.data.token,
+            expiresIn: 3600,
+            tokenType: "Bearer",
+            authState: { email: values.email },
+          })
+          navigate('/collection');
         }
       })
       .catch((error) => {
         // Handle any network or other errors
         console.error("An error occurred:", error);
-        alert("An error occurred while registering.");
+        alert("An error occurred while attempting to login.");
       });
   };
 
@@ -44,7 +57,7 @@ function Login() {
       .catch((error) => {
         // Handle any network or other errors
         console.error("An error occurred:", error);
-        alert("An error occurred while attempting to log in.");
+        alert("An error occurred while attempting to register.");
       });
   };
 

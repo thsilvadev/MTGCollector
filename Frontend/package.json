@@ -11,6 +11,7 @@
     "bootstrap": "^5.3.0",
     "formik": "^2.4.4",
     "react": "^18.2.0",
+    "react-auth-kit": "^2.12.7",
     "react-beautiful-dnd": "^13.1.1",
     "react-custom-scrollbars-2": "^4.5.0",
     "react-dom": "^18.2.0",

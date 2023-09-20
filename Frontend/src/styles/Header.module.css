@@ -1,6 +1,11 @@
 a:hover {
     color: green !important;
     font-weight: bold;
+    cursor: pointer;
+}
+
+.signOut {
+    margin-left: 5px;
 }
 
 .Login {

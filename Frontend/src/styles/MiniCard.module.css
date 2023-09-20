@@ -136,13 +136,13 @@
   }
   
   .scaledCard {
-    border-radius: 10px;
+    border-radius: 12px;
     animation: hover-animation 0.3s forwards;
     z-index: 10;
   }
   
   .scaledPlaneOrBattle {
-    border-radius: 10px;
+    border-radius: 12px;
     animation: battle-hover-animation 0.3s forwards;
     z-index: 10;
   }

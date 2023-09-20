@@ -8,6 +8,8 @@ import Deck from "../components/Deck";
 //tools
 import { React, useState, useEffect } from "react";
 import Axios from "axios";
+import { useAuthHeader } from "react-auth-kit";
+
 
 //imgs
 import newDeck from "../images/newDeck.png";
@@ -42,13 +44,28 @@ function Decks() {
     );
   };
 
+  //Getting decks 
+
+  //Headers configuration
+  const authHeader = useAuthHeader()
+  
+  const config = {
+    headers:{
+      authorization: authHeader()
+    }
+  }
+
+  
+
   useEffect(() => {
-    Axios.get(`${window.name}/decks/${page}`)
+    Axios.get(`${window.name}/decks/${page}`, config)
       .then((response) => {
         setDecks(response.data);
       })
       .then(console.log("toggling refresher:", refresh));
   }, [page, refresh]);
+
+
 
   const createDeck = () => {
     let deckName = prompt(`What is the name of the deck?`, "Default");
@@ -60,7 +77,7 @@ function Decks() {
         color: "",
         card_count: 0,
         id_deck: null,
-      }).then(toggleRefresh());
+      }, config).then(toggleRefresh());
     }
   };
 
