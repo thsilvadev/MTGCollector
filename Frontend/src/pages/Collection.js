@@ -194,16 +194,16 @@ function Collection() {
         Axios.post(`${window.name}/eachDeck/`, {
           id_card: collectionId,
           deck: chosenDeck,
-        })
+        }, config)
           .then(console.log(`id postado: ${collectionId}`))
-          .then(handleRefresherToggler());
+          .then(() => handleRefresherToggler());
       }
     }
   };
 
   //Delete from Deck
   const deleteFromDeck = (cardIdConstructed) => {
-    Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`)
+    Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`, config)
       .then(console.log(`requested to delete card from deck`))
       .then(handleRefresherToggler());
   };
@@ -213,17 +213,22 @@ function Collection() {
   const [selectedDeck, setSelectedDeck] = useState(0);
 
   const handleDeckChange = (event) => {
-    setSelectedDeck(event.target.value);
-    window.scrollTo({ top: 120, behavior: "smooth" });
-    handleDeckColor();
-    console.log(`selected deck: ${selectedDeck}`);
+    if (event.target.value !== 'Default'){
+      setSelectedDeck(event.target.value);
+      window.scrollTo({ top: 120, behavior: "smooth" });
+      handleDeckColor();
+      console.log(`selected deck: ${selectedDeck}`);
+    } else {
+      setSelectedDeck(0);
+    }
+    
   };
 
   //Decks
   const [decks, setDecks] = useState([]);
 
   useEffect(() => {
-    Axios.get(`${window.name}/decks/0`)
+    Axios.get(`${window.name}/decks/0`, config)
       .then((response) => {
         setDecks(response.data);
       })
@@ -236,7 +241,7 @@ function Collection() {
 
   useEffect(() => {
     if (selectedDeck) {
-      Axios.get(`${window.name}/eachDeck/${selectedDeck}`)
+      Axios.get(`${window.name}/eachDeck/${selectedDeck}`, config)
         .then((response) => {
           setDeckCards(response.data);
         })

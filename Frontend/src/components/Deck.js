@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import Axios from 'axios';
+import { useAuthHeader } from "react-auth-kit";
+
+
 import styles from "../styles/Deck.module.css";
 
 const Deck = ({ colorIdentity, description, id_deck, name }) => {
@@ -20,8 +23,17 @@ const deckCardCount = deckCards.length;
 
   }
 
+   //Headers configuration
+   const authHeader = useAuthHeader()
+  
+   const config = {
+     headers:{
+       authorization: authHeader()
+     }
+   }
+
   useEffect(() => {
-    Axios.get(`${window.name}/eachDeck/${id_deck}`).then(
+    Axios.get(`${window.name}/eachDeck/${id_deck}`, config).then(
       (response) => {
         setDeckCards(response.data);
       }

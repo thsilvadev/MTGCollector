@@ -46,8 +46,8 @@ const SideBox = ({ modalToggler, refresher }) => {
         card_id: cardId,
         card_condition: cardCondition,
         id_collection:
-          null /* later implement that. This is for multiple users (multiple collection) */,
-      }).then(() => {
+          null /* later implement that. This could be for multiple collections */,
+      }, config).then(() => {
         console.log(`Card posted of id: ${cardId}`);
         toggleRefresh();
       });
