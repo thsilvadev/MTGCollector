@@ -17,6 +17,8 @@ import Axios from "axios";
 
 import React, { useState, useEffect } from "react";
 
+import { useAuthHeader } from "react-auth-kit";
+
 //imgs
 import welcome from "../images/welcome.png";
 import welcome3 from "../images/welcome3.png";
@@ -150,9 +152,19 @@ function Home() {
   };
 
   //Delete from Collection
+
+    //Headers configuration
+    const authHeader = useAuthHeader()
+  
+    const config = {
+      headers:{
+        authorization: authHeader()
+      }
+    }
+
   const deleteFromCollection = (cardIdCollection) => {
     if (window.confirm(`Confirm deletion?`)) {
-      Axios.delete(`${window.name}/card/${cardIdCollection}`)
+      Axios.delete(`${window.name}/card/${cardIdCollection}`, config)
         .then(console.log(`Card deleted from collection`))
         .then(toggleRefresh());
     } 

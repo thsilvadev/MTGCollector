@@ -5,6 +5,8 @@ import styles from "../styles/MiniCard.module.css";
 import Axios from "axios";
 import { React, useState } from "react";
 
+import { useAuthHeader } from "react-auth-kit";
+
 //imgs
 import black from "../images/black.png";
 import green from "../images/green.png";
@@ -27,12 +29,22 @@ const MiniCard = ({
   keywords,
 }) => {
   //Delete
+
+  //Headers configuration
+  const authHeader = useAuthHeader()
+  
+  const config = {
+    headers:{
+      authorization: authHeader()
+    }
+  }
+
   //Delete from Collection
   const deleteFromCollection = () => {
     if (
       window.confirm(`You're deleting ${name} from your collection. Confirm?`)
     ) {
-      Axios.delete(`${window.name}/card/${id_collection}`).then(
+      Axios.delete(`${window.name}/card/${id_collection}`, config).then(
         console.log(`requested to delete ${name} from collection`)
       );
       toggle();
@@ -42,7 +54,7 @@ const MiniCard = ({
   //Delete from Deck
   const deleteFromDeck = () => {
     if (window.confirm(`You're deleting ${name} from your deck. Confirm?`)) {
-      Axios.delete(`${window.name}/eachDeck/${id_constructed}`).then(
+      Axios.delete(`${window.name}/eachDeck/${id_constructed}`, config).then(
         console.log(`requested to delete ${name} from collection`)
       );
       toggle();

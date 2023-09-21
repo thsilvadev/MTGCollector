@@ -4,6 +4,8 @@
 import { React, useState } from "react";
 import Axios from "axios";
 
+import { useAuthHeader } from "react-auth-kit";
+
 //styles
 
 import styles from "../styles/Card.module.css";
@@ -89,6 +91,15 @@ function Card({
 
   //Post
 
+   //Headers configuration
+   const authHeader = useAuthHeader()
+  
+   const config = {
+     headers:{
+       authorization: authHeader()
+     }
+   }
+
   //postOnCollection
   const postOnCollection = () => {
     //Use prompt() method for card condition. Just for instance.
@@ -111,7 +122,7 @@ function Card({
         card_id: id,
         card_condition: cardCondition,
         id_collection: null /* later implement that */,
-      }).then(() => {
+      }, config).then(() => {
         console.log(`Card posted of id: ${id}`);
         toggleRefresh();
       });
@@ -124,7 +135,7 @@ function Card({
     if (
       window.confirm(`You're deleting ${name} from your collection. Confirm?`)
     ) {
-      Axios.delete(`${window.name}/card/${id_collection}`)
+      Axios.delete(`${window.name}/card/${id_collection}`, config)
         .then(console.log(`${name} deleted from collection`))
         .then(toggleRefresh());
     }
@@ -139,7 +150,7 @@ function Card({
 
   //get
   const inCollection = () => {
-    Axios.get(`${window.name}/card/${id}`).then((response) => {
+    Axios.get(`${window.name}/card/${id}`, config).then((response) => {
       setCollectionCard(response.data);
     });
   };
@@ -148,11 +159,13 @@ function Card({
     HandleOffset(e);
     inCollection(); // Fetch data when mouse enters the card
     setIsMouseOver(true);
+    console.log(isMouseOver)
   };
 
   const handleMouseLeave = () => {
     setIsMouseOver(false);
     setIsHoverable(false);
+    console.log(isMouseOver)
   };
 
   const handleTouchEnter = (e) => {

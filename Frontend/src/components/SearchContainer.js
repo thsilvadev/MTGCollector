@@ -236,14 +236,12 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   //Getting Sets
 
-  /* 
-1)We use JSON.parse to parse the stored data from localStorage and set localSets to an empty array [] if it's null.
-
-2) In the useEffect, we check if localSets is an empty array [] instead of null. If it's empty, we make the Axios request to fetch the data, and then we store it in localStorage as a JSON string using JSON.stringify(response.data).
-
-  */
+  // In the useEffect, we check if localSets is an empty array [] instead of null. If it's empty, we make the Axios request to fetch the data, and then we store it in localStorage as a JSON string using JSON.stringify(response.data).
+ 
   //Local Storage will be used to not fetch data everytime component is rendered.
+
   //Also we will locally control LocalSets version, so whenever there are any updates in the database, we re-fetch on client side.
+  
   const [localSets, setLocalSets] = useState([]);
 
 
