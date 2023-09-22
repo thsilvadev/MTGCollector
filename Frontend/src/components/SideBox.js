@@ -105,7 +105,7 @@ const SideBox = ({ modalToggler, refresher }) => {
   // Function to toggle the refreshCards state
   const toggleRefresh = debounce(() => {
     setRefreshCards((prevRefresh) => !prevRefresh);
-  }, 650);
+  }, 450);
 
   //Have to create a local state variable for refresher to work
   const [localRefreshCards, setLocalRefreshCards] = useState(false);
