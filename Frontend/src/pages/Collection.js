@@ -148,57 +148,12 @@ function Collection() {
   //postOnDeck
   const postOnDeck = (collectionId) => {
     let chosenDeck = selectedDeck;
-
-    if (chosenDeck !== null) {
-      let collectionIdString = collectionId.toString();
-
-      let onDeckCard = deckCards.find(
-        (card) => card.id_card.toString() === collectionIdString
-      );
-      let onCollectionCard = cards.find(
-        (card) => card.id_collection.toString() === collectionIdString
-      );
-
-      let onDeckCounter = onDeckCard ? onDeckCard.countById : 0;
-      console.log("how many on deck: ", onDeckCounter);
-      let onCollectionCounter = onCollectionCard
-        ? onCollectionCard.countById
-        : 0;
-      console.log("how many on collection: ", onCollectionCounter);
-
-      let CardName = onCollectionCard.name;
-      console.log("card name: ", CardName);
-      let nameCounter = 0;
-
-      deckCards.forEach((card) => {
-        if (card.name === CardName) {
-          nameCounter += card.countById;
-        }
-      });
-
-      let onCollectionSuperType = onCollectionCard.supertypes;
-      console.log("cards with the same name on deck: ", nameCounter);
-
-      console.log("decksize: ", DeckSize);
-
-      if (onCollectionCounter - onDeckCounter <= 0) {
-        alert(
-          "You don't own that many of this card to put on your deck! First, add it to your collection."
-        );
-      } else if (
-        (onDeckCounter >= 4 || nameCounter >= 4) &&
-        onCollectionSuperType !== "Basic"
-      ) {
-        alert("You have already 4 cards of this in the deck!");
-      } else {
-        Axios.post(`${window.name}/eachDeck/`, {
-          id_card: collectionId,
-          deck: chosenDeck,
-        }, config)
-          .then(console.log(`id postado: ${collectionId}`))
-          .then(() => handleRefresherToggler());
-      }
-    }
+    Axios.post(`${window.name}/eachDeck/`, {
+      id_card: collectionId,
+      deck: chosenDeck,
+    }, config)
+      .then(console.log(`id postado: ${collectionId}`))
+      .then(() => handleRefresherToggler());
   };
 
   //Delete from Deck
@@ -402,6 +357,9 @@ function Collection() {
                   table="collection"
                   id_collection={card.id_collection}
                   refresh={handleRefresherToggler}
+                  getChosenDeck={selectedDeck}
+                  getDeckCards={deckCards}
+                  getCollectionCards={cards}
                 />
               ))}
             </div>

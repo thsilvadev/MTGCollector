@@ -144,12 +144,11 @@ function Home() {
   };
 
   // Function to toggle the refreshCards state
-  const toggleRefresh = () => {
-    debounce(
-      setLiftedRefreshCards((prevRefresh) => !prevRefresh),
+  const toggleRefresh = debounce(() => {
+      setLiftedRefreshCards((prevRefresh) => !prevRefresh);
+  },
       450
     );
-  };
 
   //Delete from Collection
 
@@ -163,11 +162,11 @@ function Home() {
     }
 
   const deleteFromCollection = (cardIdCollection) => {
-    if (window.confirm(`Confirm deletion?`)) {
       Axios.delete(`${window.name}/card/${cardIdCollection}`, config)
-        .then(console.log(`Card deleted from collection`))
-        .then(toggleRefresh());
-    } 
+        .then(() => {
+          console.log(`Card deleted from collection`)
+          toggleRefresh();
+        })
   };
 
   const handleDrop = (e) => {

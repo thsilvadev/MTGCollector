@@ -24,6 +24,9 @@ function Card({
   table,
   id_collection,
   refresh,
+  getChosenDeck,
+  getDeckCards,
+  getCollectionCards
 }) {
   //Scryfall ID management
 
@@ -60,6 +63,7 @@ function Card({
     } else {
       setCollected(false);
     }
+
   };
 
   //Click Handler
@@ -200,9 +204,64 @@ function Card({
 
   //Drag and Drop (e.dataTransfer JS method)
 
+
+  //DRAGGING FROM COLLECTION INTO DECK CASE - Checking if there are already 4 of it on deck OR if there is enough on Collection to put it.
+  const isDraggable = (collectionId) => {
+
+    let chosenDeck = getChosenDeck;
+
+    if (chosenDeck !== null) {
+      let collectionIdString = collectionId.toString(); //let's turn this id number into string
+
+      let onDeckCard = getDeckCards.find(
+        (card) => card.id_card.toString() === collectionIdString
+      );
+      let onCollectionCard = getCollectionCards.find(
+        (card) => card.id_collection.toString() === collectionIdString
+      );
+
+      let onDeckCounter = onDeckCard ? onDeckCard.countById : 0;
+      console.log("how many on deck: ", onDeckCounter);
+
+      let onCollectionCounter = onCollectionCard
+        ? onCollectionCard.countById
+        : 0;
+      console.log("how many on collection: ", onCollectionCounter);
+
+      let CardName = onCollectionCard.name;
+      console.log("card name: ", CardName);
+      let nameCounter = 0;
+
+      getDeckCards.forEach((card) => {
+        if (card.name === CardName) {
+          nameCounter += card.countById;
+        }
+      });
+
+      let onCollectionSuperType = onCollectionCard.supertypes;
+      console.log("cards with the same name on deck: ", nameCounter);
+
+      if (onCollectionCounter - onDeckCounter <= 0) {
+        return "You don't own that many of this card to put on your deck! First, add it to your collection.";
+      } else if (
+        (onDeckCounter >= 4 || nameCounter >= 4) &&
+        onCollectionSuperType !== "Basic"
+      ) {
+        return "You have already 4 cards of this in the deck!";
+      } else {
+        return true;
+      }
+    }
+  }
+
+  let isDraggableCall = id_collection ? isDraggable(id_collection) : true ;
+
+  const isDraggableToggler = (isDraggableCall === true && typeof isDraggableCall === 'boolean') ? true : false;
+  const isDraggableHover = (isDraggableCall === true && typeof isDraggableCall === 'boolean') ? '' : isDraggableCall;
+
   const handleOnDrag = (e, cardId) => {
     console.log("dragStart");
-    console.log("settinData: ", cardId)
+    console.log("settingData: ", cardId)
     e.dataTransfer.clearData();
     e.dataTransfer.setData("card", cardId);
   };
@@ -364,7 +423,7 @@ function Card({
           onLoad={changeCardClass}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          draggable={true}
+          draggable={isDraggableToggler}
           onDragStart={(e) => handleTableDrag()(e)}
           onMouseMove={HandleOffset}
           onTouchStart={handleTouchEnter}
