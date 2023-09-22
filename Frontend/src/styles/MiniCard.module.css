@@ -3,12 +3,14 @@
     height: 24px;
     width: 249px;
     color: black;
-    margin: 2px 0px 2px 5px;
-
+    margin: 4px 0px 4px 5px;
+    border-radius: 2% / 50%;
     font-size: 13px;
     font-family: "BelerenBold";
     justify-items: center;
     vertical-align: middle;
+    box-shadow:  2px 2px 1px #ae9f77,
+    -1px -1px 2px #ffffdd;
 }
 
 .MinierCard {
@@ -26,6 +28,7 @@
 
 .Main:hover {
     border: solid 2px rgb(80, 139, 184);
+    border-radius: 2% / 50%;
     scale: 1.06;
 }
 
@@ -48,13 +51,13 @@
 .Main {
     align-items: center;
     padding-left: 3px;
-    border: solid 2px black;
+    border: transparent 2px black;
     border-radius: 2% / 50%;
     width: 221px;
     display: flex;
     justify-content: space-between;
-    background-color: antiquewhite;
-}
+    background: linear-gradient(145deg, #fdf4c6, #dfcc99);
+  }
 
 /* Icons */
 
