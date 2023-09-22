@@ -254,7 +254,7 @@ function Collection() {
     deckCards.forEach((card) => {
       if (card && typeof card.colorIdentity === "string") {
         // Split the colorIdentity string into individual colors (e.g., "G, U" -> ["G", "U"])
-        const colors = card.colorIdentity.split(", ");
+        const colors = card.colorIdentity.trim().split(", ");
 
         // Add each color to the Set to ensure uniqueness
         colors.forEach((color) => {
@@ -265,6 +265,7 @@ function Collection() {
 
     // Convert the unique colors to an array
     const uniqueColorsArray = Array.from(uniqueColorIdentities);
+    console.log(uniqueColorsArray)
 
     // Determine the deck combination name
     const res = getDeckNotation(uniqueColorsArray);
@@ -273,6 +274,11 @@ function Collection() {
 
   function getDeckNotation(deckColors) {
     const colorCombinations = {
+      MonoGreen: ["G"],
+      MonoRed: ["R"],
+      MonoBlue: ["U"],
+      MonoWhite: ["W"],
+      MonoBlack: ["B"],
       Azorius: ["U", "W"],
       Boros: ["R", "W"],
       Dimir: ["U", "B"],
@@ -317,7 +323,7 @@ function Collection() {
       }
 
       // If it's a match and the combination is longer than the current best match
-      if (isMatch && colors.length > bestMatch.split(", ").length) {
+      if (isMatch && colors.length >= bestMatch.split(", ").length) {
         bestMatch = deck;
       }
     }

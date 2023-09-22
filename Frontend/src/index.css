@@ -4,7 +4,7 @@
   --bodyBackgroundActive: #e2e2ea;
   --textColor: #5A5353;
   --linkColor: cyan;
-  --sideBar: rgb(157, 69, 15);
+  --sideBar: rgb(240, 216, 143);
 }
 
 [data-theme="dark"] {
@@ -12,7 +12,7 @@
   --bodyBackgroundActive: #000000;
   --textColor: white;
   --linkColor: navy;
-  --sideBar: rgb(157, 69, 15);
+  --sideBar: #f8e3aa;
 }
 
 
