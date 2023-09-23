@@ -1,35 +1,39 @@
 .Background {
-    background-color: var(--bodyBackground);
+  background-color: var(--bodyBackground);
 }
 
 .title {
-    font-size: 80px;
+  font-size: 80px;
 }
 
 .decksContainer {
-    display: flex;
-    justify-content: center;
-    width: 80%;
-    margin: auto;
-    animation: hideSideBar .1s;
+  display: flex;
+  justify-content: center;
+  width: 80%;
+  margin: auto;
+  animation: hideSideBar 0.1s;
 }
 
 .addDeck {
-    margin: auto;
-    min-width: 200px;
-    max-width: 290px;
-    height: 225px;
+  margin: 14px auto 30px auto;
+  min-width: 200px;
+  max-width: 290px;
+  height: 225px;
 }
 
 .newDeckImg:hover {
-    scale: 1.1;
-    border: 4px solid pink;
-
+  scale: 1.1;
+  border: 4px solid pink;
+  box-shadow: 17px 17px 34px #474747, -17px -17px 34px #616161;
+  cursor: pointer;
 }
 
 .newDeckImg {
-    margin: 15px 0 15px 0;
-    width: 100%;
-    height: 100%;
+  margin: 15px 0 15px 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50px;
+  background: linear-gradient(145deg, #4c4c4c, #5a5a5a);
+  box-shadow: 5px 5px 11px #474747, -5px -5px 11px #616161;
+  transition: box-shadow, scale 0.2s;
 }
-
