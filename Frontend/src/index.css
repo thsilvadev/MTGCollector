@@ -5,6 +5,11 @@
   --textColor: #5A5353;
   --linkColor: cyan;
   --sideBar: rgb(240, 216, 143);
+  --deckBackground: linear-gradient(145deg, #cacaca, #f0f0f0);
+  --deckBoxShadow: 5px 5px 10px #bebebe,
+  -5px -5px 10px #ffffff;
+  --deckBoxShadowHover: 20px 20px 60px #bebebe,
+  -20px -20px 60px #ffffff;
 }
 
 [data-theme="dark"] {
@@ -13,6 +18,11 @@
   --textColor: white;
   --linkColor: navy;
   --sideBar: #f8e3aa;
+  --deckBackground: linear-gradient(145deg, #768392, #474f55);
+  --deckBoxShadow: 5px 5px 10px #1c1f23,
+  -5px -5px 10px #262b2f;
+  --deckBoxShadowHover: 20px 20px 60px #1c1f23,
+  -20px -20px 60px #262b2f;
 }
 
 

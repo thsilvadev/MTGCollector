@@ -68,20 +68,21 @@ function Decks() {
       );
     } else {
       let deckName = prompt(`What is the name of the deck?`, "Default");
-      let deckDescription = prompt(`Describe your deck`, "...");
-
-      if (deckName !== null && deckDescription !== null) {
-        Axios.post(
-          `${window.name}/decks`,
-          {
-            name: deckName,
-            description: deckDescription,
-            color: "",
-            card_count: 0,
-            id_deck: null,
-          },
-          config
-        ).then(() => toggleRefresh());
+      if (deckName !== null) {
+        let deckDescription = prompt(`Describe your deck`, "...");
+        if (deckDescription !== null) {
+          Axios.post(
+            `${window.name}/decks`,
+            {
+              name: deckName,
+              description: deckDescription,
+              color: "",
+              card_count: 0,
+              id_deck: null,
+            },
+            config
+          ).then(() => toggleRefresh());
+        }
       }
     }
   };
@@ -132,6 +133,8 @@ function Decks() {
               description={deck.description}
               id_deck={deck.id_deck}
               name={deck.name}
+              toggler={toggleRefresh}
+              cardCount={deck.card_count}
             />
           ))}
         </div>

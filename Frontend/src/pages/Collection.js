@@ -14,7 +14,7 @@ import PrevNext from "../components/PrevNext";
 
 import Axios from "axios";
 
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 
 import { Scrollbars } from "react-custom-scrollbars-2";
 
@@ -65,16 +65,14 @@ function Collection() {
 
   //get filtered and paginated Collection Cards in real time
 
-
   //Headers configuration
-  const authHeader = useAuthHeader()
-  
-  const config = {
-    headers:{
-      authorization: authHeader()
-    }
-  }
+  const authHeader = useAuthHeader();
 
+  const config = {
+    headers: {
+      authorization: authHeader(),
+    },
+  };
 
   useEffect(() => {
     Axios.get(`${window.name}/collection/${page}?${superParams}`, config)
@@ -118,6 +116,7 @@ function Collection() {
     if (e.currentTarget.id === "lower") {
       if (pickedCard) {
         postOnDeck(pickedCard);
+
         console.log("card Id:", pickedCard);
       } else {
         console.log("no data was caught");
@@ -125,6 +124,7 @@ function Collection() {
     } else if (e.currentTarget.id === "upper") {
       if (pickedMiniCard) {
         deleteFromDeck(pickedMiniCard);
+
         console.log("card id_constructed: ", pickedMiniCard);
       } else {
         console.log("no data was caught");
@@ -148,19 +148,31 @@ function Collection() {
   //postOnDeck
   const postOnDeck = (collectionId) => {
     let chosenDeck = selectedDeck;
-    Axios.post(`${window.name}/eachDeck/`, {
-      id_card: collectionId,
-      deck: chosenDeck,
-    }, config)
-      .then(console.log(`id postado: ${collectionId}`))
-      .then(() => handleRefresherToggler());
+    try {
+      Axios.post(
+        `${window.name}/eachDeck/`,
+        {
+          id_card: collectionId,
+          deck: chosenDeck,
+        },
+        config
+      )
+        .then(console.log(`id postado: ${collectionId}`))
+        .then(() => handleRefresherToggler())
+    } catch (error) {
+      console.error("Failed to add card to deck:", error);
+    }
   };
 
   //Delete from Deck
   const deleteFromDeck = (cardIdConstructed) => {
-    Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`, config)
-      .then(console.log(`requested to delete card from deck`))
-      .then(handleRefresherToggler());
+    try {
+      Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`, config)
+        .then(console.log(`requested to delete card from deck`))
+        .then(() => handleRefresherToggler())
+    } catch (error) {
+      console.error("Failed to remove card from deck:", error);
+    }
   };
 
   //selectDeck
@@ -168,15 +180,13 @@ function Collection() {
   const [selectedDeck, setSelectedDeck] = useState(0);
 
   const handleDeckChange = (event) => {
-    if (event.target.value !== 'Default'){
+    if (event.target.value !== "Default") {
       setSelectedDeck(event.target.value);
       window.scrollTo({ top: 120, behavior: "smooth" });
-      handleDeckColor();
       console.log(`selected deck: ${selectedDeck}`);
     } else {
       setSelectedDeck(0);
     }
-    
   };
 
   //Decks
@@ -213,15 +223,14 @@ function Collection() {
       deckCards.forEach((deckCard) => {
         deckCardsCount += 1 * deckCard.countById;
       });
+
+      console.log("cards in deck: ", deckCardsCount);
       return deckCardsCount;
     } else {
       return "";
     }
   };
 
-  let DeckSize = handleCardCount();
-  const RenderedDeckSize = DeckSize > 0 ? DeckSize + " Cards" : "";
-  const isLessThanSixty = DeckSize < 60 && DeckSize !== "" ? styles.Red : styles.Normal;
 
   //Dividing this deck in up to 7 columns
 
@@ -265,10 +274,12 @@ function Collection() {
 
     // Convert the unique colors to an array
     const uniqueColorsArray = Array.from(uniqueColorIdentities);
-    console.log(uniqueColorsArray)
+
 
     // Determine the deck combination name
     const res = getDeckNotation(uniqueColorsArray);
+    console.log("deck color: ", res)
+
     return res;
   };
 
@@ -331,6 +342,59 @@ function Collection() {
     return bestMatch;
   }
 
+  let deckColorDefined = useMemo(()=> handleDeckColor(), [deckCards]) ;
+  
+  let DeckSize =  useMemo(()=> handleCardCount(), [deckCards]) ;
+  
+    //function to UPDATE deck card_count and deck color
+
+    const updateDeck = debounce(async () => {
+      if (selectedDeck) {
+        let selectedDeckObject = decks.find(
+          (deck) => deck.id_deck.toString() === selectedDeck
+        );
+  
+        try {
+          console.log("Updating deck color to:", deckColorDefined);
+          if (deckColorDefined !== selectedDeckObject.color) {
+            await Axios.put(
+              `${window.name}/decks/${selectedDeck}`,
+              {
+                color: `${deckColorDefined}`,
+              },
+              config
+            );
+            console.log("Update Succeeded: color", deckColorDefined);
+          }
+  
+          console.log("Updating deck card_count to:", DeckSize);
+          if (DeckSize !== selectedDeckObject.card_count) {
+            await Axios.put(
+              `${window.name}/decks/${selectedDeck}`,
+              {
+                card_count: `${DeckSize}`,
+              },
+              config
+            );
+            console.log("Update Succeeded: card_count", DeckSize);
+          }
+        } catch (error) {
+          console.error("Update Failed:", error);
+        }
+      }
+    }, 1250);
+
+     // Add a useEffect hook to trigger updateDeck when deckColorDefined or DeckSize change
+  useEffect(() => {
+    if (selectedDeck) {
+      updateDeck(deckColorDefined, DeckSize);
+    }
+  }, [deckColorDefined, DeckSize]);
+  
+  const RenderedDeckSize = DeckSize > 0 ? DeckSize + " Cards" : "";
+  const isLessThanSixty =
+    DeckSize < 60 && DeckSize !== "" ? styles.Red : styles.Normal;
+
   return (
     <div className={styles.Background}>
       <div
@@ -388,8 +452,14 @@ function Collection() {
       >
         <div className={styles.selectDeck}>
           <div id="lol" className={styles.even}>
-            <span className={styles.DeckColor}>{handleDeckColor()}</span>
-            <div className={styles.hide}><img src={deckColorsImg} width="250" alt="a list of all color combination names" /></div>
+            <span className={styles.DeckColor}>{deckColorDefined}</span>
+            <div className={styles.hide}>
+              <img
+                src={deckColorsImg}
+                width="250"
+                alt="a list of all color combination names"
+              />
+            </div>
           </div>
 
           <div className={styles.odd}>

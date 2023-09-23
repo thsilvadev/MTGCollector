@@ -221,15 +221,14 @@ function Card({
       );
 
       let onDeckCounter = onDeckCard ? onDeckCard.countById : 0;
-      console.log("how many on deck: ", onDeckCounter);
+
 
       let onCollectionCounter = onCollectionCard
         ? onCollectionCard.countById
         : 0;
-      console.log("how many on collection: ", onCollectionCounter);
+
 
       let CardName = onCollectionCard.name;
-      console.log("card name: ", CardName);
       let nameCounter = 0;
 
       getDeckCards.forEach((card) => {
@@ -239,7 +238,7 @@ function Card({
       });
 
       let onCollectionSuperType = onCollectionCard.supertypes;
-      console.log("cards with the same name on deck: ", nameCounter);
+
 
       if (onCollectionCounter - onDeckCounter <= 0) {
         return "You don't own that many of this card to put on your deck! First, add it to your collection.";
