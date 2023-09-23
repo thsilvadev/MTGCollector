@@ -111,6 +111,8 @@ function Decks() {
     ? `justify-content-start`
     : `justify-content-center`;
 
+    
+
   return (
     <div className={styles.Background}>
       <div className="container">

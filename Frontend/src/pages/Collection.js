@@ -21,10 +21,18 @@ import { Scrollbars } from "react-custom-scrollbars-2";
 import { useAuthHeader } from "react-auth-kit";
 
 import MiniCard from "../components/MiniCard";
+import { useLocation, useParams } from "react-router-dom";
 
 //Component
 
 function Collection() {
+
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+
+  // Get the value of the 'selected' query parameter
+  const selected = searchParams.get('selected');
+
   //cards
   const [cards, setCards] = useState([]);
 
@@ -198,6 +206,10 @@ function Collection() {
         setDecks(response.data);
       })
       .then(console.log("got decks"));
+    if (selected !== undefined){
+      setSelectedDeck(selected);
+    }
+    console.log(selectedDeck, selected)
   }, []);
 
   //eachDeck
@@ -212,6 +224,8 @@ function Collection() {
         })
         .then(console.log(`selected deck: ${selectedDeck}`))
         .then(console.log(`refresherToggler: ${refresherToggler}`));
+    } else {
+      setDeckCards([])
     }
   }, [selectedDeck, refresherToggler]);
 

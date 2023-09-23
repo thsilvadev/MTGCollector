@@ -107,12 +107,14 @@ function Login() {
               name="password"
               className={styles.formField}
               placeholder="Password"
+              type="password"
             />
 
             <ErrorMessage
               component="span"
               name="password"
               className={styles.formError}
+              type="password"
             />
           </div>
           <button className={styles.button} type="submit">
@@ -145,6 +147,7 @@ function Login() {
               name="password"
               className={styles.formField}
               placeholder="Password"
+              type="password"
             />
 
             <ErrorMessage
@@ -158,6 +161,7 @@ function Login() {
               name="confirmPassword"
               className={styles.formField}
               placeholder="Confirm Password"
+              type="password"
             />
 
             <ErrorMessage
