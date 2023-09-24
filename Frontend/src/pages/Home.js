@@ -281,7 +281,7 @@ function Home() {
         </ul>
 
         <h1 className={styles.h1}>
-          All <i>Magic: The Gathering</i> Cards
+          All <span className={styles.MTG}><i>Magic: The Gathering</i></span> cards
         </h1>
         <SearchContainer
           baseOfSearch="AllCards"

@@ -21,29 +21,31 @@ import { Scrollbars } from "react-custom-scrollbars-2";
 import { useAuthHeader } from "react-auth-kit";
 
 import MiniCard from "../components/MiniCard";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 //Component
 
 function Collection() {
 
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  
+  //On Decks page, clicking on a deck will bring the user up here in Collection and automatically selects clicked deck, showing it´s cards.
+  /**/ const location = useLocation();
+  /**/ const searchParams = new URLSearchParams(location.search);
 
-  // Get the value of the 'selected' query parameter
-  const selected = searchParams.get('selected');
+  /**/ // Get the value of the 'selected' query parameter
+  /**/ const selected = searchParams.get("selected");
 
-  //cards
+  //Collection cards
   const [cards, setCards] = useState([]);
 
-  //page value
+  //Page value for Collection cards
   const [page, setPage] = useState(0);
 
   const handlePage = (pageData) => {
     setPage(pageData);
   };
 
-  //get Params
+  //get Params for Search Container.
   const [superParams, setSuperParams] = useState("");
   const handleSuperParams = (paramsData) => {
     setSuperParams(paramsData);
@@ -124,7 +126,6 @@ function Collection() {
     if (e.currentTarget.id === "lower") {
       if (pickedCard) {
         postOnDeck(pickedCard);
-
         console.log("card Id:", pickedCard);
       } else {
         console.log("no data was caught");
@@ -132,7 +133,6 @@ function Collection() {
     } else if (e.currentTarget.id === "upper") {
       if (pickedMiniCard) {
         deleteFromDeck(pickedMiniCard);
-
         console.log("card id_constructed: ", pickedMiniCard);
       } else {
         console.log("no data was caught");
@@ -166,7 +166,7 @@ function Collection() {
         config
       )
         .then(console.log(`id postado: ${collectionId}`))
-        .then(() => handleRefresherToggler())
+        .then(() => handleRefresherToggler());
     } catch (error) {
       console.error("Failed to add card to deck:", error);
     }
@@ -177,7 +177,7 @@ function Collection() {
     try {
       Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`, config)
         .then(console.log(`requested to delete card from deck`))
-        .then(() => handleRefresherToggler())
+        .then(() => handleRefresherToggler());
     } catch (error) {
       console.error("Failed to remove card from deck:", error);
     }
@@ -206,10 +206,12 @@ function Collection() {
         setDecks(response.data);
       })
       .then(console.log("got decks"));
-    if (selected !== undefined){
+    if (selected !== undefined) {
       setSelectedDeck(selected);
+      window.scrollTo({ top: 120, behavior: "smooth" });
+      console.log(`selected deck: ${selectedDeck}`);
     }
-    console.log(selectedDeck, selected)
+    console.log(selectedDeck, selected);
   }, []);
 
   //eachDeck
@@ -225,7 +227,7 @@ function Collection() {
         .then(console.log(`selected deck: ${selectedDeck}`))
         .then(console.log(`refresherToggler: ${refresherToggler}`));
     } else {
-      setDeckCards([])
+      setDeckCards([]);
     }
   }, [selectedDeck, refresherToggler]);
 
@@ -244,7 +246,6 @@ function Collection() {
       return "";
     }
   };
-
 
   //Dividing this deck in up to 7 columns
 
@@ -289,10 +290,9 @@ function Collection() {
     // Convert the unique colors to an array
     const uniqueColorsArray = Array.from(uniqueColorIdentities);
 
-
     // Determine the deck combination name
     const res = getDeckNotation(uniqueColorsArray);
-    console.log("deck color: ", res)
+    console.log("deck color: ", res);
 
     return res;
   };
@@ -356,55 +356,55 @@ function Collection() {
     return bestMatch;
   }
 
-  let deckColorDefined = useMemo(()=> handleDeckColor(), [deckCards]) ;
-  
-  let DeckSize =  useMemo(()=> handleCardCount(), [deckCards]) ;
-  
-    //function to UPDATE deck card_count and deck color
+  let deckColorDefined = useMemo(() => handleDeckColor(), [deckCards]);
 
-    const updateDeck = debounce(async () => {
-      if (selectedDeck) {
-        let selectedDeckObject = decks.find(
-          (deck) => deck.id_deck.toString() === selectedDeck
-        );
-  
-        try {
-          console.log("Updating deck color to:", deckColorDefined);
-          if (deckColorDefined !== selectedDeckObject.color) {
-            await Axios.put(
-              `${window.name}/decks/${selectedDeck}`,
-              {
-                color: `${deckColorDefined}`,
-              },
-              config
-            );
-            console.log("Update Succeeded: color", deckColorDefined);
-          }
-  
-          console.log("Updating deck card_count to:", DeckSize);
-          if (DeckSize !== selectedDeckObject.card_count) {
-            await Axios.put(
-              `${window.name}/decks/${selectedDeck}`,
-              {
-                card_count: `${DeckSize}`,
-              },
-              config
-            );
-            console.log("Update Succeeded: card_count", DeckSize);
-          }
-        } catch (error) {
-          console.error("Update Failed:", error);
+  let DeckSize = useMemo(() => handleCardCount(), [deckCards]);
+
+  //function to UPDATE deck card_count and deck color
+
+  const updateDeck = debounce(async () => {
+    if (selectedDeck) {
+      let selectedDeckObject = decks.find(
+        (deck) => deck.id_deck.toString() === selectedDeck
+      );
+
+      try {
+        console.log("Updating deck color to:", deckColorDefined);
+        if (deckColorDefined !== selectedDeckObject.color) {
+          await Axios.put(
+            `${window.name}/decks/${selectedDeck}`,
+            {
+              color: `${deckColorDefined}`,
+            },
+            config
+          );
+          console.log("Update Succeeded: color", deckColorDefined);
         }
-      }
-    }, 1250);
 
-     // Add a useEffect hook to trigger updateDeck when deckColorDefined or DeckSize change
+        console.log("Updating deck card_count to:", DeckSize);
+        if (DeckSize !== selectedDeckObject.card_count) {
+          await Axios.put(
+            `${window.name}/decks/${selectedDeck}`,
+            {
+              card_count: `${DeckSize}`,
+            },
+            config
+          );
+          console.log("Update Succeeded: card_count", DeckSize);
+        }
+      } catch (error) {
+        console.error("Update Failed:", error);
+      }
+    }
+  }, 1250);
+
+  // Add a useEffect hook to trigger updateDeck when deckColorDefined or DeckSize change
   useEffect(() => {
     if (selectedDeck) {
       updateDeck(deckColorDefined, DeckSize);
     }
   }, [deckColorDefined, DeckSize]);
-  
+
   const RenderedDeckSize = DeckSize > 0 ? DeckSize + " Cards" : "";
   const isLessThanSixty =
     DeckSize < 60 && DeckSize !== "" ? styles.Red : styles.Normal;

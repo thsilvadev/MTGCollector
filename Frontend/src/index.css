@@ -17,7 +17,7 @@
   --bodyBackgroundActive: #000000;
   --textColor: white;
   --linkColor: navy;
-  --sideBar: #f8e3aa;
+  --sideBar: rgb(240, 216, 143);
   --deckBackground: linear-gradient(145deg, #768392, #474f55);
   --deckBoxShadow: 5px 5px 10px #1c1f23,
   -5px -5px 10px #262b2f;

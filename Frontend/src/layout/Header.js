@@ -114,8 +114,8 @@ function Header() {
               </a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="/wishlist">
-                Wishlist
+              <a className="nav-link" id={styles.off} href="/wishlist">
+                Wishlist <span className={styles.coming}>coming soon</span>
               </a>
             </li>
             <li className="nav-item">

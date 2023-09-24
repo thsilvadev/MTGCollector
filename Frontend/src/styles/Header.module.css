@@ -62,3 +62,11 @@ a:hover {
 .title:hover {
      scale: 1.3;
 }
+
+.coming {
+    font-size: 8px;
+}
+
+#off {
+    pointer-events: none;
+}
