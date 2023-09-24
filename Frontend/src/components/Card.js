@@ -285,7 +285,7 @@ function Card({
 
   //conditional bootstrap class for the whole component
   const componentContainer =
-    table === "allCards" ? "col-12 col-sm-6 col-lg-4 col-xl-3" : "col";
+    table === "allCards" ? "col-12 col-sm-6 col-lg col-xl" : "col";
 
   //Handling Scaled Copy on hover offset
 
