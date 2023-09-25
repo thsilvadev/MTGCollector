@@ -56,5 +56,6 @@
     border: 4px solid rgb(105, 235, 66);
     background: var(--deckBackground);
     box-shadow:  var(--deckBoxShadowHover);
+    cursor: pointer;
 
 }
