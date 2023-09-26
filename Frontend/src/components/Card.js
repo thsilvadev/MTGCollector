@@ -119,7 +119,6 @@ function Card({
         cardCondition = `Undescribed`;
       } else {
         cardCondition = userCondition;
-        alert(`${cardCondition} ${name} card was put into your collection!`);
       }
 
       Axios.post(`${window.name}/collection/`, {
