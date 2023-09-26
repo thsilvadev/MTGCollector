@@ -113,11 +113,7 @@ function Header() {
                 Decks
               </a>
             </li>
-            <li className="nav-item">
-              <a className="nav-link" id={styles.off} href="/wishlist">
-                Wishlist <span className={styles.coming}>coming soon</span>
-              </a>
-            </li>
+            
             <li className="nav-item">
               <a className="nav-link" href="/about">
                 About Us
@@ -126,6 +122,16 @@ function Header() {
             <li className="nav-item">
               <a className="nav-link" href="/contact">
                 Contact
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" id={styles.off} href="/wishlist">
+                Wishlist <span className={styles.coming}>coming soon</span>
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" id={styles.off} href="/wishlist">
+                AI deck builder <span className={styles.coming}>coming soon</span>
               </a>
             </li>
             <li className="nav-item">
