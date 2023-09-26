@@ -115,7 +115,6 @@ function Card({
 
     if (userCondition !== null) {
       if (userCondition === "") {
-        alert(`no condition info was put along with your new card`);
         cardCondition = `Undescribed`;
       } else {
         cardCondition = userCondition;
