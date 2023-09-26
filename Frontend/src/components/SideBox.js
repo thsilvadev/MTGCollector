@@ -30,28 +30,17 @@ const SideBox = ({ modalToggler, refresher }) => {
   //postOnCollection
   const postOnCollection = (cardId) => {
     //Use prompt() method for card condition. Just for instance.
-    let cardCondition;
-    let userCondition = prompt(`What is the card condition?`, "Undescribed");
-
-    if (userCondition !== null) {
-      if (userCondition === "") {
-        alert(`no condition info was put along with your new card`);
-        cardCondition = `Undescribed`;
-      } else {
-        cardCondition = userCondition;
-        alert(` ${cardCondition} card was put into your collection!`);
-      }
 
       Axios.post(`${window.name}/collection/`, {
         card_id: cardId,
-        card_condition: cardCondition,
+        card_condition: `Undescribed`,
         id_collection:
           null /* later implement that. This could be for multiple collections */,
       }, config).then(() => {
         console.log(`Card posted of id: ${cardId}`);
         toggleRefresh();
       });
-    }
+    
   };
 
   const handleDrop = (e) => {
