@@ -9,6 +9,7 @@ import { useAuthHeader } from "react-auth-kit";
 //styles
 
 import styles from "../styles/Card.module.css";
+import { useNavigate } from "react-router";
 
 function Card({
   id,
@@ -42,6 +43,9 @@ function Card({
   const [battle, setBattle] = useState(false);
   const [plane, setPlane] = useState(false);
   const [collected, setCollected] = useState(false);
+
+  //Navigation
+  const navigate = useNavigate();
 
   const isBattleOrPlane =
     battle || plane ? styles.scaledPlaneOrBattle : styles.scaledCard;
@@ -107,30 +111,36 @@ function Card({
   const postOnCollection = () => {
     //Use prompt() method for card condition. Just for instance.
     let cardCondition;
-    let userCondition = prompt(
-      `You're adding ${name} to your collection. What's it's condition?`,
-      "Undescribed"
-    );
+    console.log(authHeader())
+    if (authHeader()) {
+      let userCondition = prompt(
+        `You're adding ${name} to your collection. What's it's condition?`,
+        "Undescribed"
+      );
 
-    if (userCondition !== null) {
-      if (userCondition === "") {
-        cardCondition = `Undescribed`;
-      } else {
-        cardCondition = userCondition;
+      if (userCondition !== null) {
+        if (userCondition === "") {
+          cardCondition = `Undescribed`;
+        } else {
+          cardCondition = userCondition;
+        }
+
+        Axios.post(
+          `${window.name}/collection/`,
+          {
+            card_id: id,
+            card_condition: cardCondition,
+            id_collection: null /* later implement that */,
+          },
+          config
+        ).then(() => {
+          console.log(`Card posted of id: ${id}`);
+          toggleRefresh();
+        });
       }
-
-      Axios.post(
-        `${window.name}/collection/`,
-        {
-          card_id: id,
-          card_condition: cardCondition,
-          id_collection: null /* later implement that */,
-        },
-        config
-      ).then(() => {
-        console.log(`Card posted of id: ${id}`);
-        toggleRefresh();
-      });
+    } else {
+      alert("You must login");
+      navigate("/login");
     }
   };
 
@@ -207,7 +217,7 @@ function Card({
   //DRAGGING FROM COLLECTION INTO DECK CASE - Checking if there are already 4 of it on deck OR if there is enough on Collection to put it.
   const isDraggable = (collectionId) => {
     let chosenDeck = getChosenDeck;
-    
+
     if (chosenDeck !== null) {
       let collectionIdString = collectionId.toString(); //let's turn this id number into string
 
@@ -271,7 +281,6 @@ function Card({
 
   //Handle table variation for dragStart event
   const handleTableDrag = () => {
-
     if (table === "allCards") {
       return (e) => handleOnDrag(e, id);
     } else if (table === "collection") {

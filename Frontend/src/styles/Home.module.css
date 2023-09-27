@@ -83,7 +83,9 @@ overflow: hidden;
   list-style: disc;
   text-align: start;
   margin-bottom: 40px;
-  padding-right: 1px;
+  padding-right: 10px;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .listItem {

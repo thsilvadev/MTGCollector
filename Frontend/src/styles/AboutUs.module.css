@@ -3,9 +3,12 @@
     border-radius: 0px 30px 0px 30px;
 }
 
+
 .text {
     margin-top: 50px;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .title {
@@ -17,5 +20,7 @@
 }
 
 .container {
-    margin: 50px 200px 100px 200px;
+    margin: auto;
+    width: 80%;
+
 }

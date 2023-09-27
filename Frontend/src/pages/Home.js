@@ -19,6 +19,8 @@ import React, { useState, useEffect } from "react";
 
 import { useAuthHeader } from "react-auth-kit";
 
+import { RequireAuth } from "react-auth-kit";
+
 //imgs
 import welcome from "../images/welcome.png";
 import welcome3 from "../images/welcome3.png";
@@ -65,20 +67,6 @@ function Home() {
   //Image Switcher
   const [isImagesLoaded, setIsImagesLoaded] = useState(false);
 
-  /*
-  const [isHovered, setIsHovered] = useState(false);
-  
-
-  const HandleMouseEnter = () => {
-    if(isVeryWideScreen){
-      setIsHovered(true);
-    }
-    
-  };
-  const HandleMouseLeave = () => {
-    setIsHovered(false);
-  };
-  */
 
   useEffect(() => {
     const preloadImages = async () => {
@@ -262,16 +250,16 @@ function Home() {
         </p>
         <ul className={styles.list}>
           <li className={styles.listItem}>
-            Mirror your physical cards by adding cards to your collection.
+            Mirror your physical cards by adding cards to your collection;
           </li>
           <li className={styles.listItem}>
             Build multiple decks with the same cards that you have so you don't
-            need to take notes on shared cards
+            need to take notes on shared cards;
           </li>
 
           <li className={styles.listItem}>
             Fill your wishlist and write a description on each card to remember
-            their role in your malevolent strategies in assigned deck
+            their role in your malevolent strategies in assigned deck;
           </li>
 
           <li className={styles.listItem}>
