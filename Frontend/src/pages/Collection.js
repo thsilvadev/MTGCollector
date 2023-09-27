@@ -26,8 +26,6 @@ import { useLocation } from "react-router-dom";
 //Component
 
 function Collection() {
-
-  
   //On Decks page, clicking on a deck will bring the user up here in Collection and automatically selects clicked deck, showing it´s cards.
   /**/ const location = useLocation();
   /**/ const searchParams = new URLSearchParams(location.search);
@@ -52,6 +50,12 @@ function Collection() {
     console.log(superParams);
   };
 
+  //Total cards in collection
+  const [totalCards, setTotalCards] = useState(0);
+
+  //Handle Droppable
+  const [isDroppable, setIsDroppable] = useState(true);
+
   //Debounced toggle refresher
   const [refresherToggler, setRefresherToggler] = useState(false);
 
@@ -71,7 +75,7 @@ function Collection() {
   const handleRefresherToggler = debounce(() => {
     setRefresherToggler((prevRefresh) => !prevRefresh);
     console.log(`WOW: ${refresherToggler}`);
-  }, 450);
+  }, 150);
 
   //get filtered and paginated Collection Cards in real time
 
@@ -87,7 +91,8 @@ function Collection() {
   useEffect(() => {
     Axios.get(`${window.name}/collection/${page}?${superParams}`, config)
       .then((response) => {
-        setCards(response.data);
+        setTotalCards(response.data.total);
+        setCards(response.data.cards);
       })
       .then(console.log(refresherToggler));
   }, [page, superParams, refresherToggler]);
@@ -118,17 +123,31 @@ function Collection() {
     setIsDraggedOver(false);
   };
 
+
+  /*
+
+  useEffect(() => {
+    console.log('isDroppable updated:', isDroppable);
+    // You can perform other actions here based on the updated state.
+  }, [isDroppable]);
+
+  */
+
   const handleDrop = (e) => {
     //on drop, get card ID
     setIsDraggedOver(false);
+    /* setIsDroppable(false); */
+
     const pickedCard = e.dataTransfer.getData("card");
     const pickedMiniCard = e.dataTransfer.getData("cardDeletion");
     if (e.currentTarget.id === "lower") {
       if (pickedCard) {
         postOnDeck(pickedCard);
+        /* setIsDroppable(true) */
         console.log("card Id:", pickedCard);
       } else {
-        console.log("no data was caught");
+        /* setIsDroppable(true) */
+        console.log("no data was caught.");
       }
     } else if (e.currentTarget.id === "upper") {
       if (pickedMiniCard) {
@@ -156,6 +175,7 @@ function Collection() {
   //postOnDeck
   const postOnDeck = (collectionId) => {
     let chosenDeck = selectedDeck;
+
     try {
       Axios.post(
         `${window.name}/eachDeck/`,
@@ -197,6 +217,15 @@ function Collection() {
     }
   };
 
+  //Select Deck coming from Decks page
+  const comingFromDecks = () => {
+    if (selected !== undefined) {
+      setSelectedDeck(selected);
+      window.scrollTo({ top: 120, behavior: "smooth" });
+      console.log(`selected deck: ${selectedDeck}`);
+    }
+  };
+
   //Decks
   const [decks, setDecks] = useState([]);
 
@@ -206,11 +235,6 @@ function Collection() {
         setDecks(response.data);
       })
       .then(console.log("got decks"));
-    if (selected !== undefined) {
-      setSelectedDeck(selected);
-      window.scrollTo({ top: 120, behavior: "smooth" });
-      console.log(`selected deck: ${selectedDeck}`);
-    }
     console.log(selectedDeck, selected);
   }, []);
 
@@ -228,6 +252,7 @@ function Collection() {
         .then(console.log(`refresherToggler: ${refresherToggler}`));
     } else {
       setDeckCards([]);
+      console.log("no deck selected");
     }
   }, [selectedDeck, refresherToggler]);
 
@@ -396,7 +421,7 @@ function Collection() {
         console.error("Update Failed:", error);
       }
     }
-  }, 1250);
+  }, 200);
 
   // Add a useEffect hook to trigger updateDeck when deckColorDefined or DeckSize change
   useEffect(() => {
@@ -410,13 +435,14 @@ function Collection() {
     DeckSize < 60 && DeckSize !== "" ? styles.Red : styles.Normal;
 
   return (
-    <div className={styles.Background}>
+    <div className={styles.Background} onLoad={comingFromDecks}>
       <div
         onDrop={handleDrop}
         id="upper"
         droppable="true"
         onDragOver={handleDragOver}
       >
+        <h1>You have {totalCards} cards in your collection.</h1>
         <SearchContainer
           baseOfSearch="collection"
           onParamsChange={handleSuperParams}
@@ -463,6 +489,7 @@ function Collection() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         id="lower"
+        droppable={isDroppable}
       >
         <div className={styles.selectDeck}>
           <div id="lol" className={styles.even}>

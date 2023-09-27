@@ -26,7 +26,7 @@ function Card({
   refresh,
   getChosenDeck,
   getDeckCards,
-  getCollectionCards
+  getCollectionCards,
 }) {
   //Scryfall ID management
 
@@ -63,7 +63,6 @@ function Card({
     } else {
       setCollected(false);
     }
-
   };
 
   //Click Handler
@@ -95,14 +94,14 @@ function Card({
 
   //Post
 
-   //Headers configuration
-   const authHeader = useAuthHeader()
-  
-   const config = {
-     headers:{
-       authorization: authHeader()
-     }
-   }
+  //Headers configuration
+  const authHeader = useAuthHeader();
+
+  const config = {
+    headers: {
+      authorization: authHeader(),
+    },
+  };
 
   //postOnCollection
   const postOnCollection = () => {
@@ -120,11 +119,15 @@ function Card({
         cardCondition = userCondition;
       }
 
-      Axios.post(`${window.name}/collection/`, {
-        card_id: id,
-        card_condition: cardCondition,
-        id_collection: null /* later implement that */,
-      }, config).then(() => {
+      Axios.post(
+        `${window.name}/collection/`,
+        {
+          card_id: id,
+          card_condition: cardCondition,
+          id_collection: null /* later implement that */,
+        },
+        config
+      ).then(() => {
         console.log(`Card posted of id: ${id}`);
         toggleRefresh();
       });
@@ -161,53 +164,50 @@ function Card({
     HandleOffset(e);
     inCollection(); // Fetch data when mouse enters the card
     setIsMouseOver(true);
-    console.log(isMouseOver)
+    console.log(isMouseOver);
   };
 
   const handleMouseLeave = () => {
     setIsMouseOver(false);
     setIsHoverable(false);
-    console.log(isMouseOver)
+    console.log(isMouseOver);
   };
 
   const handleTouchEnter = (e) => {
     HandleOffset(e);
     inCollection(); // Fetch data when Touch enters the card
     setIsTouchOver(true);
-    console.log(istouchOver)
+    console.log(istouchOver);
   };
 
   const handleTouchLeave = () => {
     setIsHoverable(false);
     setIsTouchOver(false);
-    console.log(istouchOver)
+    console.log(istouchOver);
   };
 
   const renderer = () => {
-  
-    if (isMouseOver || istouchOver){
+    if (isMouseOver || istouchOver) {
       if (collectionCard.length === 0) {
         return <span>not obtained</span>;
       } else {
         return collectionCard.map((hoveredCard) => (
-          <span key={hoveredCard.id}>on Collection: {hoveredCard.countById}</span>
+          <span key={hoveredCard.id}>
+            on Collection: {hoveredCard.countById}
+          </span>
         ));
-        
       }
     } else {
       return null;
     }
-      
   };
 
   //Drag and Drop (e.dataTransfer JS method)
 
-
   //DRAGGING FROM COLLECTION INTO DECK CASE - Checking if there are already 4 of it on deck OR if there is enough on Collection to put it.
   const isDraggable = (collectionId) => {
-
     let chosenDeck = getChosenDeck;
-
+    
     if (chosenDeck !== null) {
       let collectionIdString = collectionId.toString(); //let's turn this id number into string
 
@@ -220,11 +220,9 @@ function Card({
 
       let onDeckCounter = onDeckCard ? onDeckCard.countById : 0;
 
-
       let onCollectionCounter = onCollectionCard
         ? onCollectionCard.countById
         : 0;
-
 
       let CardName = onCollectionCard.name;
       let nameCounter = 0;
@@ -237,7 +235,6 @@ function Card({
 
       let onCollectionSuperType = onCollectionCard.supertypes;
 
-
       if (onCollectionCounter - onDeckCounter <= 0) {
         return "You don't own that many of this card to put on your deck! First, add it to your collection.";
       } else if (
@@ -249,24 +246,32 @@ function Card({
         return true;
       }
     }
-  }
+  };
 
-  let isDraggableCall = id_collection ? isDraggable(id_collection) : true ;
+  //If Card is not collection card, making it All Card, it's draggable. But if it's a collection card, it may return true (draggable), or a string (undraggable)
+  let isDraggableCall = id_collection ? isDraggable(id_collection) : true;
 
-  const isDraggableToggler = (isDraggableCall === true && typeof isDraggableCall === 'boolean') ? true : false;
-  const isDraggableHover = (isDraggableCall === true && typeof isDraggableCall === 'boolean') ? '' : isDraggableCall;
+  //if isDraggableCall returns true, it's dragging anyway. So for the toggler, we want the true value. If it returns a string, it's false - not dragging.
+  const isDraggableToggler =
+    isDraggableCall === true && typeof isDraggableCall === "boolean"
+      ? true
+      : false;
+  //If dragging, no string; if not dragging, this variable will get the returned string (which will be put in an overlay on collection card.)
+  const isDraggableHover =
+    isDraggableCall === true && typeof isDraggableCall === "boolean"
+      ? ""
+      : isDraggableCall;
 
   const handleOnDrag = (e, cardId) => {
-    console.log("dragStart");
-    console.log("settingData: ", cardId)
+    setIsMouseOver(false);
+    setIsTouchOver(false);
     e.dataTransfer.clearData();
     e.dataTransfer.setData("card", cardId);
   };
 
   //Handle table variation for dragStart event
   const handleTableDrag = () => {
-    setIsMouseOver(false);
-    setIsTouchOver(false);
+
     if (table === "allCards") {
       return (e) => handleOnDrag(e, id);
     } else if (table === "collection") {
@@ -296,13 +301,14 @@ function Card({
 
   const [styleToggler, setStyleToggler] = useState(false);
 
-  const scaledStyle = styleToggler ? {
-    position: "absolute",
-    left: `${scaledCardPosition.x}px`,
-    top: `${scaledCardPosition.y}px`,
-    display: isMouseOver || istouchOver ? "block" : "none",
-  } : { display: isMouseOver || istouchOver ? "block" : "none",
-} ;
+  const scaledStyle = styleToggler
+    ? {
+        position: "absolute",
+        left: `${scaledCardPosition.x}px`,
+        top: `${scaledCardPosition.y}px`,
+        display: isMouseOver || istouchOver ? "block" : "none",
+      }
+    : { display: isMouseOver || istouchOver ? "block" : "none" };
 
   const HandleOffset = (e) => {
     const card = e.currentTarget; // Get the hovered card element
@@ -319,7 +325,7 @@ function Card({
     const viewportWidth = window.innerWidth;
 
     // Calculate the amount by which the scaled copy should be shifted to the center
-    const shift = cardWidth / 2 ;
+    const shift = cardWidth / 2;
 
     // Calculate the X position where the scaled copy should be centered
     const centerX = viewportWidth / 2;
@@ -336,8 +342,6 @@ function Card({
     const y = e.clientY - cardRect.top - card.offsetHeight / 2 - 50;
     const xRight = e.clientX - cardRect.left - card.offsetWidth / 2 - 250;
 
-    
-
     if (table === "allCards") {
       if (viewportWidth < 1064) {
         if (viewportWidth < 576) {
@@ -349,14 +353,12 @@ function Card({
           setIsHoverable(true);
         } else {
           setStyleToggler(true);
-          setScaledCardClass(styles.Default)
+          setScaledCardClass(styles.Default);
           setIsHoverable(false);
           if (isOnLeftSide) {
             setScaledCardPosition({ x, y });
-
           } else {
             setScaledCardPosition({ x: xRight, y });
-
           }
         }
       } else {
@@ -407,7 +409,8 @@ function Card({
   //Toggle hover on whenever scaledCard is disabled.
   const [isHoverable, setIsHoverable] = useState(false);
   const hoverableClass = isHoverable ? styles.Hover : "";
-  const battleClass = isHoverable && (battle || plane) ? styles.scaledPlaneOrBattle : "";
+  const battleClass =
+    isHoverable && (battle || plane) ? styles.scaledPlaneOrBattle : "";
 
   return (
     <div className={componentContainer}>
@@ -427,10 +430,7 @@ function Card({
           onTouchEnd={handleTouchLeave}
           onTouchMove={HandleOffset}
         />
-        <div
-          className={scaledCardClass}
-          style={scaledStyle}
-        >
+        <div className={scaledCardClass} style={scaledStyle}>
           <img
             className={`${isBattleOrPlane}`}
             src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}

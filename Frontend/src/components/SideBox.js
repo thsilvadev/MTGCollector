@@ -73,6 +73,9 @@ const SideBox = ({ modalToggler, refresher }) => {
     setPage(pageData);
   };
 
+    //Total cards in collection
+    const [totalCards, setTotalCards] = useState(0);
+
   //get filtered and paginated Collection Cards in real time
 
   // Add a state variable to trigger card refresh
@@ -120,7 +123,8 @@ const SideBox = ({ modalToggler, refresher }) => {
     console.log("logging refreshCards changing:", refreshCards);
     //GET 'EM!
     Axios.get(`${window.name}/collection/${page}`, config).then((response) => {
-      setCards(response.data);
+      setCards(response.data.cards);
+      setTotalCards(response.data.total);
     });
   }, [page, refreshCards, localRefreshCards]);
 
@@ -153,7 +157,9 @@ const SideBox = ({ modalToggler, refresher }) => {
           <a className={styles.Link} href="/collection">
             Collection
           </a>
+          
         </h6>
+        <span className={styles.total}>{totalCards} cards</span>
         <PrevNext
           onPageChange={handlePage}
           page={page}

@@ -7,7 +7,7 @@
   right: 0;
   width: 268px;
   overflow: visible; /* This is the key to making the child element visible outside the container */
-  background-color: var(--sideBar);
+  background-color: #C06E52;
   border-radius: 4px 0 0 20px;
   z-index: 2;
   opacity: 1;
@@ -74,7 +74,16 @@
 
 .Link {
   text-decoration: none;
-  color: #5a5353;
+  color: #ffffff;
   font-weight: bold;
   font-size: 25px;
+  font-family: 'Roboto';
+  line-height: 1.2;
+}
+
+.total {
+  color: #ffffff;
+  font-size: 13px;
+  font-family: 'Roboto';
+  line-height: 2;
 }

@@ -9,8 +9,7 @@
     font-family: "BelerenBold";
     justify-items: center;
     vertical-align: middle;
-    box-shadow:  2px 2px 1px #ae9f77,
-    -1px -1px 2px #ffffdd;
+
 }
 
 .MinierCard {
@@ -19,18 +18,14 @@
     height: 24px;
     width: 260px;
     color: black;
-    margin: 2px 0px 2px 5px;
+    margin: 5px 0px 5px 5px;
     font-size: 14px;
     font-family: "BelerenBold";
     justify-items: center;
     vertical-align: middle;
 }
 
-.Main:hover {
-    border: solid 2px rgb(80, 139, 184);
-    border-radius: 2% / 50%;
-    scale: 1.06;
-}
+
 
 .Count {
     text-align: start;
@@ -57,7 +52,43 @@
     display: flex;
     justify-content: space-between;
     background: linear-gradient(145deg, #fdf4c6, #dfcc99);
+    box-shadow:  2px 2px 1px #ae9f77,
+    -1px -1px 2px #ffffdd;
   }
+
+  .Main:hover {
+    border: solid 2px rgb(80, 139, 184);
+    border-radius: 2% / 50%;
+    scale: 1.06;
+    box-shadow:  -2px 3px 6px #000000,
+    2px -2px 6px #BA5A31;
+    z-index: 2;
+
+}
+
+.Mainier {
+  align-items: center;
+  padding-left: 3px;
+  border: transparent 2px black;
+  border-radius: 2% / 50%;
+  width: 221px;
+  display: flex;
+  justify-content: space-between;
+  background: linear-gradient(145deg, #fdf4c6, #dfcc99);
+  box-shadow:  2px 2px 1px #ae9f77,
+  -1px -1px 2px #ffffdd;
+  animation: spawn .3s;
+}
+
+.Mainier:hover {
+  border: solid 2px rgb(80, 139, 184);
+  border-radius: 2% / 50%;
+  scale: 1.06;
+  box-shadow:  -6px 6px 8px #000000,
+  2px -5px 8px #3d3d3d;
+  z-index: 2;
+
+}
 
 /* Icons */
 
@@ -92,7 +123,7 @@
   margin: 15px 0px 15px 0px;
   transition: border .1s;
   border-radius: 12px;
-  z-index: 1;
+  z-index: 3;
   position: relative;
 }
 
@@ -184,5 +215,26 @@
   
     100% {
       transform: scale(1.2) rotate(90deg);
+    }
+  }
+
+  /* Minicard Added */
+  @keyframes spawn {
+    0% {
+      color: white;
+      background: white;
+      transform: scale(0);
+    }
+
+    50% {
+      color: white;
+      background: white;
+      transform: scale(1.2);
+    }
+
+    100% {
+      color: rgb(0, 0, 0);
+      background: linear-gradient(145deg, #fdf4c6, #dfcc99);
+      transform: scale(1);
     }
   }
