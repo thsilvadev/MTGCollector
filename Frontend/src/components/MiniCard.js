@@ -352,7 +352,7 @@ const MiniCard = ({
               <p>{count}x</p>
             </div>
 
-            <div className={styles.Main}>
+            <div className={styles.Mainier}>
               <span>{cardName}</span>
               <span className={styles.cardCost}>{cardCost}</span>
             </div>

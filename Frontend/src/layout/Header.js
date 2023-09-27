@@ -131,7 +131,7 @@ function Header() {
             </li>
             <li className="nav-item">
               <a className="nav-link" id={styles.off} href="/wishlist">
-                AI deck builder <span className={styles.coming}>coming soon</span>
+                AI Deck Builder <span className={styles.coming}>coming soon</span>
               </a>
             </li>
             <li className="nav-item">
