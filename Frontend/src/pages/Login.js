@@ -11,6 +11,8 @@ function Login() {
   const navigate = useNavigate();
   const signIn = useSignIn();
 
+  
+
   const handleClickLogin = (values) => {
     Axios.post(`${window.name}/login`, {
         email: values.email,
@@ -81,7 +83,7 @@ function Login() {
   });
 
   return (
-    <div className={styles.loginContainer}>
+    <div className={styles.loginContainer} onLoad={window.scrollTo({ top: 0, behavior: "smooth" })}>
       <h1>Login</h1>
       <Formik
         initialValues={{}}
