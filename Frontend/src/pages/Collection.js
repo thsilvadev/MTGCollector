@@ -77,6 +77,21 @@ function Collection() {
     console.log(`WOW: ${refresherToggler}`);
   }, 150);
 
+
+   // Call comingFromDecks only once when the component mounts
+   useEffect(() => {
+    comingFromDecks();
+  }, []);
+
+    //Select Deck coming from Decks page
+    const comingFromDecks = () => {
+      if (selected !== undefined) {
+        setSelectedDeck(selected);
+        window.scrollTo({ top: 120, behavior: "smooth" });
+        console.log(`selected deck: ${selectedDeck}`);
+      }
+    };
+
   //get filtered and paginated Collection Cards in real time
 
   //Headers configuration
@@ -211,18 +226,9 @@ function Collection() {
     if (event.target.value !== "Default") {
       setSelectedDeck(event.target.value);
       window.scrollTo({ top: 120, behavior: "smooth" });
-      console.log(`selected deck: ${selectedDeck}`);
+      console.log(`selected deckk: ${selectedDeck}`);
     } else {
       setSelectedDeck(0);
-    }
-  };
-
-  //Select Deck coming from Decks page
-  const comingFromDecks = () => {
-    if (selected !== undefined) {
-      setSelectedDeck(selected);
-      window.scrollTo({ top: 120, behavior: "smooth" });
-      console.log(`selected deck: ${selectedDeck}`);
     }
   };
 
@@ -435,7 +441,7 @@ function Collection() {
     DeckSize < 60 && DeckSize !== "" ? styles.Red : styles.Normal;
 
   return (
-    <div className={styles.Background} onLoad={comingFromDecks}>
+    <div className={styles.Background}>
       <div
         onDrop={handleDrop}
         id="upper"

@@ -141,6 +141,7 @@ function Card({
     } else {
       alert("You must login");
       navigate("/login");
+      
     }
   };
 
