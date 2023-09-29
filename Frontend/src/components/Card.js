@@ -447,6 +447,9 @@ function Card({
             alt="card"
           />
         </div>
+        <div className={styles.DraggableOverlay}>
+          <span>{isDraggableHover}</span>
+        </div>
 
         <div className={styles.CardOverlay}>
           <p>{renderer()}</p>
