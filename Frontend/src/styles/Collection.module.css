@@ -100,7 +100,7 @@
     margin: 0;
 }
 
-@media (max-width: 478px) {
+@media (max-width: 567px) {
     .minicardsCol {
       margin: auto;
     }

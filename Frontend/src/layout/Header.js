@@ -80,7 +80,7 @@ function Header() {
   };
 
   return (
-    <nav className={`navbar navbar-expand-md ${darkNavbar} ps-3 pe-3`}>
+    <nav className={`navbar navbar-expand-lg ${darkNavbar} ps-3 pe-3`}>
       <div className="container-fluid">
         <a className="navbar-brand" href="/">
           <span>
