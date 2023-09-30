@@ -6,12 +6,17 @@ import React, { useState, useEffect, useRef } from "react";
 import Axios from "axios";
 import { Scrollbars } from "react-custom-scrollbars-2";
 import { useAuthHeader } from "react-auth-kit";
+import { useNavigate } from "react-router-dom";
 
 //Components
 import MiniCard from "./MiniCard";
 import PrevNext from "./PrevNext";
 
 const SideBox = ({ modalToggler, refresher }) => {
+
+  const navigate = useNavigate();
+
+
   //change css class when card is being dragged over the sidebar
   const [isDraggedOver, setIsDraggedOver] = useState(false);
 
@@ -31,27 +36,37 @@ const SideBox = ({ modalToggler, refresher }) => {
   const postOnCollection = (cardId) => {
     //Use prompt() method for card condition. Just for instance.
 
-      Axios.post(`${window.name}/collection/`, {
+    Axios.post(
+      `${window.name}/collection/`,
+      {
         card_id: cardId,
         card_condition: `Undescribed`,
         id_collection:
           null /* later implement that. This could be for multiple collections */,
-      }, config).then(() => {
-        console.log(`Card posted of id: ${cardId}`);
-        toggleRefresh();
-      });
-    
+      },
+      config
+    ).then(() => {
+      console.log(`Card posted of id: ${cardId}`);
+      toggleRefresh();
+    });
   };
 
   const handleDrop = (e) => {
-    //on drop, get card ID
     setIsDraggedOver(false);
-    const pickedCard = e.dataTransfer.getData("card");
-    if (pickedCard) {
-      postOnCollection(pickedCard);
-      console.log("card Id:", pickedCard);
-    } else if (!pickedCard) {
-      console.log("no data was caught");
+
+    //check if LoggedIn
+    if (authHeader()) {
+      //on drop, get card ID
+      const pickedCard = e.dataTransfer.getData("card");
+      if (pickedCard) {
+        postOnCollection(pickedCard);
+        console.log("card Id:", pickedCard);
+      } else if (!pickedCard) {
+        console.log("no data was caught");
+      }
+    } else {
+      alert("You must login");
+      navigate("/login");
     }
   };
 
@@ -73,8 +88,8 @@ const SideBox = ({ modalToggler, refresher }) => {
     setPage(pageData);
   };
 
-    //Total cards in collection
-    const [totalCards, setTotalCards] = useState(0);
+  //Total cards in collection
+  const [totalCards, setTotalCards] = useState(0);
 
   //get filtered and paginated Collection Cards in real time
 
@@ -106,15 +121,14 @@ const SideBox = ({ modalToggler, refresher }) => {
     setLocalRefreshCards(refresher);
   }, [refresher]);
 
+  //Headers configuration
+  const authHeader = useAuthHeader();
 
-    //Headers configuration
-    const authHeader = useAuthHeader()
-  
-    const config = {
-      headers:{
-        authorization: authHeader()
-      }
-    }
+  const config = {
+    headers: {
+      authorization: authHeader(),
+    },
+  };
 
   useEffect(() => {
     //This is for adding cards
@@ -131,9 +145,7 @@ const SideBox = ({ modalToggler, refresher }) => {
   //css classes
 
   const boxClass = modalToggler ? styles.OpenBoxDiv : styles.ClosedBoxDiv;
-  const uponDraggingItem = isDraggedOver
-    ? styles.UponDraggedItem
-    : '';
+  const uponDraggingItem = isDraggedOver ? styles.UponDraggedItem : "";
 
   //managing scroll to top when nextPrev clicked
 
@@ -157,7 +169,6 @@ const SideBox = ({ modalToggler, refresher }) => {
           <a className={styles.Link} href="/collection">
             Collection
           </a>
-          
         </h6>
         <span className={styles.total}>{totalCards} cards</span>
         <PrevNext

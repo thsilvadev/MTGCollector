@@ -84,7 +84,7 @@ function Login() {
 
   return (
     <div className={styles.loginContainer} onLoad={window.scrollTo({ top: 0, behavior: "smooth" })}>
-      <h1>Login</h1>
+      <h1 className={styles.title}>Login</h1>
       <Formik
         initialValues={{}}
         onSubmit={handleClickLogin}
@@ -124,7 +124,7 @@ function Login() {
           </button>
         </Form>
       </Formik>
-      <h2>Register</h2>
+      <h2 className={styles.title}>Register</h2>
       <Formik
         initialValues={{}}
         onSubmit={handleClickRegister}

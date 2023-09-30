@@ -22,6 +22,7 @@ function Card({
   scryfallId,
   multiverseId,
   keywords,
+  count,
   table,
   id_collection,
   refresh,
@@ -171,9 +172,21 @@ function Card({
     });
   };
 
+  //if table = Collection, just set quantity got on prop 'count'
+  const handleCollectionCard = () => {
+    if (table === 'collection'){
+      setCollectionCard([{
+        id: id,
+        countById: count,
+      }])
+    } else if (table === 'allCards'){
+      inCollection();
+    }
+  }
+
   const handleMouseEnter = (e) => {
     HandleOffset(e);
-    inCollection(); // Fetch data when mouse enters the card
+    handleCollectionCard(); // Fetch data when mouse enters the card
     setIsMouseOver(true);
     console.log(isMouseOver);
   };
@@ -186,7 +199,7 @@ function Card({
 
   const handleTouchEnter = (e) => {
     HandleOffset(e);
-    inCollection(); // Fetch data when Touch enters the card
+    handleCollectionCard(); // Fetch data when Touch enters the card
     setIsTouchOver(true);
     console.log(istouchOver);
   };
@@ -272,6 +285,9 @@ function Card({
     isDraggableCall === true && typeof isDraggableCall === "boolean"
       ? ""
       : isDraggableCall;
+
+
+  const draggableOverlay = isMouseOver || istouchOver ? styles.showingOverlay : styles.hiddenOverlay;
 
   const handleOnDrag = (e, cardId) => {
     setIsMouseOver(false);
@@ -422,6 +438,8 @@ function Card({
   const battleClass =
     isHoverable && (battle || plane) ? styles.scaledPlaneOrBattle : "";
 
+  const draggableClass = isDraggableToggler || !getChosenDeck ? "" : styles.Undraggable;
+
   return (
     <div className={componentContainer}>
       <div className={`${isAllCards}`}>
@@ -429,7 +447,7 @@ function Card({
           src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
           onClick={clickHandler}
           alt="card"
-          className={`${isCollected} ${hoverableClass} ${battleClass}`}
+          className={`${isCollected} ${hoverableClass} ${battleClass} ${draggableClass}`}
           onLoad={changeCardClass}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
@@ -447,7 +465,7 @@ function Card({
             alt="card"
           />
         </div>
-        <div className={styles.DraggableOverlay}>
+        <div className={draggableOverlay}>
           <span>{isDraggableHover}</span>
         </div>
 

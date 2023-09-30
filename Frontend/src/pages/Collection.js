@@ -470,12 +470,14 @@ function Collection() {
                   name={card.name}
                   types={card.types}
                   keywords={card.keywords}
+                  count={card.countById}
                   table="collection"
                   id_collection={card.id_collection}
                   refresh={handleRefresherToggler}
                   getChosenDeck={selectedDeck}
                   getDeckCards={deckCards}
                   getCollectionCards={cards}
+                  
                 />
               ))}
             </div>
