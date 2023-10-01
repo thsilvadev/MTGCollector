@@ -108,8 +108,10 @@ function Collection() {
       .then((response) => {
         setTotalCards(response.data.total);
         setCards(response.data.cards);
+        setIsDroppable(true);
       })
-      .then(console.log(refresherToggler));
+      .then(
+        console.log(refresherToggler));
   }, [page, superParams, refresherToggler]);
 
   //HORIZONTAL SCROLL
@@ -151,7 +153,6 @@ function Collection() {
   const handleDrop = (e) => {
     //on drop, get card ID
     setIsDraggedOver(false);
-    /* setIsDroppable(false); */
 
     const pickedCard = e.dataTransfer.getData("card");
     const pickedMiniCard = e.dataTransfer.getData("cardDeletion");
@@ -188,11 +189,15 @@ function Collection() {
   //make it a dropzone using `e.dataTransfer.getData`
 
   //postOnDeck
-  const postOnDeck = (collectionId) => {
+  const postOnDeck = async (collectionId) => {
     let chosenDeck = selectedDeck;
-
+    console.log({isDroppable})
+    if (!isDroppable){
+      return;
+    }
     try {
-      Axios.post(
+      setIsDroppable(false);
+      await Axios.post(
         `${window.name}/eachDeck/`,
         {
           id_card: collectionId,
@@ -209,6 +214,9 @@ function Collection() {
 
   //Delete from Deck
   const deleteFromDeck = (cardIdConstructed) => {
+    if (!isDroppable){
+      return;
+    }
     try {
       Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`, config)
         .then(console.log(`requested to delete card from deck`))
@@ -497,7 +505,6 @@ function Collection() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         id="lower"
-        droppable={isDroppable}
       >
         <div className={styles.selectDeck}>
           <div id="lol" className={styles.even}>
