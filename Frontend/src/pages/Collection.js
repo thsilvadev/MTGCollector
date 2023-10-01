@@ -405,7 +405,7 @@ function Collection() {
           await Axios.put(
             `${window.name}/decks/${selectedDeck}`,
             {
-              color: `${deckColorDefined}`,
+              color: deckColorDefined,
             },
             config
           );
@@ -417,7 +417,7 @@ function Collection() {
           await Axios.put(
             `${window.name}/decks/${selectedDeck}`,
             {
-              card_count: `${DeckSize}`,
+              card_count: DeckSize,
             },
             config
           );

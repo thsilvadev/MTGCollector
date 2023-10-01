@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 
 import styles from "../styles/Deck.module.css";
 
+import pencil from "../images/pencil.png";
+
 const Deck = ({
   colorIdentity,
   description,
@@ -13,7 +15,6 @@ const Deck = ({
   toggler,
   cardCount,
 }) => {
-
   const navigate = useNavigate();
   // Define the selected property (it can be null or a string)
   const [isHovering, setIsHovering] = useState(false);
@@ -44,7 +45,7 @@ const Deck = ({
   };
 
   const deleteDeck = (e) => {
-    e.stopPropagation() //this is for not triggering parent element onClick event.
+    e.stopPropagation(); //this is for not triggering parent element onClick event.
     if (window.confirm(`You're deleting this deck. Confirm?`)) {
       Axios.delete(`${window.name}/decks/${id_deck}`, config).then(() => {
         console.log(`requested to delete ${name} from collection`);
@@ -53,8 +54,31 @@ const Deck = ({
     }
   };
 
-  const handleClick = () => {
+  const updateDeck = (e) => {
+    e.stopPropagation(); //this is for not triggering parent element onClick event.
+    let newDeckName = prompt(`Type the new name of the deck:`, `${name}`);
+    let newDeckDescription = prompt(
+      `Type new deck description:`,
+      `${description}`
+    );
+    try {
+      Axios.put(
+        `${window.name}/decks/${id_deck}`,
+        {
+          name: newDeckName,
+          description: newDeckDescription,
+        },
+        config
+      ).then(() => {
+        console.log(`requested to update deck "${name}"`);
+        toggler();
+      });
+    } catch (error) {
+      console.error("Update Failed: ", error);
+    }
+  };
 
+  const handleClick = () => {
     navigate(`/collection?selected=${id_deck}`);
   };
 
@@ -68,6 +92,12 @@ const Deck = ({
       >
         <button className={hoveringClass} onClick={deleteDeck}>
           &times;
+        </button>
+        <button
+          className={` ${hoveringClass} ${styles.edit}`}
+          onClick={updateDeck}
+        >
+          <img src={pencil} width="26px" alt="edit" />
         </button>
         <div className={styles.deck}>
           <p>Deck name:{name}</p>
