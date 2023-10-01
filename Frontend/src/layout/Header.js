@@ -72,7 +72,7 @@ function Header() {
               alt="Logo"
             />
             Welcome, {user.email}!
-            <a className={styles.signOut} onClick={logOut}>Sign Out</a>
+            <button className={styles.signOut} onClick={logOut}>Log off</button>
           </span>
         </div>
       );

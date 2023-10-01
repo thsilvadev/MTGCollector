@@ -11,6 +11,7 @@
     /* This inhibits the Container to be pushed down in case of the first element of the page being top-marged*/
     float: left;
     width: 100%;
+    margin-top: 60px;
 
 }
 

@@ -13,6 +13,32 @@ import green from "../images/green.png";
 import red from "../images/red.png";
 import blue from "../images/blue.png";
 import white from "../images/white.png";
+import colorless from "../images/Colorless.png";
+
+import phyrexian from "../images/Phyrexian.png";
+
+import phyrexianBlack from "../images/phyrexianBlack.png";
+import phyrexianBlue from "../images/phyrexianBlue.png";
+import phyrexianGreen from "../images/phyrexianGreen.png";
+import phyrexianRed from "../images/phyrexianRed.png";
+import phyrexianWhite from "../images/phyrexianWhite.png";
+
+import twoBlack from "../images/2Black.png";
+import twoBlue from "../images/2Blue.png";
+import twoGreen from "../images/2Green.png";
+import twoRed from "../images/2Red.png";
+import twoWhite from "../images/2White.png";
+
+import blackGreen from "../images/BlackGreen.png";
+import blackRed from "../images/BlackRed.png";
+import blueBlack from "../images/BlueBlack.png";
+import blueRed from "../images/BlueRed.png";
+import greenBlue from "../images/GreenBlue.png";
+import greenWhite from "../images/GreenWhite.png";
+import redGreen from "../images/RedGreen.png";
+import redWhite from "../images/RedWhite.png";
+import whiteBlack from "../images/WhiteBlack.png";
+import whiteBlue from "../images/WhiteBlue.png";
 
 const MiniCard = ({
   id,
@@ -31,13 +57,13 @@ const MiniCard = ({
   //Delete
 
   //Headers configuration
-  const authHeader = useAuthHeader()
-  
+  const authHeader = useAuthHeader();
+
   const config = {
-    headers:{
-      authorization: authHeader()
-    }
-  }
+    headers: {
+      authorization: authHeader(),
+    },
+  };
 
   //Delete from Collection
   const deleteFromCollection = () => {
@@ -90,15 +116,245 @@ const MiniCard = ({
   //This is where I learned that JSX Elements are not strings nor objects, they are React Elements. You can put them in an array and send the array to be rendered just fine.
   function costIconHandler(theCardCost) {
     if (theCardCost) {
-      const sanitizedCost = theCardCost.replace(/\{|\}/g, "");
+      const sanitizedCost = theCardCost.split(/(\{.*?\})/).filter(Boolean).map(cost => cost.replace(/\{|\}/g, ""));
       const resultElements = [];
 
       for (let i = 0; i < sanitizedCost.length; i++) {
-        if (sanitizedCost[i].charCodeAt(0) <= 57) {
+        //if it's single character and it's special character or number
+        
+        if ((sanitizedCost[i].charCodeAt(0) <= 57) && (sanitizedCost[i].length === 1)) {
           resultElements.push(
             <div key={i} className={styles.colorlessIcon}>
               {sanitizedCost[i]}
             </div>
+          );
+        } else if (sanitizedCost[i] === "P") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={phyrexian}
+              width="13"
+              alt="phyrexian-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "B/P") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={phyrexianBlack}
+              width="13"
+              alt="phyrexianBlack-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "U/P") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={phyrexianBlue}
+              width="13"
+              alt="phyrexianBlue-logo"
+            />
+          );
+
+        } else if (sanitizedCost[i] === "G/P") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={phyrexianGreen}
+              width="13"
+              alt="phyrexianGreen-logo"
+            />
+          );
+
+        } else if (sanitizedCost[i] === "R/P") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={phyrexianRed}
+              width="13"
+              alt="phyrexianRed-logo"
+            />
+          );
+
+        } else if (sanitizedCost[i] === "W/P") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={phyrexianWhite}
+              width="13"
+              alt="phyrexianWhite-logo"
+            />
+          );
+
+        } else if (sanitizedCost[i] === "2/B") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={twoBlack}
+              width="13"
+              alt="two or Black-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "2/U") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={twoBlue}
+              width="13"
+              alt="two or Blue-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "2/G") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={twoGreen}
+              width="13"
+              alt="two or Green-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "2/R") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={twoRed}
+              width="13"
+              alt="two or Red-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "2/W") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={twoWhite}
+              width="13"
+              alt="two or White-logo"
+            />
+          );
+
+        } else if (sanitizedCost[i] === "B/G") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={blackGreen}
+              width="13"
+              alt="blackGreen-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "B/R") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={blackRed}
+              width="13"
+              alt="blackRed-logo"
+            />
+          );
+
+        } else if (sanitizedCost[i] === "U/B") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={blueBlack}
+              width="13"
+              alt="blueBlack-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "U/R") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={blueRed}
+              width="13"
+              alt="blueRed-logo"
+            />
+          );
+
+        } else if (sanitizedCost[i] === "G/U") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={greenBlue}
+              width="13"
+              alt="greenBlue-logo"
+            />
+          );
+
+        } else if (sanitizedCost[i] === "G/W") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={greenWhite}
+              width="13"
+              alt="greenWhite-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "R/G") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={redGreen}
+              width="13"
+              alt="redGreen-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "R/W") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={redWhite}
+              width="13"
+              alt="redWhite-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "W/B") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={whiteBlack}
+              width="13"
+              alt="whiteBlack-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "W/U") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={whiteBlue}
+              width="13"
+              alt="whiteBlue-logo"
+            />
+          );
+        } else if (sanitizedCost[i] === "C") {
+          resultElements.push(
+            <img
+              className={styles.coloredIcon}
+              key={i}
+              src={colorless}
+              width="13"
+              alt="colorless-logo"
+            />
           );
         } else if (sanitizedCost[i] === "B") {
           resultElements.push(
@@ -106,7 +362,7 @@ const MiniCard = ({
               className={styles.coloredIcon}
               key={i}
               src={black}
-              width="11"
+              width="13"
               alt="black-logo"
             />
           );
@@ -116,7 +372,7 @@ const MiniCard = ({
               className={styles.coloredIcon}
               key={i}
               src={green}
-              width="11"
+              width="13"
               alt="green-logo"
             />
           );
@@ -126,7 +382,7 @@ const MiniCard = ({
               className={styles.coloredIcon}
               key={i}
               src={red}
-              width="11"
+              width="13"
               alt="red-logo"
             />
           );
@@ -136,7 +392,7 @@ const MiniCard = ({
               className={styles.coloredIcon}
               key={i}
               src={blue}
-              width="11"
+              width="13"
               alt="blue-logo"
             />
           );
@@ -146,7 +402,7 @@ const MiniCard = ({
               className={styles.coloredIcon}
               key={i}
               src={white}
-              width="11"
+              width="13"
               alt="white-logo"
             />
           );
@@ -332,9 +588,11 @@ const MiniCard = ({
       );
     } else if (table === "deck") {
       return (
-        <div style={{
-          position: 'relative'
-        }}>
+        <div
+          style={{
+            position: "relative",
+          }}
+        >
           <div
             className={styles.MinierCard}
             onLoad={changeCardClass}
@@ -356,27 +614,25 @@ const MiniCard = ({
               <span>{cardName}</span>
               <span className={styles.cardCost}>{cardCost}</span>
             </div>
-
-            
           </div>
           <div
-              className={styles.Card}
+            className={styles.Card}
+            style={{
+              position: "absolute",
+              left: `${scaledCardPosition.x}px`,
+              top: `${scaledCardPosition.y}px`,
+              display: isMouseOver || istouchOver ? "block" : "none",
+            }}
+          >
+            <img
               style={{
-                position: "absolute",
-                left: `${scaledCardPosition.x}px`,
-                top: `${scaledCardPosition.y}px`,
-                display: isMouseOver || istouchOver ? "block" : "none",
+                height: "300px",
               }}
-            >
-              <img
-                style={{
-                  height: "300px",
-                }}
-                className={`${isBattleOrPlane}`}
-                src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
-                alt="card"
-              />
-            </div>
+              className={`${isBattleOrPlane}`}
+              src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+              alt="card"
+            />
+          </div>
         </div>
       );
     }
