@@ -1,5 +1,5 @@
 {
     "rewrites": [
-      {"source": "/confirmation/:emailToken", "destination": "/confirmation/:emailToken"}
+      {"source": "/confirmation/*", "destination": "/confirmation/:emailToken"}
     ]
   }
