@@ -108,6 +108,7 @@ function Collection() {
       .then((response) => {
         setTotalCards(response.data.total);
         setCards(response.data.cards);
+        //used to block dragging as many cards as user wants before req is complete.
         setIsDroppable(true);
       })
       .then(
@@ -192,6 +193,7 @@ function Collection() {
   const postOnDeck = async (collectionId) => {
     let chosenDeck = selectedDeck;
     console.log({isDroppable})
+    //used to use droppable prop in lower <div> but it's USELESS. To check wether isDroppable and if not, don't post, this is the way:
     if (!isDroppable){
       return;
     }
