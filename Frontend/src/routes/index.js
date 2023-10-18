@@ -46,7 +46,7 @@ function AppRoutes() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
 
-      <Route path="/confirmation" element={<Confirmation />} />
+      <Route path="/confirmation/:emailToken" element={<Confirmation />} />
     </Routes>
   );
 }
