@@ -1,19 +1,28 @@
 import React from 'react';
 import * as yup from 'yup';
-import styles from '../styles/Contact.module.css'
+import styles from '../styles/Contact.module.css';
+import Axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const ContactForm = () => {
+
+  const navigate = useNavigate();
   const [formStatus, setFormStatus] = React.useState('Send')
   const onSubmit = (e) => {
     e.preventDefault()
     setFormStatus('Submitting...')
-    const { name, email, message } = e.target.elements
+    const { name, email, subject, message } = e.target.elements
     let conFom = {
-      name: name.value,
-      email: email.value,
-      message: message.value,
+      yourname: name.value,
+      youremail: email.value,
+      yoursubject: subject.value,
+      yourmessage: message.value
     }
     console.log(conFom)
+    Axios.post(`${window.name}/contact`, conFom).then(() => {
+      alert('Contact submitted. Thanks for your feedback!');
+      navigate('/');
+    })
 
   }
   return (

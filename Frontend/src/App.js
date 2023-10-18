@@ -1,6 +1,6 @@
 //Styles
 import "./App.css";
-import React from "react";
+import {React, useEffect}  from "react";
 
 //Routes
 import { BrowserRouter } from "react-router-dom";
@@ -24,6 +24,11 @@ ReactGA.initialize(TRACKING_ID);
 
 
 function App() {
+
+  useEffect(() => {
+    ReactGA.pageview(window.location.pathname + window.location.search);
+  }, []);
+  
   return (
     <div className="App">
       <BrowserRouter>

@@ -21,10 +21,11 @@ function Login() {
         // Check if the response contains an error property
         if (response.data.error) {
           // Handle the error case
-          alert(`Error: ${response.data.error}`);
+          alert(`${response.data.error}`);
         } else {
           // Handle the success case
           alert(response.data.message);
+          
           //get Json Web Token and store it
           signIn({
             token: response.data.token,
@@ -54,6 +55,7 @@ function Login() {
         } else {
           // Handle the success case
           alert(response.data.message);
+          alert(response.data.confirm);
         }
       })
       .catch((error) => {
