@@ -28,7 +28,7 @@ const Confirmation = () => {
   return (
     <div>
       <h1>Hey!</h1>
-      <h2>Sorry...</h2>
+      <h2>Sorry</h2>
       <h3>{message}</h3>
     </div>
   );
