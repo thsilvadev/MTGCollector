@@ -14,20 +14,22 @@ const Confirmation = () => {
       Axios.put(`${window.name}/confirmation/${emailToken}`, {
         confirmed: "confirmed",
       }).then((response) => {
-        if (response.data.error) {
-          setMessage("Something went wrong");
-        } else {
-          alert(response.data.message);
-          navigate("/login");
+        if (response.data.message){
+            alert(response.data.message);
+            navigate("/login");
         }
-      });
+        }).catch((error) => {
+            console.error(error);
+            setMessage(error.response.data.error);
+        })
     }
-  }, [emailToken]);
+  }, [emailToken, message]);
 
   return (
     <div>
       <h1>Hey!</h1>
-      <h2>{message}</h2>
+      <h2>Sorry.</h2>
+      <h3>{message}</h3>
     </div>
   );
 };
