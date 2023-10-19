@@ -14,13 +14,31 @@ module.exports = {
 
     const { page } = params;
 
+    const userId = req.userId;
+
+    /* 
+We'll be using Promise.all to execute multiple asynchronous operations concurrently and await their results.
+
+Promise.all is a JavaScript function that takes an array of promises and returns a new promise. This new promise resolves when all the promises in the input array have resolved, or it rejects if any of the input promises rejects. In this case, it's being used to wait for the completion of two asynchronous queries.
+
+[cardsQuery, countQuery] is an array containing two promises. These promises represent the results of two database queries: cardsQuery and countQuery.
+
+await is used to wait for the Promise.all to complete. It will pause the execution of the function until both cardsQuery and countQuery have completed, which means both queries have fetched their respective data.
+
+The result of await Promise.all(...) is an array of results from the resolved promises in the same order as the input array. In this case, you have destructured this array into two variables: cardsResult and countResult. cardsResult will contain the result of cardsQuery, and countResult will contain the result of countQuery.
+    */
+
     try {
-      const result = await knex
+      const [cardsResult, countResult] = await Promise.all([
+
+        //********************** FIRST QUERY === CARDS QUERY **************************//
+        knex
         //SELECT id, name, types, setCode, manaCost, manaValue, rarity, uuid, colorIdentity, keywords
         .select(
           "supercards.id",
           "supercards.name",
           "supercards.types",
+          "supercards.supertypes",
           "supercards.setCode",
           "supercards.manaCost",
           "supercards.manaValue",
@@ -32,7 +50,7 @@ module.exports = {
           "supercards.scryfallId",
           "collection.id_collection"
         )
-        //COUNT for card quantity. Alias needed to simplify key name to send to frontend.
+        //COUNT for each card quantity. Alias needed to simplify key name to send to frontend.
         .count("id", { as: "countById" })
         //FROM supercards;
         .from("supercards")
@@ -40,6 +58,7 @@ module.exports = {
         .join("collection", "collection.card_id", "=", "supercards.id")
 
         //WHERE (condition)
+        .where("collection.user_id", userId)
         .where((builder) => {
           for (const [key, value] of Object.entries(query)) {
             //[PRINTING FOR DEBUG]
@@ -156,10 +175,21 @@ module.exports = {
 
         .limit(40)
 
-        .offset(page * 40);
+        .offset(page * 40),
+        
+        //********************** SECOND QUERY === COUNT QUERY **************************//
 
-      console.log(`Request successful by ${req.ip} at ${formattedDate}`);
-      return res.json(result);
+       
+      knex("collection")
+      .where("user_id", userId)
+      .count("card_id", { as: "totalCount" })
+
+      ]);
+      
+      const totalCount = countResult[0].totalCount; //totalCount is an array of jsons returning all rows of query. In this case there is just one row [0], and we're gonna directly yield it's only value - totalCount (.totalCount).
+
+      console.log(`Collection Get Request successful by ${req.ip} of user${userId} at ${formattedDate}`);
+      return res.json({total: totalCount, cards: cardsResult});
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
       return res.status(500).json({
@@ -179,15 +209,16 @@ module.exports = {
     const body = req.body;
     const { card_id } = body;
     const { card_condition } = body;
-
+    const user_id = req.userId;
     try {
       const result = await knex("collection").insert({
         card_id,
         card_condition,
+        user_id
       });
 
       console.log(
-        `Post successful of ${card_id} on Collection by ${req.ip} at ${formattedDate}`
+        `Post successful of ${card_id} on Collection of user${user_id} by ${req.ip} at ${formattedDate}`
       );
 
       return res.json(result);
@@ -200,10 +231,12 @@ module.exports = {
     }
   },
 
-  //This is a function to get card by ID. This is used to check if card is in Collection and how many of it there are.
+  //This is a function to get card by ID. This is used to check if card is in Collection and how many of it are there.
 
   async getById(req, res) {
     const { id } = req.params;
+
+    const userId = req.userId
     //SELECT * FROM cards WHERE id = {id}
     try {
       const result = await knex
@@ -216,7 +249,9 @@ module.exports = {
         .from("supercards")
         //JOIN collection
         .join("collection", "collection.card_id", "=", "supercards.id")
+        .where("collection.user_id", userId)
         .where({ id })
+        
         .groupBy("id");
 
       return res.json(result);
@@ -236,15 +271,19 @@ module.exports = {
     //Params request
     const { id_collection } = req.params;
 
+    //Authenticated userId
+    const user_id = req.userId;
+
     try {
       const result = await knex
         .select("id_collection")
         .from("collection")
+        .where("collection.user_id", user_id)
         .where(`id_collection`, id_collection)
         .del();
 
       console.log(
-        `Delete successful of card number "${id_collection}" on Collection by ${req.ip} at ${formattedDate}`
+        `Delete successful of card number "${id_collection}" on Collection  of user${user_id} by ${req.ip} at ${formattedDate}`
       );
 
       return res.json(result);
