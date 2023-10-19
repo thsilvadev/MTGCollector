@@ -1,66 +1,89 @@
-.OpenBoxDiv{
-    height: 80%;
-    position: fixed;
-    top: 10%;
-    right: 0;
-    width: 268px;
-    background-color: rgb(157, 69, 15);
-    border-radius: 4px 0 0 20px;
-    z-index: 2;
-    opacity: .7;
-    animation: showSideBar .3s;
-    @media (max-width: 849px) {
-        display: none;
-      }
+
+
+.OpenBoxDiv {
+  height: 80%;
+  position: fixed;
+  top: 10%;
+  right: 0;
+  width: 268px;
+  overflow: visible; /* This is the key to making the child element visible outside the container */
+  background-color: #C06E52;
+  border-radius: 4px 0 0 20px;
+  z-index: 2;
+  opacity: 1;
+  animation: showSideBar 0.3s forwards;
+  transition: background-color .05s; /* I tried to implement the same animation scheme I developed in Collection.module.css for the drag and drop blinking issue. But had too many bugs with it here. So I managed this workaround - using transition instead of animation.*/
+  transition-delay: .05s;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
 
 }
 
-.OpenBoxDiv:hover {
-    opacity: 1;
+/* Media query for screens with a minimum width of 1920px */
+@media (min-width: 2420px) {
+  .OpenBoxDiv {
+    top: 25%;
+    height: 50%;
+  }
+}
+
+/* Media query for screens with a maximum width of 849px */
+@media (max-width: 849px) {
+  .OpenBoxDiv {
+    display: none;
+  }
 }
 
 .UponDraggedItem {
-    opacity: 1;
-    z-index: 2;
+  background-color:rgb(133, 157, 15);
+  z-index: 2;
 }
 
 @keyframes showSideBar {
-    from {
-        right: -258px;
-    }
-    to {
-        right: 0;
-    }
+  from {
+    right: -258px;
+  }
+  to {
+    right: 0;
+  }
 }
 
 .ClosedBoxDiv {
-    height: 80%;
-    position: fixed;
-    top: 10%;
-    right: -258px;
-    background-color: rgb(214, 159, 63);
-    z-index: 2;
-    clear: bottom;
-    opacity: .4;
-    animation: hideSideBar .3s;
+  height: 80%;
+  position: fixed;
+  top: 10%;
+  right: -258px;
+  background-color: rgb(214, 159, 63);
+  z-index: 2;
+  clear: bottom;
+  opacity: 0.4;
+  animation: hideSideBar 0.3s;
 
-    @media (max-width: 849px) {
-        display: none;
-      }
+  @media (max-width: 849px) {
+    display: none;
+  }
 }
 
 @keyframes hideSideBar {
-    from {
-        right: 0;
-    }
-    to {
-        right: -258px;
-    }
+  from {
+    right: 0;
+  }
+  to {
+    right: -258px;
+  }
 }
 
 .Link {
-    text-decoration: none;
-    color: white;
-    font-weight: bold;
-    font-size: 25px;
+  text-decoration: none;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 25px;
+  font-family: 'Roboto';
+  line-height: 1.2;
+}
+
+.total {
+  color: #ffffff;
+  font-size: 13px;
+  font-family: 'Roboto';
+  line-height: 2;
 }

@@ -1,0 +1,12 @@
+<!-- 30 "particles" are generated using Pug.js, then styled like circles and followed by a centered div with text content and a link. You could also use SVGs for unique shapes -->
+body
+  .particle-container
+    .particles
+      - var n = 0;
+      while n < 30
+        span.circle(class=n++)
+
+.home-hero
+  .home-hero-content
+    h1.home-hero-title CSS Particles Animation
+    a.button.home-hero-button(href="#") button
