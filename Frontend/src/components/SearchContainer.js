@@ -3,6 +3,7 @@ import styles from "../styles/SearchContainer.module.css";
 
 //imports
 import React, { useCallback, useEffect, useState } from "react";
+import Axios from "axios";
 
 //imgs
 import black from "../images/black.png";
@@ -25,7 +26,12 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   //Statelifting queryParams
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;
-  onParamsChange(queryParams);
+
+    // Use useEffect to call modalHandler when sideBar changes
+    useEffect(() => {
+      onParamsChange(queryParams);
+    }, [queryParams, onParamsChange]);
+  
 
   // Handle inputs
 
@@ -54,14 +60,15 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   //Input type="search"
   const handleNameChange = (event) => {
     if (event.target.value) {
-      setSelectedName(`&name=${event.target.value}`);
       //This means that whenever user types anything, it will search for the card in all table, unless new color check.
       setBlackIsChecked(false);
       setGreenIsChecked(false);
       setRedIsChecked(false);
       setBlueIsChecked(false);
       setWhiteIsChecked(false);
+      console.log(`colors unchecked: ${whiteIsChecked}`);
       setSelectedColor("");
+      setSelectedName(`&name=${event.target.value}`);
     } else {
       setSelectedName("");
     }
@@ -212,7 +219,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
       clearTimeout(timerId);
 
       timerId = setTimeout(() => {
-        func.apply(this, args);
+        func(...args);
       }, delay);
     };
   };
@@ -220,12 +227,42 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const debouncedHandleNameChange = debounce(handleNameChange, 450);
 
   //Advanced Toggler (Collection only)
-  const [advancedSearch, setAdvancedSearch] = useState(false)
+  const [advancedSearch, setAdvancedSearch] = useState(false);
   const advancedToggler = () => {
-    setAdvancedSearch((previousValue) => !previousValue)
-  }
+    setAdvancedSearch((previousValue) => !previousValue);
+  };
 
   const isAdvanced = advancedSearch ? "flex" : "none";
+
+  //Getting Sets
+
+  // In the useEffect, we check if localSets is an empty array [] instead of null. If it's empty, we make the Axios request to fetch the data, and then we store it in localStorage as a JSON string using JSON.stringify(response.data).
+ 
+  //Local Storage will be used to not fetch data everytime component is rendered.
+
+  //Also we will locally control LocalSets version, so whenever there are any updates in the database, we re-fetch on client side.
+  
+  const [localSets, setLocalSets] = useState([]);
+
+
+  useEffect(() => {
+    const storedSets = localStorage.getItem("localSets");
+    const storedSetsVersion = localStorage.getItem("localSetsVersion");
+    if (storedSets && storedSetsVersion === "1") {
+        setLocalSets(JSON.parse(storedSets));
+    } else {
+      Axios.get(`${window.name}/sets`)
+        .then((response) => {
+          const sets = response.data;
+          localStorage.setItem("localSets", JSON.stringify(sets));
+          localStorage.setItem("localSetsVersion", "1");
+          setLocalSets(sets); // Update localSets and trigger a re-render
+        })
+        .then(() => {
+          console.log(`localSets has just been set`);
+        });
+    }
+  }, []);
 
   //Returns
 
@@ -234,16 +271,16 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
       <div className={styles.SearchContainer}>
         <h3> Filter by:</h3>
         <div className="container">
-          <div className="row justify-content-around mb-2">
+          <div className="row justify-content-around mb-4 gap-3">
             <div className="col-12">
-              <h4 className={styles.Filters}>Type</h4>
               <select
+                
                 value={selectedType}
                 className={styles.FilterBox}
                 onChange={handleTypeChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">Select Type </option>
                 <option value="&types=Creature">Creature</option>
                 <option value="&types=Artifact">Artifact</option>
                 <option value="&types=Land">Land</option>
@@ -256,33 +293,41 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
             </div>
 
             <div className="col-12">
-              <h4 className={styles.Filters}>Set</h4>
               <select
+                
                 value={selectedSet}
                 className={styles.FilterBox}
                 onChange={handleSetChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
-                <option value="&setCode=MOM">March of the Machine</option>
-                <option value="&setCode=MAT">
-                  March of the Machine: The Aftermath
-                </option>
-                <option value="&setCode=ONE">Phyrexia: All Will Be One</option>
-                <option value="&setCode=BRO">The Brothers' War</option>
-                {/*have to continue... long work.*/}
+                <option value="">Select Set</option>
+                {localSets
+                  .sort((a, b) => {
+                    if (a.name < b.name) {
+                      return -1;
+                    }
+                    if (a.name > b.name) {
+                      return 1;
+                    }
+                    return 0;
+                  })
+                  .map((set, key) => (
+                    <option key={key} value={`&setCode=${set.keyruneCode}`}>
+                      {set.name}
+                    </option>
+                  ))}
               </select>
             </div>
 
             <div className="col-12">
-              <h4 className={styles.Filters}>Rarity</h4>
               <select
+                
                 value={selectedRarity}
                 className={styles.FilterBox}
                 onChange={handleRarityChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">Select Rarity</option>
                 <option value="&rarity=common">Common</option>
                 <option value="&rarity=uncommon">Uncommon</option>
                 <option value="&rarity=rare">Rare</option>
@@ -295,7 +340,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
           <div className="row justify-content-center">
             <div className="col-12">
-              <h4 className={styles.Filters}>Color</h4>
               <div className="row">
                 <div className="col ps-0 pe-0">
                   <input
@@ -304,7 +348,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="black"
                   />
-                  <label className={`${blackIsTyping}`} for="black">
+                  <label className={`${blackIsTyping}`} htmlFor="black">
                     <img src={black} width="30" alt="black-logo" />
                   </label>
                 </div>
@@ -316,7 +360,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="green"
                   />
-                  <label className={`${greenIsTyping}`} for="green">
+                  <label className={`${greenIsTyping}`} htmlFor="green">
                     <img src={green} width="30" alt="green-logo" />
                   </label>
                 </div>
@@ -328,7 +372,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="red"
                   />
-                  <label className={`${redIsTyping}`} for="red">
+                  <label className={`${redIsTyping}`} htmlFor="red">
                     <img src={red} width="30" alt="red-logo" />
                   </label>
                 </div>
@@ -340,7 +384,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="blue"
                   />
-                  <label className={`${blueIsTyping}`} for="blue">
+                  <label className={`${blueIsTyping}`} htmlFor="blue">
                     <img src={blue} width="30" alt="blue-logo" />
                   </label>
                 </div>
@@ -352,7 +396,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="white"
                   />
-                  <label className={`${whiteIsTyping}`} for="white">
+                  <label className={`${whiteIsTyping}`} htmlFor="white">
                     <img src={white} width="30" alt="white-logo" />
                   </label>
                 </div>
@@ -380,7 +424,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   } else if (baseOfSearch === "collection") {
     return (
       <div className={styles.CollectionSearch}>
-        <div className="d-flex justify-content-start">
+        <div className="d-flex justify-content-center">
           <div className="row align-items-center">
             <div className="col-sm">
               <form role="search">
@@ -402,7 +446,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="black"
                   />
-                  <label className={`${blackIsTyping}`} for="black">
+                  <label className={`${blackIsTyping}`} htmlFor="black">
                     <img src={black} width="30" alt="black-logo" />
                   </label>
                 </div>
@@ -414,7 +458,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="green"
                   />
-                  <label className={`${greenIsTyping}`} for="green">
+                  <label className={`${greenIsTyping}`} htmlFor="green">
                     <img src={green} width="30" alt="green-logo" />
                   </label>
                 </div>
@@ -426,7 +470,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="red"
                   />
-                  <label className={`${redIsTyping}`} for="red">
+                  <label className={`${redIsTyping}`} htmlFor="red">
                     <img src={red} width="30" alt="red-logo" />
                   </label>
                 </div>
@@ -438,7 +482,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="blue"
                   />
-                  <label className={`${blueIsTyping}`} for="blue">
+                  <label className={`${blueIsTyping}`} htmlFor="blue">
                     <img src={blue} width="30" alt="blue-logo" />
                   </label>
                 </div>
@@ -450,7 +494,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                     onChange={checkHandler}
                     id="white"
                   />
-                  <label className={`${whiteIsTyping}`} for="white">
+                  <label className={`${whiteIsTyping}`} htmlFor="white">
                     <img src={white} width="30" alt="white-logo" />
                   </label>
                 </div>
@@ -462,17 +506,17 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           </div>
         </div>
 
-        <div className={`d-${isAdvanced} justify-content-start mb-2`}>
-          <div className="row">
-            <div className="col">
-              <h4 className={styles.Filters}>Type</h4>
+        <div className={`d-${isAdvanced} justify-content-center mb-2`}>
+          <div className="row justify-content-around">
+            <div className="col-12 col-sm-12 col-lg-4">
               <select
+                
                 value={selectedType}
                 className={styles.FilterBox}
                 onChange={handleTypeChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">Select Type</option>
                 <option value="&types=Creature">Creature</option>
                 <option value="&types=Artifact">Artifact</option>
                 <option value="&types=Land">Land</option>
@@ -484,34 +528,42 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </select>
             </div>
 
-            <div className="col">
-              <h4 className={styles.Filters}>Set</h4>
+            <div className="col-12 col-sm-12 col-lg-4">
               <select
+                
                 value={selectedSet}
                 className={styles.FilterBox}
                 onChange={handleSetChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
-                <option value="&setCode=MOM">March of the Machine</option>
-                <option value="&setCode=MAT">
-                  March of the Machine: The Aftermath
-                </option>
-                <option value="&setCode=ONE">Phyrexia: All Will Be One</option>
-                <option value="&setCode=BRO">The Brothers' War</option>
-                {/*have to continue... long work.*/}
+                <option value="">Select Set</option>
+                {localSets
+                  .sort((a, b) => {
+                    if (a.name < b.name) {
+                      return -1;
+                    }
+                    if (a.name > b.name) {
+                      return 1;
+                    }
+                    return 0;
+                  })
+                  .map((set, key) => (
+                    <option key={key} value={`&setCode=${set.keyruneCode}`}>
+                      {set.name}
+                    </option>
+                  ))}
               </select>
             </div>
 
-            <div className="col">
-              <h4 className={styles.Filters}>Rarity</h4>
+            <div className="col-12 col-sm-12 col-lg-4">
               <select
+                
                 value={selectedRarity}
                 className={styles.FilterBox}
                 onChange={handleRarityChange}
                 aria-label="Default select example"
               >
-                <option selected> </option>
+                <option value="">Select Rarity</option>
                 <option value="&rarity=common">Common</option>
                 <option value="&rarity=uncommon">Uncommon</option>
                 <option value="&rarity=rare">Rare</option>

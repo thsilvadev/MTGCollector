@@ -42,7 +42,7 @@ const Container = () => {
 
     //Return
     return (
-        <div className={`Container ${container ? 'active' : ''}`} /* style={{backgroundImage: `url(${background})`}}*/ >
+        <div className={`Container ${container ? 'active' : ''}`} /* style={{backgroundImage: `url(${background})`}}*/>
             <AppRoutes />
         </div>
     )

@@ -17,8 +17,15 @@ import Axios from "axios";
 
 import React, { useState, useEffect } from "react";
 
+import { useAuthHeader } from "react-auth-kit";
+
+import { RequireAuth } from "react-auth-kit";
+
 //imgs
 import welcome from "../images/welcome.png";
+import welcome3 from "../images/welcome3.png";
+import welcome2white from "../images/welcome2white.png";
+import logo2 from "../images/logo2white.png";
 import closedchest from "../images/closed-chest.png";
 import openedchest from "../images/opened-chest.png";
 import floatingCards from "../images/cards.png";
@@ -43,10 +50,10 @@ function Home() {
   //get Refresh from Card
   //Whenever a card is posted on collection, through Home.js, Card prop `refresh` calls it's function to toggle this state variable `liftedRefreshCards`. That variable is passed on to SideBar and then to SideBox, to trigger re-fetching. RESUME: THIS MAKES NEW CARDS IN COLLECTION IMMEDIATELY SHOW ON SIDEBAR COLLECTION.
   const [liftedRefreshCards, setLiftedRefreshCards] = useState(false);
-  const handleLiftedRefreshCards = (isRefreshed) => {
-    setLiftedRefreshCards(isRefreshed);
+  const handleLiftedRefreshCards = () => {
+    toggleRefresh();
     console.log("changed liftedRefreshCards:", liftedRefreshCards);
-  }
+  };
 
   //get filtered and paginated Cards in real time
   useEffect(() => {
@@ -58,16 +65,8 @@ function Home() {
   }, [page, superParams]);
 
   //Image Switcher
-
-  const [isHovered, setIsHovered] = useState(false);
   const [isImagesLoaded, setIsImagesLoaded] = useState(false);
 
-  const HandleMouseEnter = () => {
-    setIsHovered(true);
-  };
-  const HandleMouseLeave = () => {
-    setIsHovered(false);
-  };
 
   useEffect(() => {
     const preloadImages = async () => {
@@ -108,7 +107,6 @@ function Home() {
     setIsModalOpen(modalState);
   };
 
-
   const upperContainerClass = isModalOpen
     ? styles.upperContainerWithModal
     : styles.upperContainer;
@@ -117,88 +115,131 @@ function Home() {
     ? styles.cardsContainerWithModal
     : styles.cardsContainer;
 
-    //Delete by dragging minicards off the sidebox
+  //Delete by dragging minicards off the sidebox
 
-    //Debounced toggle refresher
-          //Debouncer
-          const debounce = (func, delay) => {
-            let timerId;
-        
-            return (...args) => {
-              clearTimeout(timerId);
-        
-              timerId = setTimeout(() => {
-                func.apply(this, args);
-              }, delay);
-            };
-          };
-    
-      // Function to toggle the refreshCards state
-      const toggleRefresh = () => {
-        debounce(
-          setLiftedRefreshCards((prevRefresh) => !prevRefresh), 450
-        )
-      };
+  //Debounced toggle refresher
+  //Debouncer
+  const debounce = (func, delay) => {
+    let timerId;
 
-     //Delete from Collection
+    return (...args) => {
+      clearTimeout(timerId);
+
+      timerId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
+
+  // Function to toggle the refreshCards state
+  const toggleRefresh = debounce(() => {
+      setLiftedRefreshCards((prevRefresh) => !prevRefresh);
+  },
+      450
+    );
+
+  //Delete from Collection
+
+    //Headers configuration
+    const authHeader = useAuthHeader()
+  
+    const config = {
+      headers:{
+        authorization: authHeader()
+      }
+    }
+
   const deleteFromCollection = (cardIdCollection) => {
-    if (
-      window.confirm(`Confirm deletion?`)
-    ) {
-      Axios.delete(`${window.name}/card/${cardIdCollection}`)
-        .then(console.log(`Card deleted from collection`))
-        .then(toggleRefresh());
-    } else {
-      window.alert("deletion canceled");
+      Axios.delete(`${window.name}/card/${cardIdCollection}`, config)
+        .then(() => {
+          console.log(`Card deleted from collection`)
+          toggleRefresh();
+        })
+  };
+
+  const handleDrop = (e) => {
+    //on drop, get card ID
+    const cardToDelete = e.dataTransfer.getData("cardDeletion");
+    if (cardToDelete) {
+      deleteFromCollection(cardToDelete);
+      console.log("card Id:", cardToDelete);
+    } else if (!cardToDelete) {
+      console.log("no data was caught");
     }
   };
 
-    const handleDrop = (e) => {
-      //on drop, get card ID
-      const cardToDelete = e.dataTransfer.getData("cardDeletion");
-      if (cardToDelete){
-        deleteFromCollection(cardToDelete);
-        console.log("card Id:", cardToDelete);
-      } else if (!cardToDelete){
-        console.log('no data was caught')
-      }
-    };
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    console.log("drag over");
+  };
 
-    const handleDragOver = (e) => {
-      e.preventDefault();
-      console.log("drag over");
+  //Tips change when modal is unavailable
+  //modal won't work below certain resolution
+
+  const [isWideScreen, setIsWideScreen] = useState(true);
+  
+  //const [isVeryWideScreen, setIsVeryWideScreen] = useState(true);
+
+  const updateScreenSize = () => {
+    const screenWidth = window.innerWidth;
+    const breakpoint = 850; // Set your desired breakpoint in pixels here
+    setIsWideScreen(screenWidth >= breakpoint);
+    /*
+    const veryBreakpoint = 1101;
+    setIsVeryWideScreen(screenWidth > veryBreakpoint)
+    */
+  };
+
+  // Add a resize event listener to update the state on window resize
+  useEffect(() => {
+    updateScreenSize(); // Initial update
+    window.addEventListener("resize", updateScreenSize);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", updateScreenSize);
     };
+  }, []);
+
+  const guideChangesWithModal = isWideScreen
+    ? `Click on cards to add to your collection, or drag 'em to the side bar
+    on the right side.`
+    : `Click on cards to add to your collection.`;
 
   return (
     <>
-      <SideBar modalHandler={handleModalOpen} refresh={liftedRefreshCards}/>
-      <div className={upperContainerClass} droppable='true' onDrop={handleDrop}
-        onDragOver={handleDragOver}>
+      <SideBar modalHandler={handleModalOpen} refresh={liftedRefreshCards} />
+      <div
+        className={upperContainerClass}
+        droppable="true"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         <div className={styles.titleContainer}>
-          <img src={welcome} className={styles.title} width="500" alt="Logo" />
-          <div
-            className={styles.chestContainer}
-            onMouseEnter={HandleMouseEnter}
-            onMouseLeave={HandleMouseLeave}
-          >
-            <a href="/collection">
-              {isHovered && isImagesLoaded ? (
-                <div>
-                  <img
-                    src={openedchest}
-                    className={styles.chest}
-                    alt="opened chest"
-                  />{" "}
-                  <img
-                    src={floatingCards}
-                    className={styles.fCards}
-                    alt="cards floating"
-                  />
-                </div>
-              ) : (
-                <img src={closedchest} className={styles.chest} alt="chest" />
-              )}
-            </a>
+          <img src={welcome3} className={styles.title} alt="Logo" />
+          <div className={styles.chestContainer}>
+            <div
+              className={styles.chestWrapper}
+            >
+              <a href="/collection">
+                {isImagesLoaded ? (
+                  <div className={styles.chestContent}>
+                    <img
+                      src={openedchest}
+                      className={styles.chest}
+                      alt="opened chest"
+                    />{" "}
+                    <img
+                      src={floatingCards}
+                      className={styles.fCards}
+                      alt="cards floating"
+                    />
+                  </div>
+                ) : (
+                  <img src={closedchest} className={styles.chest} alt="chest" />
+                )}
+              </a>
+            </div>
           </div>
         </div>
 
@@ -209,16 +250,16 @@ function Home() {
         </p>
         <ul className={styles.list}>
           <li className={styles.listItem}>
-            Mirror your physical cards by adding cards to your collection.
+            Mirror your physical cards by adding cards to your collection;
           </li>
           <li className={styles.listItem}>
             Build multiple decks with the same cards that you have so you don't
-            need to take notes on shared cards
+            need to take notes on shared cards;
           </li>
 
           <li className={styles.listItem}>
             Fill your wishlist and write a description on each card to remember
-            their role in your malevolent strategies in assigned deck
+            their role in your malevolent strategies in assigned deck;
           </li>
 
           <li className={styles.listItem}>
@@ -228,16 +269,20 @@ function Home() {
         </ul>
 
         <h1 className={styles.h1}>
-          All <i>Magic: The Gathering</i> Cards
+          All <span className={styles.MTG}><i>Magic: The Gathering</i></span> cards
         </h1>
         <SearchContainer
           baseOfSearch="AllCards"
           onParamsChange={handleSuperParams}
         />
-        <h5>Click on cards to add to your collection, or drag 'em to the side bar on the right side.</h5>
+        <h5 className="mb-5">{guideChangesWithModal}</h5>
       </div>
-      <div className={cardsContainerClass} droppable={true} onDrop={handleDrop}
-        onDragOver={handleDragOver}> 
+      <div
+        className={cardsContainerClass}
+        droppable="true"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         <div className="row justify-content-center">
           {cards.map((card, key) => (
             <Card
@@ -251,7 +296,6 @@ function Home() {
               keywords={card.keywords}
               table="allCards"
               refresh={handleLiftedRefreshCards}
-              
             />
           ))}
         </div>

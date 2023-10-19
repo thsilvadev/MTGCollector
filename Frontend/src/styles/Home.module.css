@@ -1,39 +1,55 @@
 .titleContainer {
-  max-width: 500px;
+  max-width: 80%;
   display: flex;
+  flex-direction: column;
   margin: 80px auto 40px auto;
   box-sizing: border-box;
   vertical-align: middle;
   align-items: center;
+  align-content: center;
+  justify-content: center;
 }
 
 .title {
-  font-size: 50px;
+  max-width: 100%;
+    min-width: 368px;
+    
 }
 
 .chestContainer {
+    /* Reset width for the second inner div to take full width */
+    width: 200px;
+    margin: 0px auto -100px auto;
+display: flex;
+}
+
+.chestContent {
   position: relative;
 }
 
-.chestContainer .chest {
-  position: absolute;
-  margin-top: 40px;
-  top: -90px;
-  left: 10px;
-  width: 150px;
-  rotate: 5deg;
+.chestWrapper {
+  position: relative;
+}
+
+.chest {
+  position: relative;
+  top: 0;
+  left: auto;
+  width: 100%; /* Adjust as needed */
+  rotate: 0deg;
+
 }
 
 /* This is for the cards image on the logo, not the actual cards (components) */
 .fCards {
-  width: 80px;
-  position: absolute;
-  left: 45px;
-  top: -55px;
-  rotate: 5deg;
-  overflow: hidden;
-    transform: translatey(0px);
-    animation: float 5s ease-in-out infinite;
+  position: relative;
+  left: auto;
+  max-width: 80px;
+  top: -175px;
+rotate: 5deg;
+overflow: hidden;
+  transform: translatey(0px);
+  animation: float 5s ease-in-out infinite;
 }
 
 /* Float animation */
@@ -67,7 +83,9 @@
   list-style: disc;
   text-align: start;
   margin-bottom: 40px;
-  padding-right: 1px;
+  padding-right: 10px;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 .listItem {
@@ -87,6 +105,7 @@
 }
 
 .upperContainerWithModal {
+  padding: 0 10px 0 10px;
   width: 100%;
   animation: showSideBar .1s;
 }
@@ -101,6 +120,7 @@
 }
 
 .cardsContainerWithModal {
+  padding: 0 10px 0 10px;
     display: flex;
     justify-content: center;
     width: 100%;
@@ -137,7 +157,7 @@
     }
 
     .upperContainerWithModal {
-      width: 70%;
+      width: 69%;
     }
     
     .cardsContainer {
@@ -145,7 +165,7 @@
     }
 
     .cardsContainerWithModal {
-      width: 70%;
+      width: 69%;
   }
     
   }
@@ -191,3 +211,6 @@
     }
   }
 
+.MTG {
+  font-family: 'BelerenBold';
+}

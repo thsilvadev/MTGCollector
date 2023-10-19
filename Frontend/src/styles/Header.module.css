@@ -1,4 +1,72 @@
 a:hover {
     color: green !important;
     font-weight: bold;
+    cursor: pointer;
+}
+
+.signOut {
+    margin-left: 5px;
+}
+
+.Login {
+    position: absolute;
+    right: 93px;
+    top: 11px;
+}
+
+.LoginImg {
+    padding-right: 10px;
+}
+
+.toggled_Login {
+        display: flex;
+        justify-content: center;
+}
+/*
+.hidden {
+    height: 0%;
+    animation: hide .3s;
+    display: inline !important;
+}
+
+@keyframes hide {
+    from {
+        height: 100%;
+    }
+    to {
+        height: 0%;
+    }
+}
+
+.showing {
+    height: 100%;
+    animation: show .3s;
+    display: inline !important;
+}
+
+@keyframes show {
+    from {
+        height: 0%;
+    }
+    to {
+        height: 100%;
+    }
+}
+*/
+
+.title {
+    scale: 1;
+    transition: scale .3s;
+}
+
+.title:hover {
+     scale: 1.3;
+}
+
+.coming {
+    font-size: 8px;
+}
+
+#off {
+    pointer-events: none;
 }

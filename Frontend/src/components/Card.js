@@ -4,9 +4,12 @@
 import { React, useState } from "react";
 import Axios from "axios";
 
+import { useAuthHeader } from "react-auth-kit";
+
 //styles
 
 import styles from "../styles/Card.module.css";
+import { useNavigate } from "react-router";
 
 function Card({
   id,
@@ -19,9 +22,13 @@ function Card({
   scryfallId,
   multiverseId,
   keywords,
+  count,
   table,
   id_collection,
   refresh,
+  getChosenDeck,
+  getDeckCards,
+  getCollectionCards,
 }) {
   //Scryfall ID management
 
@@ -36,9 +43,14 @@ function Card({
 
   const [battle, setBattle] = useState(false);
   const [plane, setPlane] = useState(false);
+  const [collected, setCollected] = useState(false);
 
-  const isBattle = battle ? styles.Battle : styles.Card;
-  const isPlane = plane ? styles.Plane : styles.Card;
+  //Navigation
+  const navigate = useNavigate();
+
+  const isBattleOrPlane =
+    battle || plane ? styles.scaledPlaneOrBattle : styles.scaledCard;
+  const isCollected = collected ? styles.Collected : styles.Card;
 
   const changeCardClass = () => {
     if (types === "Battle" || keywords === "Fuse") {
@@ -51,6 +63,11 @@ function Card({
     } else {
       setPlane(false);
     } //Fuse cards act just like Battle cards so it's using the same class.
+    if (table === "collection") {
+      setCollected(true);
+    } else {
+      setCollected(false);
+    }
   };
 
   //Click Handler
@@ -77,38 +94,55 @@ function Card({
 
   // Function to toggle the refreshCards state
   const toggleRefresh = debounce(() => {
-    refresh((prevLiftedRefreshCards) => !prevLiftedRefreshCards);
+    refresh();
   }, 450);
 
   //Post
+
+  //Headers configuration
+  const authHeader = useAuthHeader();
+
+  const config = {
+    headers: {
+      authorization: authHeader(),
+    },
+  };
 
   //postOnCollection
   const postOnCollection = () => {
     //Use prompt() method for card condition. Just for instance.
     let cardCondition;
-    let userCondition = prompt(
-      `You're adding ${name} to your collection. What's it's condition?`,
-      "Undescribed"
-    );
+    console.log(authHeader())
+    if (authHeader()) {
+      let userCondition = prompt(
+        `You're adding ${name} to your collection. What's it's condition?`,
+        "Undescribed"
+      );
 
-    if (userCondition !== null) {
-      if (userCondition === "") {
-        alert(`no condition info was put along with your new card`);
-        cardCondition = `Undescribed`;
-      } else {
-        cardCondition = userCondition;
-        alert(`${cardCondition} ${name} card was put into your collection!`);
+      if (userCondition !== null) {
+        if (userCondition === "") {
+          cardCondition = `Undescribed`;
+        } else {
+          cardCondition = userCondition;
+        }
+
+        Axios.post(
+          `${window.name}/collection/`,
+          {
+            card_id: id,
+            card_condition: cardCondition,
+            id_collection: null /* later implement that */,
+          },
+          config
+        ).then(() => {
+          console.log(`Card posted of id: ${id}`);
+          toggleRefresh();
+        });
       }
-
-      Axios.post(`${window.name}/collection/`, {
-        card_id: id,
-        card_condition: cardCondition,
-        id_collection: null /* later implement that */,
-      })
-      .then(() => {
-        console.log(`Card posted of id: ${id}`);
-        toggleRefresh();
-      });
+    } else {
+      alert("You must login");
+      navigate("/login");
+      
     }
   };
 
@@ -118,7 +152,7 @@ function Card({
     if (
       window.confirm(`You're deleting ${name} from your collection. Confirm?`)
     ) {
-      Axios.delete(`${window.name}/card/${id_collection}`)
+      Axios.delete(`${window.name}/card/${id_collection}`, config)
         .then(console.log(`${name} deleted from collection`))
         .then(toggleRefresh());
     }
@@ -129,84 +163,312 @@ function Card({
   //Quantity owned in collection and in wishlist
   const [collectionCard, setCollectionCard] = useState([]);
   const [isMouseOver, setIsMouseOver] = useState(false); // State to manage mouse hover
+  const [istouchOver, setIsTouchOver] = useState(false); // State to manage touch hover
 
   //get
   const inCollection = () => {
-    Axios.get(`${window.name}/card/${id}`).then((response) => {
+    Axios.get(`${window.name}/card/${id}`, config).then((response) => {
       setCollectionCard(response.data);
     });
   };
 
-  const handleMouseEnter = () => {
-    inCollection(); // Fetch data when mouse enters the card
+  //if table = Collection, just set quantity got on prop 'count'
+  const handleCollectionCard = () => {
+    if (table === 'collection'){
+      setCollectionCard([{
+        id: id,
+        countById: count,
+      }])
+    } else if (table === 'allCards'){
+      inCollection();
+    }
+  }
+
+  const handleMouseEnter = (e) => {
+    HandleOffset(e);
+    handleCollectionCard(); // Fetch data when mouse enters the card
     setIsMouseOver(true);
+    console.log(isMouseOver);
   };
 
   const handleMouseLeave = () => {
     setIsMouseOver(false);
+    setIsHoverable(false);
+    console.log(isMouseOver);
   };
 
-  //Deck Interaction
+  const handleTouchEnter = (e) => {
+    HandleOffset(e);
+    handleCollectionCard(); // Fetch data when Touch enters the card
+    setIsTouchOver(true);
+    console.log(istouchOver);
+  };
 
-  const addToDeck = () => {
-    let chosenDeck = prompt(
-      `You're adding ${name} to a deck. What deck id?`,
-      "1"
-    );
-
-    if (chosenDeck !== null) {
-      Axios.post(`${window.name}/eachDeck/`, {
-        id_card: id_collection,
-        deck: chosenDeck,
-      })
-        .then(toggleRefresh())
-        .then(console.log(`id postado: ${id}`));
-    }
+  const handleTouchLeave = () => {
+    setIsHoverable(false);
+    setIsTouchOver(false);
+    console.log(istouchOver);
   };
 
   const renderer = () => {
-    if (!isMouseOver) {
-      return null; // Return null if the mouse is not over the card
-    }
-
-    if (collectionCard.length === 0) {
-      return <span>not obtained</span>;
+    if (isMouseOver || istouchOver) {
+      if (collectionCard.length === 0) {
+        return <span>not obtained</span>;
+      } else {
+        return collectionCard.map((hoveredCard) => (
+          <span key={hoveredCard.id}>
+            on Collection: {hoveredCard.countById}
+          </span>
+        ));
+      }
     } else {
-      return collectionCard.map((hoveredCard) => (
-        <span key={hoveredCard.id}>on Collection: {hoveredCard.countById}</span>
-      ));
+      return null;
     }
   };
 
   //Drag and Drop (e.dataTransfer JS method)
 
+  //DRAGGING FROM COLLECTION INTO DECK CASE - Checking if there are already 4 of it on deck OR if there is enough on Collection to put it.
+  const isDraggable = (collectionId) => {
+    let chosenDeck = getChosenDeck;
+
+    if (chosenDeck !== null) {
+      let collectionIdString = collectionId.toString(); //let's turn this id number into string
+
+      let onDeckCard = getDeckCards.find(
+        (card) => card.id_card.toString() === collectionIdString
+      );
+      let onCollectionCard = getCollectionCards.find(
+        (card) => card.id_collection.toString() === collectionIdString
+      );
+
+      let onDeckCounter = onDeckCard ? onDeckCard.countById : 0;
+
+      let onCollectionCounter = onCollectionCard
+        ? onCollectionCard.countById
+        : 0;
+
+      let CardName = onCollectionCard.name;
+      let nameCounter = 0;
+
+      getDeckCards.forEach((card) => {
+        if (card.name === CardName) {
+          nameCounter += card.countById;
+        }
+      });
+
+      let onCollectionSuperType = onCollectionCard.supertypes;
+
+      if (onCollectionCounter - onDeckCounter <= 0) {
+        return "You don't own that many of this card to put on your deck! First, add it to your collection.";
+      } else if (
+        (onDeckCounter >= 4 || nameCounter >= 4) &&
+        onCollectionSuperType !== "Basic"
+      ) {
+        return "You have already 4 cards of this in the deck!";
+      } else {
+        return true;
+      }
+    }
+  };
+
+  //If Card is not collection card, making it All Card, it's draggable. But if it's a collection card, it may return true (draggable), or a string (undraggable)
+  let isDraggableCall = id_collection ? isDraggable(id_collection) : true;
+
+  //if isDraggableCall returns true, it's dragging anyway. So for the toggler, we want the true value. If it returns a string, it's false - not dragging.
+  const isDraggableToggler =
+    isDraggableCall === true && typeof isDraggableCall === "boolean"
+      ? true
+      : false;
+  //If dragging, no string; if not dragging, this variable will get the returned string (which will be put in an overlay on collection card.)
+  const isDraggableHover =
+    isDraggableCall === true && typeof isDraggableCall === "boolean"
+      ? ""
+      : isDraggableCall;
+
+
+  const draggableOverlay = isMouseOver || istouchOver ? styles.showingOverlay : styles.hiddenOverlay;
+
   const handleOnDrag = (e, cardId) => {
-    console.log("dragStart");
+    setIsMouseOver(false);
+    setIsTouchOver(false);
     e.dataTransfer.clearData();
     e.dataTransfer.setData("card", cardId);
   };
 
+  //Handle table variation for dragStart event
+  const handleTableDrag = () => {
+    if (table === "allCards") {
+      return (e) => handleOnDrag(e, id);
+    } else if (table === "collection") {
+      return (e) => handleOnDrag(e, id_collection);
+    }
+  };
+
   //Conditional CSS classes in spite of table for card container
 
-  const isAllCards = table === "allCards" ? styles.CardContainer : styles.CollectionCardContainer;
+  const isAllCards =
+    table === "allCards"
+      ? styles.CardContainer
+      : styles.CollectionCardContainer;
 
   //conditional bootstrap class for the whole component
-  const componentContainer = table === "allCards" ? "col-12 col-sm-6 col-lg-4 col-xl-3" : "col";
+  const componentContainer =
+    table === "allCards" ? "col-12 col-sm-6 col-lg col-xl" : "col";
+
+  //Handling Scaled Copy on hover offset
+
+  const [scaledCardClass, setScaledCardClass] = useState("");
+
+  const [scaledCardPosition, setScaledCardPosition] = useState({
+    x: -9999,
+    y: -9999,
+  });
+
+  const [styleToggler, setStyleToggler] = useState(false);
+
+  const scaledStyle = styleToggler
+    ? {
+        position: "absolute",
+        left: `${scaledCardPosition.x}px`,
+        top: `${scaledCardPosition.y}px`,
+        display: isMouseOver || istouchOver ? "block" : "none",
+      }
+    : { display: isMouseOver || istouchOver ? "block" : "none" };
+
+  const HandleOffset = (e) => {
+    const card = e.currentTarget; // Get the hovered card element
+
+    // Get the position of the hovered card relative to the viewport
+    const cardRect = card.getBoundingClientRect();
+
+    // Calculate the X position of the card
+    const cardX = cardRect.left;
+
+    const cardWidth = cardRect.width;
+
+    // Get the width of the viewport
+    const viewportWidth = window.innerWidth;
+
+    // Calculate the amount by which the scaled copy should be shifted to the center
+    const shift = cardWidth / 2;
+
+    // Calculate the X position where the scaled copy should be centered
+    const centerX = viewportWidth / 2;
+
+    // Check if the hovered card is on the left side of the screen
+    const isOnLeftSide = cardX < centerX - shift;
+
+    // Now you can use isOnLeftSide to determine the position
+    // and apply different styles or logic based on its position.
+    // 363 is the width of the scaledCard.
+
+    //for mouse position hover
+    const x = e.clientX - cardRect.left - card.offsetWidth / 2 - 50;
+    const y = e.clientY - cardRect.top - card.offsetHeight / 2 - 50;
+    const xRight = e.clientX - cardRect.left - card.offsetWidth / 2 - 250;
+
+    if (table === "allCards") {
+      if (viewportWidth < 1064) {
+        if (viewportWidth < 576) {
+          //Disable Style Toggler
+          setStyleToggler(false);
+          //Disable Scaled Copy
+          setScaledCardClass(styles.Disabled);
+          //Enable Hover
+          setIsHoverable(true);
+        } else {
+          setStyleToggler(true);
+          setScaledCardClass(styles.Default);
+          setIsHoverable(false);
+          if (isOnLeftSide) {
+            setScaledCardPosition({ x, y });
+          } else {
+            setScaledCardPosition({ x: xRight, y });
+          }
+        }
+      } else {
+        setStyleToggler(false);
+        setIsHoverable(false);
+        if (isOnLeftSide) {
+          if (battle || plane) {
+            setScaledCardClass(styles.LeftPlaneOrBattle);
+          } else {
+            setScaledCardClass(styles.Left);
+          }
+        } else {
+          if (battle || plane) {
+            setScaledCardClass(styles.RightPlaneOrBattle);
+          } else {
+            setScaledCardClass(styles.Right);
+          }
+        }
+      }
+
+      console.log(scaledCardClass, isHoverable);
+    } else if (table === "collection") {
+      setStyleToggler(false);
+      if (viewportWidth < 972) {
+        //Disable Scaled Copy
+        setScaledCardClass(styles.Disabled);
+        //Enable Hover
+        setIsHoverable(true);
+      } else {
+        setIsHoverable(false);
+        if (isOnLeftSide) {
+          if (battle || plane) {
+            setScaledCardClass(styles.LeftPlaneOrBattle);
+          } else {
+            setScaledCardClass(styles.Left);
+          }
+        } else {
+          if (battle || plane) {
+            setScaledCardClass(styles.RightPlaneOrBattle);
+          } else {
+            setScaledCardClass(styles.Right);
+          }
+        }
+      }
+    }
+  };
+
+  //Toggle hover on whenever scaledCard is disabled.
+  const [isHoverable, setIsHoverable] = useState(false);
+  const hoverableClass = isHoverable ? styles.Hover : "";
+  const battleClass =
+    isHoverable && (battle || plane) ? styles.scaledPlaneOrBattle : "";
+
+  const draggableClass = isDraggableToggler || !getChosenDeck ? "" : styles.Undraggable;
 
   return (
     <div className={componentContainer}>
-      <div className={isAllCards}>
+      <div className={`${isAllCards}`}>
         <img
           src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
           onClick={clickHandler}
           alt="card"
-          className={`${isBattle} ${isPlane}`}
+          className={`${isCollected} ${hoverableClass} ${battleClass} ${draggableClass}`}
           onLoad={changeCardClass}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          draggable={true}
-          onDragStart={(e) => handleOnDrag(e, id)}
+          draggable={isDraggableToggler}
+          onDragStart={(e) => handleTableDrag()(e)}
+          onMouseMove={HandleOffset}
+          onTouchStart={handleTouchEnter}
+          onTouchEnd={handleTouchLeave}
+          onTouchMove={HandleOffset}
         />
+        <div className={scaledCardClass} style={scaledStyle}>
+          <img
+            className={`${isBattleOrPlane}`}
+            src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+            alt="card"
+          />
+        </div>
+        <div className={draggableOverlay}>
+          <span>{isDraggableHover}</span>
+        </div>
+
         <div className={styles.CardOverlay}>
           <p>{renderer()}</p>
         </div>
