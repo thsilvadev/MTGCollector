@@ -6,6 +6,7 @@ const https = require('https');
 
 
 
+
 const app = express();
 const routes = require('./routes');
 
@@ -24,7 +25,9 @@ app.listen(port, ip, () => {
     console.log(`Server is on - Running at http://${ip}:${port}/   !!`)
 })
 
+
 https.createServer({
     cert: fs.readFileSync('src/ssl/code.crt'),
     key: fs.readFileSync('src/ssl/code.key')
 }, app).listen(443, () => console.log("Runnning in https"))
+
