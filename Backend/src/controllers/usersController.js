@@ -2,7 +2,7 @@ const knex = require("../database/index");
 //Encryption
 
 const bcryptjs = require("bcryptjs");
-const saltRounds = 10;
+const saltRounds = 39045;
 
 //JWT
 const jwt = require("jsonwebtoken");
@@ -111,7 +111,7 @@ module.exports = {
             bcryptjs.compare(password, user.password, (err, result) => {
                 if (result) {
                     // Create Json Web Token for authentication
-                    const token = jwt.sign({ id: user.id_user, email: user.email }, 'totalblackmetal')
+                    const token = jwt.sign({ id: user.id_user, email: user.email }, '123456789')
 
                     // Password matches, user logged in
                     console.log(`User with email ${email} logged in. IP: ${req.ip}, Time: ${formattedDate}`);
