@@ -15,7 +15,7 @@ module.exports = async (req, res, next) => {
     const trueToken = authArray[1]; // this is the {token}
 
     try {
-        const data = jwt.verify(trueToken, "totalblackmetal");
+        const data = jwt.verify(trueToken, "123456789");
         console.log("data: ", data);
 
         const user = await knex
