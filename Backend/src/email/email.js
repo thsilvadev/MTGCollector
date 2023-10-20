@@ -19,12 +19,12 @@ const jwt = require('jsonwebtoken');
 */
 async function mainMail(name, email, subject, message) {
     const transporter = await nodeMailer.createTransport({
-        host: "box.bestcontact.email",
-        port: 465,
+        host: "HOST.HOST.EMAIL",
+        port: 190,
         secure: true,
         auth: {
             user: "noreply@mtgchest.com",
-            pass: "F6BOsXlwGvrPjWUa025ckR",
+            pass: "PASSWORD",
         }
     });
 
@@ -68,16 +68,16 @@ async function mainMail(name, email, subject, message) {
 
 async function configMail (email) {
     const transporter = await nodeMailer.createTransport({
-        host: "box.bestcontact.email",
-        port: 465,
+        host: "HOST.HOST.EMAIL",
+        port: 190,
         secure: true,
         auth: {
             user: "noreply@mtgchest.com",
-            pass: "F6BOsXlwGvrPjWUa025ckR",
+            pass: "PASSWORD",
         }
     });
 
-    const emailToken = jwt.sign({email: email}, 'totaldeathmetal')
+    const emailToken = jwt.sign({email: email}, '123456789')
 
     const url = `http://mtgchest.com/confirmation/${emailToken}`
 
@@ -135,7 +135,7 @@ module.exports = {
       console.log(confirmed);
       try {
       
-      const data = jwt.verify(emailToken, "totaldeathmetal");
+      const data = jwt.verify(emailToken, "123456789");
       if (!data.email){
         return res.sendStatus(401)
       } else {
