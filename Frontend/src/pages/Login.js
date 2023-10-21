@@ -113,13 +113,15 @@ function Login() {
               placeholder="Password"
               type="password"
             />
-
+            
             <ErrorMessage
               component="span"
               name="password"
               className={styles.formError}
               type="password"
             />
+            <br/>
+            <a className={styles.Forgot} href="/forgot">Forgot your password?</a>
           </div>
           <button className={styles.button} type="submit">
             Login
