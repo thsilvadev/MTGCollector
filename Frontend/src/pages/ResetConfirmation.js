@@ -65,6 +65,20 @@ const ResetConfirmation = () => {
               type="password"
             />
           </div>
+          <div className={styles.loginFormGroup}>
+            <Field
+              name="confirmPassword"
+              className={styles.formField}
+              placeholder="Confirm Password"
+              type="password"
+            />
+
+            <ErrorMessage
+              component="span"
+              name="confirmPassword"
+              className={styles.formError}
+            />
+          </div>
 
           <button className={styles.button} type="submit">
             Submit
