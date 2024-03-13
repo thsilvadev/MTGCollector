@@ -539,6 +539,9 @@ function Collection() {
           <div id="3" className={styles.even}>
             <span className={isLessThanSixty}>{RenderedDeckSize}</span>
           </div>
+          <div >
+            <a href="/decks"><button className={styles.newDeckButton}>Add New Deck</button></a>
+          </div>
         </div>
         <div className={styles.minicardsContainer}>
           {manaValueArrays.map(
