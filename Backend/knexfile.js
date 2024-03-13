@@ -1,13 +1,14 @@
 //INSERE AS INFORMAÇÕES DO BANCO DE DADOS
+require(`dotenv`).config();
 
 module.exports = {
     development: {
         client: 'mysql2',
         connection: {
-            host:'localhost',
-            user:'root',
-            password:'',
-            database:'mtg_07.07.23'
+            host: process.env.HOST,
+            user: process.env.USER,
+            password: process.env.PASSWORD,
+            database: process.env.DATABASE
         }
     }
 }
