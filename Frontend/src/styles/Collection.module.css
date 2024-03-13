@@ -72,6 +72,26 @@
     margin: 5px 0 5px 0;
 }
 
+.newDeckButton {
+    right: 0;
+    border-radius: 8px;
+    padding: 6px;
+    font-family: 'BelerenBold';
+    font-size: 20px;
+    box-shadow: 2px 2px black;
+    background-color: rgb(174, 242, 174);
+}
+
+.newDeckButton:hover {
+    background-color: rgb(43, 184, 43);
+    
+}
+
+.newDeckButton:active {
+    background-color: rgb(43, 184, 43);
+    box-shadow: inset 1px 1px black;
+}
+
 .selectInput {
     text-align: center;
     font-size: 23px;
