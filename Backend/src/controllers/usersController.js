@@ -1,3 +1,4 @@
+require('dotenv').config();
 const knex = require("../database/index");
 //Encryption
 
@@ -46,6 +47,7 @@ module.exports = {
                     console.log(
                         `user ${email} registered by ${req.ip} at ${formattedDate}. Result object: ${result}`
                     );
+                })
 
                     const confirmingEmail = await nodeMailing.confirmEmail(req);
                     if (confirmingEmail === "Confirmation email successfully sent!") {
@@ -56,7 +58,7 @@ module.exports = {
                         return res.status(500).json({ error: "Error sending confirmation email." });
                     }
 
-                })
+                
 
 
             }
@@ -111,7 +113,7 @@ module.exports = {
             bcryptjs.compare(password, user.password, (err, result) => {
                 if (result) {
                     // Create Json Web Token for authentication
-                    const token = jwt.sign({ id: user.id_user, email: user.email }, 'totalblackmetal')
+                    const token = jwt.sign({ id: user.id_user, email: user.email }, process.env.AUTH_TOKEN_TAG)
 
                     // Password matches, user logged in
                     console.log(`User with email ${email} logged in. IP: ${req.ip}, Time: ${formattedDate}`);

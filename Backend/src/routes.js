@@ -74,14 +74,19 @@ routes.get('/sets', setsController.getSets); //GET sets
 
 ///////ROUTES AND REQUISITIONS FOR THE USERS TABLE
 routes.post('/register', usersController.postUser); //Register user
+/* *** */
+/* While registering, usersController is also calling email.confirmEmail */
+/* *** */
 routes.post('/login', usersController.loginUser) //Login user
 //routes.post('/reset', usersController.resetPassword); Reset Password
 
 
 
-//==============================//ROUTES AND REQUISITIONS FOR THE [EMAILING] //============================================//
+//==============================//ROUTES AND REQUISITIONS FOR [EMAILING] //============================================//
 routes.post('/contact', email.contactForm); //Contact email
 routes.put('/confirmation/:emailToken', email.checkUserConfirm);
+routes.post('/reset', email.resetPassword);
+routes.put('/new-password/:resetToken', email.newPassword);
 
 
 

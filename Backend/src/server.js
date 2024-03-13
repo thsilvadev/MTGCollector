@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+require(`dotenv`).config({path: './.env'});
 //SSL
 const fs = require('fs');
 const https = require('https');

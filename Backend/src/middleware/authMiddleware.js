@@ -1,5 +1,7 @@
+require(`dotenv`).config();
 const knex = require("../database/index");
 const jwt = require('jsonwebtoken');
+
 
 module.exports = async (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -15,7 +17,7 @@ module.exports = async (req, res, next) => {
     const trueToken = authArray[1]; // this is the {token}
 
     try {
-        const data = jwt.verify(trueToken, "totalblackmetal");
+        const data = jwt.verify(trueToken, process.env.AUTH_TOKEN_TAG);
         console.log("data: ", data);
 
         const user = await knex
