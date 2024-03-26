@@ -9,10 +9,18 @@ import { BrowserRouter } from "react-router-dom";
 import Header from "./layout/Header";
 import Container from "./layout/Container";
 import Footer from "./layout/Footer";
+
 //Bootstrap CSS
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+//React Toastify
+
+import { ToastContainer } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
+// minified version is also included
+// import 'react-toastify/dist/ReactToastify.min.css';
 
 //Google Analytics
 import ReactGA from 'react-ga';
@@ -36,6 +44,7 @@ function App() {
         <Container />
         <Footer />
       </BrowserRouter>
+      <ToastContainer />
     </div>
   );
 }

@@ -1,11 +1,11 @@
 
 .Background {
     background-color: var(--bodyBackground);
+    padding-top: 15px;
 }
 
 .title {
     font-size: 50px;
-    margin-top: 15px;
 }
 
 .cardsContainer {

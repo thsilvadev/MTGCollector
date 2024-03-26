@@ -7,6 +7,7 @@ import Axios from "axios";
 import { Scrollbars } from "react-custom-scrollbars-2";
 import { useAuthHeader } from "react-auth-kit";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 
 //Components
 import MiniCard from "./MiniCard";
@@ -14,8 +15,11 @@ import PrevNext from "./PrevNext";
 
 const SideBox = ({ modalToggler, refresher }) => {
 
+  //auto navigations
   const navigate = useNavigate();
 
+  //toastify
+  const notify = () => toast("Card added to collection!");
 
   //change css class when card is being dragged over the sidebar
   const [isDraggedOver, setIsDraggedOver] = useState(false);
@@ -47,6 +51,7 @@ const SideBox = ({ modalToggler, refresher }) => {
       config
     ).then(() => {
       console.log(`Card posted of id: ${cardId}`);
+      notify();
       toggleRefresh();
     });
   };

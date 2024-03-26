@@ -19,13 +19,10 @@ import React, { useState, useEffect } from "react";
 
 import { useAuthHeader } from "react-auth-kit";
 
-import { RequireAuth } from "react-auth-kit";
+import { toast } from 'react-toastify';
 
 //imgs
-import welcome from "../images/welcome.png";
 import welcome3 from "../images/welcome3.png";
-import welcome2white from "../images/welcome2white.png";
-import logo2 from "../images/logo2white.png";
 import closedchest from "../images/closed-chest.png";
 import openedchest from "../images/opened-chest.png";
 import floatingCards from "../images/cards.png";
@@ -152,7 +149,8 @@ function Home() {
   const deleteFromCollection = (cardIdCollection) => {
       Axios.delete(`${window.name}/card/${cardIdCollection}`, config)
         .then(() => {
-          console.log(`Card deleted from collection`)
+          console.log(`Card deleted from collection`);
+          notify();
           toggleRefresh();
         })
   };
@@ -205,6 +203,9 @@ function Home() {
     ? `Click on cards to add to your collection, or drag 'em to the side bar
     on the right side.`
     : `Click on cards to add to your collection.`;
+
+  //Toastify
+  const notify = () => toast("Card was deleted from your collection!");
 
   return (
     <>
@@ -307,6 +308,7 @@ function Home() {
         elementsArray={cards}
         where="page"
       />
+      
     </>
   );
 }
