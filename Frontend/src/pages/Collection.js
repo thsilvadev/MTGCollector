@@ -458,7 +458,7 @@ function Collection() {
         droppable="true"
         onDragOver={handleDragOver}
       >
-        <h1>You have {totalCards} cards in your collection.</h1>
+        <h1 className={styles.title}>You have {totalCards} cards in your collection.</h1>
         <SearchContainer
           baseOfSearch="collection"
           onParamsChange={handleSuperParams}
