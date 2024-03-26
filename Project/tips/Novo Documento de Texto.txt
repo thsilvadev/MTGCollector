@@ -1,0 +1,3 @@
+Hey there! You can cross reference the second table
+
+SELECT * FROM cards LEFT JOIN cardIdentifiers ON cards.uuid = cardIdentifiers.uuid

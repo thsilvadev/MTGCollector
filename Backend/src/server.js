@@ -11,8 +11,8 @@ const https = require('https');
 const app = express();
 const routes = require('./routes');
 
-const port = 80;
-const ip = '172.31.12.117';
+const port = process.env.PORT;
+const ip = process.env.IP;
 
 
 
@@ -31,4 +31,3 @@ https.createServer({
     cert: fs.readFileSync('src/ssl/code.crt'),
     key: fs.readFileSync('src/ssl/code.key')
 }, app).listen(443, () => console.log("Runnning in https"))
-
