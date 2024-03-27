@@ -8,18 +8,16 @@ import Card from "../components/Card";
 
 import SearchContainer from "../components/SearchContainer";
 
-import PrevNext from "../components/PrevNext";
-
 import SideBar from "../components/SideBar";
 
 //Tools
 import Axios from "axios";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import { useAuthHeader } from "react-auth-kit";
 
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 //imgs
 import welcome3 from "../images/welcome3.png";
@@ -33,9 +31,6 @@ function Home() {
 
   //get page number
   const [page, setPage] = useState(0);
-  const handlePage = (pageData) => {
-    setPage(pageData);
-  };
 
   //get Params
   const [superParams, setSuperParams] = useState("");
@@ -52,18 +47,30 @@ function Home() {
     console.log("changed liftedRefreshCards:", liftedRefreshCards);
   };
 
-  //get filtered and paginated Cards in real time
   useEffect(() => {
+    // Always reset cards when superParams changes
     Axios.get(`${window.name}/cards/${page}?${superParams}`).then(
-      (response) => {
-        setCards(response.data);
-      }
+       (response) => {
+         // Reset the cards with the new data
+         setCards(response.data);
+         // Optionally reset page to 0 if you want to start fetching from the first page again
+         setPage(0);
+       }
     );
-  }, [page, superParams]);
+   }, [superParams]); // Depend only on superParams
+   
+   useEffect(() => {
+    // Fetch more cards when page changes
+    Axios.get(`${window.name}/cards/${page}?${superParams}`).then(
+       (response) => {
+         // Append the new data to the existing cards
+         setCards((prevCards) => [...prevCards, ...response.data]);
+       }
+    );
+   }, [page]); // Depend only on page
 
   //Image Switcher
   const [isImagesLoaded, setIsImagesLoaded] = useState(false);
-
 
   useEffect(() => {
     const preloadImages = async () => {
@@ -130,29 +137,26 @@ function Home() {
 
   // Function to toggle the refreshCards state
   const toggleRefresh = debounce(() => {
-      setLiftedRefreshCards((prevRefresh) => !prevRefresh);
-  },
-      450
-    );
+    setLiftedRefreshCards((prevRefresh) => !prevRefresh);
+  }, 450);
 
   //Delete from Collection
 
-    //Headers configuration
-    const authHeader = useAuthHeader()
-  
-    const config = {
-      headers:{
-        authorization: authHeader()
-      }
-    }
+  //Headers configuration
+  const authHeader = useAuthHeader();
+
+  const config = {
+    headers: {
+      authorization: authHeader(),
+    },
+  };
 
   const deleteFromCollection = (cardIdCollection) => {
-      Axios.delete(`${window.name}/card/${cardIdCollection}`, config)
-        .then(() => {
-          console.log(`Card deleted from collection`);
-          notify();
-          toggleRefresh();
-        })
+    Axios.delete(`${window.name}/card/${cardIdCollection}`, config).then(() => {
+      console.log(`Card deleted from collection`);
+      notify();
+      toggleRefresh();
+    });
   };
 
   const handleDrop = (e) => {
@@ -175,7 +179,7 @@ function Home() {
   //modal won't work below certain resolution
 
   const [isWideScreen, setIsWideScreen] = useState(true);
-  
+
   //const [isVeryWideScreen, setIsVeryWideScreen] = useState(true);
 
   const updateScreenSize = () => {
@@ -204,6 +208,20 @@ function Home() {
     on the right side.`
     : `Click on cards to add to your collection.`;
 
+  // Function to handle scroll event
+  useEffect(() => {
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } =
+        document.documentElement;
+      if (scrollTop + clientHeight >= scrollHeight - 5) {
+        setPage((prevPage) => prevPage + 1);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   //Toastify
   const notify = () => toast("Card was deleted from your collection!");
 
@@ -219,9 +237,7 @@ function Home() {
         <div className={styles.titleContainer}>
           <img src={welcome3} className={styles.title} alt="Logo" />
           <div className={styles.chestContainer}>
-            <div
-              className={styles.chestWrapper}
-            >
+            <div className={styles.chestWrapper}>
               <a href="/collection">
                 {isImagesLoaded ? (
                   <div className={styles.chestContent}>
@@ -270,7 +286,11 @@ function Home() {
         </ul>
 
         <h1 className={styles.h1}>
-          All <span className={styles.MTG}><i>Magic: The Gathering</i></span> cards
+          All{" "}
+          <span className={styles.MTG}>
+            <i>Magic: The Gathering</i>
+          </span>{" "}
+          cards
         </h1>
         <SearchContainer
           baseOfSearch="AllCards"
@@ -301,14 +321,6 @@ function Home() {
           ))}
         </div>
       </div>
-
-      <PrevNext
-        onPageChange={handlePage}
-        page={page}
-        elementsArray={cards}
-        where="page"
-      />
-      
     </>
   );
 }
