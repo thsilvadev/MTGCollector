@@ -8,31 +8,46 @@ import loginDark from "../images/login-dark.png";
 import loginWhite from "../images/login-white.png";
 
 //tools
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuthUser, useSignOut } from "react-auth-kit";
 import { useNavigate } from "react-router-dom";
 
 //components
 import DarkMode from "../components/DarkMode";
+import { useTheme } from "../hooks/useTheme";
 
 function Header() {
   const [isCollapsed, setIsCollapsed] = useState(true);
+
+  const { theme, handleSetTheme } = useTheme();
 
   const handleToggle = () => {
     setIsCollapsed((prevState) => !prevState);
     console.log(isCollapsed);
   };
+  
 
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  // const [isDarkMode, setIsDarkMode] = useState(true);
 
-  const darkModeHandler = (darkModeToggle) => {
-    setIsDarkMode(darkModeToggle);
-  };
+  // const darkModeHandler = (darkModeToggle) => {
+  //   setIsDarkMode(darkModeToggle);
+  // };
 
-  const darkIcon = isDarkMode ? logo2 : logo2dark;
-  const darkLogin = isDarkMode ? loginWhite : loginDark;
-  const loginClass = isCollapsed ? styles.Login : styles.toggledLogin;
-  const darkNavbar = isDarkMode ? "navbar-dark bg-dark" : "navbar bg-light";
+  const { darkIcon, darkLogin } = useMemo(() => {
+    console.log({theme})
+    return theme === 'dark' ?
+      {
+        darkIcon: logo2,
+        darkLogin: loginWhite,
+      } : {
+        darkIcon: logo2dark,
+        darkLogin: loginDark
+      }
+  }, [theme]) 
+  
+  let loginClass = isCollapsed ? styles.Login : styles.toggledLogin;
+  let darkNavbar = theme === "dark" ? `navbar-dark bg-${theme}` : "navbar bg-light";
+
 
   const auth = useAuthUser();
   console.log("auth:", auth());
@@ -141,7 +156,8 @@ function Header() {
               <span className="nav-link">
                 <DarkMode
                   navbarToggler={isCollapsed}
-                  darkModeToggler={darkModeHandler}
+                  theme={theme}
+                  handleSetTheme={handleSetTheme}
                 />
               </span>
             </li>
