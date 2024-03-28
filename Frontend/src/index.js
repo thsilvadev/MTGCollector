@@ -16,9 +16,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 //global variable declaration workaround for API Address.
-const apiUrl = process.env.REACT_APP_API_URL;
-
-window.name = apiUrl; /* "https://api.mtgchest.com"; */
+window.name = "https://api.mtgchest.com";
 
 // Function to apply theme based on localStorage
 const applyTheme = () => {
