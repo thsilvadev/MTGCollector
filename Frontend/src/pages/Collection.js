@@ -77,20 +77,19 @@ function Collection() {
     console.log(`WOW: ${refresherToggler}`);
   }, 150);
 
-
-   // Call comingFromDecks only once when the component mounts
-   useEffect(() => {
+  // Call comingFromDecks only once when the component mounts
+  useEffect(() => {
     comingFromDecks();
   }, []);
 
-    //Select Deck coming from Decks page
-    const comingFromDecks = () => {
-      if (selected !== undefined) {
-        setSelectedDeck(selected);
-        window.scrollTo({ top: 120, behavior: "smooth" });
-        console.log(`selected deck: ${selectedDeck}`);
-      }
-    };
+  //Select Deck coming from Decks page
+  const comingFromDecks = () => {
+    if (selected !== undefined) {
+      setSelectedDeck(selected);
+      window.scrollTo({ top: 120, behavior: "smooth" });
+      console.log(`selected deck: ${selectedDeck}`);
+    }
+  };
 
   //get filtered and paginated Collection Cards in real time
 
@@ -111,8 +110,7 @@ function Collection() {
         //used to block dragging as many cards as user wants before req is complete.
         setIsDroppable(true);
       })
-      .then(
-        console.log(refresherToggler));
+      .then(console.log(refresherToggler));
   }, [page, superParams, refresherToggler]);
 
   //HORIZONTAL SCROLL
@@ -140,7 +138,6 @@ function Collection() {
   const handleDragLeave = () => {
     setIsDraggedOver(false);
   };
-
 
   /*
 
@@ -192,9 +189,9 @@ function Collection() {
   //postOnDeck
   const postOnDeck = async (collectionId) => {
     let chosenDeck = selectedDeck;
-    console.log({isDroppable})
+    console.log({ isDroppable });
     //used to use droppable prop in lower <div> but it's USELESS. To check wether isDroppable and if not, don't post, this is the way:
-    if (!isDroppable){
+    if (!isDroppable) {
       return;
     }
     try {
@@ -216,7 +213,7 @@ function Collection() {
 
   //Delete from Deck
   const deleteFromDeck = (cardIdConstructed) => {
-    if (!isDroppable){
+    if (!isDroppable) {
       return;
     }
     try {
@@ -458,7 +455,9 @@ function Collection() {
         droppable="true"
         onDragOver={handleDragOver}
       >
-        <h1 className={styles.title}>You have {totalCards} cards in your collection.</h1>
+        <h1 className={styles.title}>
+          You have {totalCards} cards in your collection.
+        </h1>
         <SearchContainer
           baseOfSearch="collection"
           onParamsChange={handleSuperParams}
@@ -487,7 +486,6 @@ function Collection() {
                   getChosenDeck={selectedDeck}
                   getDeckCards={deckCards}
                   getCollectionCards={cards}
-                  
                 />
               ))}
             </div>
@@ -539,8 +537,10 @@ function Collection() {
           <div id="3" className={styles.even}>
             <span className={isLessThanSixty}>{RenderedDeckSize}</span>
           </div>
-          <div >
-            <a href="/decks"><button className={styles.newDeckButton}>Add New Deck</button></a>
+          <div>
+            <a href="/decks">
+              <button className={styles.newDeckButton}>Add New Deck</button>
+            </a>
           </div>
         </div>
         <div className={styles.minicardsContainer}>

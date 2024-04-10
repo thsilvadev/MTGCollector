@@ -1,0 +1,20 @@
+.Allcards {
+  position: relative;
+  margin: auto;
+  width: 243px;
+  height: 300px;
+}
+
+.Collection {
+  position: relative;
+  margin: auto;
+  width: 243px;
+  height: 300px;
+}
+
+.loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

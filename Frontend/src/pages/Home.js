@@ -13,7 +13,7 @@ import SideBar from "../components/SideBar";
 //Tools
 import Axios from "axios";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
 import { useAuthHeader } from "react-auth-kit";
 
@@ -21,7 +21,6 @@ import { toast } from "react-toastify";
 
 //imgs
 import welcome3 from "../images/welcome3.png";
-import closedchest from "../images/closed-chest.png";
 import openedchest from "../images/opened-chest.png";
 import floatingCards from "../images/cards.png";
 
@@ -48,60 +47,32 @@ function Home() {
   };
 
   useEffect(() => {
+    // Optionally reset page to 0 if you want to start fetching from the first page again
+    setPage(0);
     // Always reset cards when superParams changes
-    Axios.get(`${window.name}/cards/${page}?${superParams}`).then(
-       (response) => {
-         // Reset the cards with the new data
-         setCards(response.data);
-         // Optionally reset page to 0 if you want to start fetching from the first page again
-         setPage(0);
-       }
+    Axios.get(`${window.name}/cards/0?${superParams}`).then(
+      (response) => {
+        // Reset the cards with the new data
+        setCards(response.data);
+        
+      }
     );
-   }, [superParams]); // Depend only on superParams
-   
-   useEffect(() => {
-    // Fetch more cards when page changes
-    Axios.get(`${window.name}/cards/${page}?${superParams}`).then(
-       (response) => {
-         // Append the new data to the existing cards
-         setCards((prevCards) => [...prevCards, ...response.data]);
-       }
-    );
-   }, [page]); // Depend only on page
-
-  //Image Switcher
-  const [isImagesLoaded, setIsImagesLoaded] = useState(false);
+  }, [superParams]); // Depend only on superParams
 
   useEffect(() => {
-    const preloadImages = async () => {
-      try {
-        await Promise.all([
-          // Preload the images here
-          new Promise((resolve) => {
-            const img1 = new Image();
-            img1.src = closedchest;
-            img1.onload = resolve;
-          }),
-          new Promise((resolve) => {
-            const img2 = new Image();
-            img2.src = openedchest;
-            img2.onload = resolve;
-          }),
-          new Promise((resolve) => {
-            const img3 = new Image();
-            img3.src = floatingCards;
-            img3.onload = resolve;
-          }),
-        ]);
-        setIsImagesLoaded(true);
-      } catch (error) {
-        // Handle any errors while preloading images
-        console.error("Error preloading images:", error);
-      }
-    };
-
-    preloadImages();
-  }, []);
+    // Fetch more cards when page changes
+    console.log("Page state before fetch:", page);
+    if (page > 0){
+      Axios.get(`${window.name}/cards/${page}?${superParams}`).then(
+        (response) => {
+          console.log("Page state after fetch:", page);
+          // Append the new data to the existing cards
+          setCards((prevCards) => [...prevCards, ...response.data]);
+        }
+      );
+    }
+    
+  }, [page]); // Depend only on page
 
   //Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -184,7 +155,7 @@ function Home() {
 
   const updateScreenSize = () => {
     const screenWidth = window.innerWidth;
-    const breakpoint = 850; // Set your desired breakpoint in pixels here
+    const breakpoint = 850; // Set desired breakpoint in pixels here
     setIsWideScreen(screenWidth >= breakpoint);
     /*
     const veryBreakpoint = 1101;
@@ -209,6 +180,7 @@ function Home() {
     : `Click on cards to add to your collection.`;
 
   // Function to handle scroll event
+
   useEffect(() => {
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } =
@@ -239,22 +211,18 @@ function Home() {
           <div className={styles.chestContainer}>
             <div className={styles.chestWrapper}>
               <a href="/collection">
-                {isImagesLoaded ? (
-                  <div className={styles.chestContent}>
-                    <img
-                      src={openedchest}
-                      className={styles.chest}
-                      alt="opened chest"
-                    />{" "}
-                    <img
-                      src={floatingCards}
-                      className={styles.fCards}
-                      alt="cards floating"
-                    />
-                  </div>
-                ) : (
-                  <img src={closedchest} className={styles.chest} alt="chest" />
-                )}
+                <div className={styles.chestContent}>
+                  <img
+                    src={openedchest}
+                    className={styles.chest}
+                    alt="opened chest"
+                  />{" "}
+                  <img
+                    src={floatingCards}
+                    className={styles.fCards}
+                    alt="cards floating"
+                  />
+                </div>
               </a>
             </div>
           </div>
