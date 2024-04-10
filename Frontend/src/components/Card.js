@@ -1,7 +1,7 @@
 //SHIT DO DO FIRST
 
 //imports
-import { React, useState } from "react";
+import { React, useState, useEffect } from "react";
 import Axios from "axios";
 
 import { useAuthHeader } from "react-auth-kit";
@@ -10,6 +10,7 @@ import { useAuthHeader } from "react-auth-kit";
 
 import styles from "../styles/Card.module.css";
 import { useNavigate } from "react-router";
+import Loading from "./Loading";
 
 function Card({
   id,
@@ -38,6 +39,24 @@ function Card({
   const fileName = scryfallId;
   const dir1 = fileName.charAt(0);
   const dir2 = fileName.charAt(1);
+
+  const imageUrl = `https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`;
+
+  //Loading Spinner
+  const [isLoading, setIsLoading] = useState(true);
+  const [ImgSrc, setImgSrc] = useState(null)
+    
+  useEffect(() => {
+    // Reset loading state and image source when imageUrl changes
+    setIsLoading(true);
+    setImgSrc(null);
+    const img = new Image();
+    img.src = imageUrl;
+    img.onload = () => {
+      setIsLoading(false);
+      setImgSrc(imageUrl);
+    };
+ }, [imageUrl]);
 
   //Conditional CSS classes for exotic type cards
 
@@ -440,11 +459,12 @@ function Card({
 
   const draggableClass = isDraggableToggler || !getChosenDeck ? "" : styles.Undraggable;
 
+
   return (
     <div className={componentContainer}>
-      <div className={`${isAllCards}`}>
+      {isLoading ? <Loading page={table}/> : <div className={`${isAllCards}`}>
         <img
-          src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+          src={ImgSrc}
           onClick={clickHandler}
           alt="card"
           className={`${isCollected} ${hoverableClass} ${battleClass} ${draggableClass}`}
@@ -461,7 +481,7 @@ function Card({
         <div className={scaledCardClass} style={scaledStyle}>
           <img
             className={`${isBattleOrPlane}`}
-            src={`https://cards.scryfall.io/${fileType}/${fileFace}/${dir1}/${dir2}/${fileName}${fileFormat}`}
+            src={ImgSrc}
             alt="card"
           />
         </div>
@@ -473,6 +493,8 @@ function Card({
           <p>{renderer()}</p>
         </div>
       </div>
+      }
+      
     </div>
   );
 }

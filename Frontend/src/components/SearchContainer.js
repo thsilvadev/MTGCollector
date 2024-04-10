@@ -244,18 +244,19 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   
   const [localSets, setLocalSets] = useState([]);
 
+  //version 2 -> 02.04.2024
 
   useEffect(() => {
     const storedSets = localStorage.getItem("localSets");
     const storedSetsVersion = localStorage.getItem("localSetsVersion");
-    if (storedSets && storedSetsVersion === "1") {
+    if (storedSets && storedSetsVersion === "2") {
         setLocalSets(JSON.parse(storedSets));
     } else {
       Axios.get(`${window.name}/sets`)
         .then((response) => {
           const sets = response.data;
           localStorage.setItem("localSets", JSON.stringify(sets));
-          localStorage.setItem("localSetsVersion", "1");
+          localStorage.setItem("localSetsVersion", "2");
           setLocalSets(sets); // Update localSets and trigger a re-render
         })
         .then(() => {

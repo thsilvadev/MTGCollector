@@ -36,7 +36,8 @@ module.exports = {
           "colorIdentity",
           "keywords",
           "multiverseId",
-          "scryfallId"
+          "scryfallId",
+          "supertypes"
         )
         //FROM supercards;
         .from("supercards")
@@ -155,9 +156,9 @@ module.exports = {
 
         .orderBy("Rarity", "asc")
 
-        .limit(40)
+        .limit(20)
 
-        .offset(page * 40);
+        .offset(page * 20);
 
       //Console logging with IP and Date
       const now = new Date();

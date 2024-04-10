@@ -80,7 +80,7 @@ async function configMail(email) {
 
   const emailToken = jwt.sign({ email: email }, process.env.CONFIRM_EMAIL_TOKEN_TAG)
 
-  const url = `http://mtgchest.com/confirmation/${emailToken}`
+  const url = `${process.env.FRONTEND_ADDRESS}/confirmation/${emailToken}`
 
   //Also did some <b/> tags and <br> tags to better format our email bodies from Contact Form.
   const mailOption = {
@@ -164,14 +164,14 @@ module.exports = {
   ,
   //As user registers or try to login in a not confirmed account > send email to confirm.
   //This function is being used in usersController.js .
-  async confirmEmail(req) {
-    const { email } = req.body;
+  async confirmEmail(email) {
+    console.log(email)
     try {
       await configMail(email);
 
-      return res.send("Confirmation email successfully sent!");
+      return ("Confirmation email successfully sent!");
     } catch (error) {
-      return res.send("Confirmation email could not be Sent");
+      return ("Confirmation email could not be Sent");
     }
   }
 
