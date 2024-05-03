@@ -48,7 +48,9 @@ The result of await Promise.all(...) is an array of results from the resolved pr
           "supercards.keywords",
           "supercards.multiverseId",
           "supercards.scryfallId",
+          "supercards.layout",
           "collection.id_collection"
+        
         )
         //COUNT for each card quantity. Alias needed to simplify key name to send to frontend.
         .count("id", { as: "countById" })

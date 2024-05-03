@@ -231,7 +231,7 @@ function Home() {
         <p className={styles.Paragraph}>
           {" "}
           MTG Chest is the perfect solution for organizing your{" "}
-          <i>Magic: The Gathering</i> cards! Here you'll be able to:
+          <i>Magic: The Gathering</i> cards. <br/>Here you'll be able to:
         </p>
         <ul className={styles.list}>
           <li className={styles.listItem}>
@@ -244,7 +244,7 @@ function Home() {
 
           <li className={styles.listItem}>
             Fill your wishlist and write a description on each card to remember
-            their role in your malevolent strategies in assigned deck;
+            their role in your malevolent strategies;
           </li>
 
           <li className={styles.listItem}>
@@ -283,6 +283,7 @@ function Home() {
               cost={card.manaCost}
               types={card.types}
               keywords={card.keywords}
+              layout={card.layout}
               table="allCards"
               refresh={handleLiftedRefreshCards}
             />

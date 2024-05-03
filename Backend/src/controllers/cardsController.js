@@ -37,7 +37,8 @@ module.exports = {
           "keywords",
           "multiverseId",
           "scryfallId",
-          "supertypes"
+          "supertypes",
+          "layout"
         )
         //FROM supercards;
         .from("supercards")
@@ -53,9 +54,13 @@ module.exports = {
             if (key === "name") {
               const sanitizedName = value.replace(/\\s/g, "");
               builder.where(function () {
-                this.where(key, "like", `%${sanitizedName}%`)
-                  .orWhere(key, "like", `${sanitizedName}%`)
-                  .orWhere(key, "like", `${sanitizedName}`);
+                this.where("name", "like", `%${sanitizedName}%`)
+                  .orWhere("name", "like", `${sanitizedName}%`)
+                  .orWhere("name", "like", `${sanitizedName}`)
+                  .orWhere("portugueseName", "like", `%${sanitizedName}%`)
+                  .orWhere("portugueseName", "like", `${sanitizedName}%`)
+                  .orWhere("portugueseName", "like", `${sanitizedName}`)
+                // Add SOUNDS LIKE condition here
               });
               //Some Logging for more control
               console.log(`Sanitized name: ${sanitizedName}`);
@@ -65,10 +70,8 @@ module.exports = {
 
             //2)When nothing is typed, color check works as follows: search will return not only cards that match every color selected, but also cards of each color selected as well. But when user types anything, search will then return only cards that that match every color selected.
             if (key === "colorIdentity") {
-
               //To exclude cards containing colors not selected, we will create an array with all colors and compare it with the array of selected colors. So while we query for all cards containing ("like") the colors we want, we'll exclude all the cards that contains the colors we want but contain also colors we don't want. For example: you check blue and white. It should not show cards that are 'red and blue' or 'red and white'. It should show just cards that are blue, or white, or 'blue and white'.
               const allColors = ["B", "G", "R", "U", "W"];
-
 
               if (
                 (!query.name || query.name === undefined) &&
@@ -77,8 +80,10 @@ module.exports = {
                 const sanitizedColor = value.replace(/[, ]/g, "");
                 const colorsArr = [...sanitizedColor];
                 //compare all colors with colors selected => create array of excluded colors.
-                const excludedColors = allColors.filter((color) => !colorsArr.includes(color));
-                //build query of cards containing selected colors 
+                const excludedColors = allColors.filter(
+                  (color) => !colorsArr.includes(color)
+                );
+                //build query of cards containing selected colors
                 builder.where(function () {
                   this.where(function () {
                     //this is for cards of all colors selected
@@ -111,9 +116,9 @@ module.exports = {
                 builder.where(function () {
                   this.where(function () {
                     this.where(key, value);
-                      for (let i = 0; i < colorsArr.length; i++) {
-                        this.orWhere(key, "like", `%${colorsArr[i]}%`);
-                      }
+                    for (let i = 0; i < colorsArr.length; i++) {
+                      this.orWhere(key, "like", `%${colorsArr[i]}%`);
+                    }
                     this.orWhere(key, "");
                   });
                 });
@@ -171,12 +176,10 @@ module.exports = {
       const now = new Date();
       const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
-      return res
-        .status(500)
-        .json({
-          error:
-            "Probably request keys are mispelled. Try querying for it on phpMyAdmin or take a look at the column values to check for virgules, spaces or any other detail.",
-        });
+      return res.status(500).json({
+        error:
+          "Probably request keys are mispelled. Try querying for it on phpMyAdmin or take a look at the column values to check for virgules, spaces or any other detail.",
+      });
     }
   },
 };

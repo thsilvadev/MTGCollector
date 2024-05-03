@@ -1,0 +1,29 @@
+.hasPhoto {
+    height: 230px;
+    width: 188px;
+    border: solid;
+    display: block;
+    object-fit: cover;
+}
+
+.noPhoto {
+    height: 230px;
+    width: 188px;
+    border: solid;
+    display: block;
+    object-fit: contain;
+}
+
+.canvas {
+    border: solid;
+    height: 230px;
+    
+    
+}
+
+.cam {
+    height: 230px;
+    width: 188px;
+    display: block;
+    object-fit: cover;
+}
