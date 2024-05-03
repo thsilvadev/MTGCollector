@@ -25,6 +25,7 @@ function Card({
   keywords,
   count,
   table,
+  layout,
   id_collection,
   refresh,
   getChosenDeck,
@@ -72,7 +73,7 @@ function Card({
   const isCollected = collected ? styles.Collected : styles.Card;
 
   const changeCardClass = () => {
-    if (types === "Battle" || keywords === "Fuse") {
+    if (types === "Battle" || keywords === "Fuse" || layout === "split") {
       setBattle(true);
     } else {
       setBattle(false);
