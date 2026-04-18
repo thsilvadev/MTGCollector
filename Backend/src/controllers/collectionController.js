@@ -1,302 +1,191 @@
 //TO DO
 //In this script I'm using some destructured variables.
 
-const knex = require("../database/index");
+const knex    = require('../database/index');
+const scryfall = require('../utils/scryfall');
+
+// Apply the same color-identity filter logic as the original SQL query, but in memory.
+function matchesColorFilter(colorIdentity, filterValue) {
+  if (!filterValue || filterValue === 'B, G, R, U, W') return true;
+
+  const allColors      = ['B', 'G', 'R', 'U', 'W'];
+  const colorsArr      = [...filterValue.replace(/[, ]/g, '')]; // e.g. ['G','U']
+  const excludedColors = allColors.filter(c => !colorsArr.includes(c));
+  const ci             = colorIdentity || '';
+
+  // Multi-color: card must contain at least one selected color.
+  // Single-color: card must be exactly that color.
+  const hasSelectedColor =
+    colorsArr.length > 1
+      ? colorsArr.some(col => ci.includes(col)) || ci === filterValue
+      : ci === filterValue;
+
+  const hasExcludedColor = excludedColors.some(col => ci.includes(col));
+  return hasSelectedColor && !hasExcludedColor;
+}
 
 module.exports = {
-  //This is a function to get all cards from Collection
   async getCollection(req, res) {
-    //Console logging with IP and Date (in yellow)
-    const now = new Date();
-    let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-
+    const now           = new Date();
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
     const { params, query } = req;
-
-    const { page } = params;
-
-    const userId = req.userId;
-
-    /* 
-We'll be using Promise.all to execute multiple asynchronous operations concurrently and await their results.
-
-Promise.all is a JavaScript function that takes an array of promises and returns a new promise. This new promise resolves when all the promises in the input array have resolved, or it rejects if any of the input promises rejects. In this case, it's being used to wait for the completion of two asynchronous queries.
-
-[cardsQuery, countQuery] is an array containing two promises. These promises represent the results of two database queries: cardsQuery and countQuery.
-
-await is used to wait for the Promise.all to complete. It will pause the execution of the function until both cardsQuery and countQuery have completed, which means both queries have fetched their respective data.
-
-The result of await Promise.all(...) is an array of results from the resolved promises in the same order as the input array. In this case, you have destructured this array into two variables: cardsResult and countResult. cardsResult will contain the result of cardsQuery, and countResult will contain the result of countQuery.
-    */
+    const { page }      = params;
+    const userId        = req.userId;
 
     try {
-      const [cardsResult, countResult] = await Promise.all([
+      // ── Step 1: Fetch all grouped collection rows for this user ──────────────
+      const allDbRows = await knex('collection')
+        .select('card_id')
+        .count('id_collection as countById')
+        .max('id_collection as id_collection')
+        .max('card_condition as card_condition')
+        .where('user_id', userId)
+        .groupBy('card_id')
+        .orderBy(knex.raw('MAX(id_collection)'), 'desc');
 
-        //********************** FIRST QUERY === CARDS QUERY **************************//
-        knex
-        //SELECT id, name, types, setCode, manaCost, manaValue, rarity, uuid, colorIdentity, keywords
-        .select(
-          "supercards.id",
-          "supercards.name",
-          "supercards.types",
-          "supercards.supertypes",
-          "supercards.setCode",
-          "supercards.manaCost",
-          "supercards.manaValue",
-          "supercards.rarity",
-          "supercards.uuid",
-          "supercards.colorIdentity",
-          "supercards.keywords",
-          "supercards.multiverseId",
-          "supercards.scryfallId",
-          "supercards.layout",
-          "collection.id_collection"
-        
-        )
-        //COUNT for each card quantity. Alias needed to simplify key name to send to frontend.
-        .count("id", { as: "countById" })
-        //FROM supercards;
-        .from("supercards")
-        //JOIN collection
-        .join("collection", "collection.card_id", "=", "supercards.id")
+      if (!allDbRows.length) {
+        return res.json({ total: 0, cards: [] });
+      }
 
-        //WHERE (condition)
-        .where("collection.user_id", userId)
-        .where((builder) => {
-          for (const [key, value] of Object.entries(query)) {
-            //[PRINTING FOR DEBUG]
-            console.log({ key, value, page });
+      // ── Step 2: Decide whether filters require a full-collection fetch ───────
+      const hasEffectiveColorFilter =
+        query.colorIdentity && query.colorIdentity !== 'B, G, R, U, W';
+      const hasFilters =
+        query.name || query.types || query.setCode || query.rarity || hasEffectiveColorFilter;
 
-            //1)When Card name is typed, query for cards starting with typed string (and not just contaning it. E.G: user types 'fire', we do not want 'Safire' cards showing up, just  'Fire breath' or 'Fire ember')
+      let total, cards;
 
-            if (key === "name") {
-              const sanitizedName = value.replace(/\s/g, "");
-              builder.where(function () {
-                this.where(key, "like", `%${sanitizedName}%`);
-              });
-              //Some Logging for more control
-              console.log(`Sanitized name: ${sanitizedName}`);
-              console.log(`name: ${value}`);
-              continue;
-            }
+      if (!hasFilters) {
+        // ── Fast path: paginate in DB, fetch only the current page from Scryfall ─
+        total = allDbRows.length;
+        const pageRows     = allDbRows.slice(page * 40, (page + 1) * 40);
+        const scryfallIds  = pageRows.map(r => r.card_id);
+        const scryfallCards = await scryfall.batchGetCards(scryfallIds);
+        const cardMap      = new Map(scryfallCards.map(c => [c.id, c]));
 
-            //2)When nothing is typed, color check works as follows: search will return not only cards that match every color selected, but also cards of each color selected as well. But when user types anything, search will then return only cards that that match every color selected.
-            if (key === "colorIdentity") {
+        cards = pageRows
+          .map(row => {
+            const cardData = cardMap.get(row.card_id);
+            if (!cardData) return null;
+            return {
+              ...cardData,
+              id_collection: row.id_collection,
+              countById:     parseInt(row.countById, 10),
+              card_condition: row.card_condition,
+            };
+          })
+          .filter(Boolean);
 
-              //To exclude cards containing colors not selected, we will create an array with all colors and compare it with the array of selected colors. So while we query for all cards containing ("like") the colors we want, we'll exclude all the cards that contains the colors we want but contain also colors we don't want. For example: you check blue and white. It should not show cards that are 'red and blue' or 'red and white'. It should show just cards that are blue, or white, or 'blue and white'.
-              const allColors = ["B", "G", "R", "U", "W"];
+      } else {
+        // ── Filtered path: fetch all cards from Scryfall, filter in memory ──────
+        const allScryfallIds  = allDbRows.map(r => r.card_id);
+        const allScryfallCards = await scryfall.batchGetCards(allScryfallIds);
+        const cardMap          = new Map(allScryfallCards.map(c => [c.id, c]));
 
-              if (
-                (!query.name || query.name === undefined) &&
-                value !== "B, G, R, U, W"
-              ) {
-                const sanitizedColor = value.replace(/[, ]/g, "");
-                const colorsArr = [...sanitizedColor];
-                //compare all colors with colors selected => create array of excluded colors.
-                const excludedColors = allColors.filter((color) => !colorsArr.includes(color));
-                //build query of cards containing selected colors 
-                builder.where(function () {
-                  this.where(function () {
-                    //this is for cards of all colors selected
-                    this.where(key, value);
-                    //this is for cards of any colors selected
-                    if (colorsArr.length > 1) {
-                      for (let i = 0; i < colorsArr.length; i++) {
-                        this.orWhere(key, "like", `%${colorsArr[i]}%`);
-                      }
-                    }
-                  });
-                  //..and this excludes cards that contains the colors selected but also contains colors not selected.
-                  if (excludedColors.length > 0) {
-                    for (let i = 0; i < excludedColors.length; i++) {
-                      this.andWhere(key, "not like", `%${excludedColors[i]}%`);
-                    }
-                  }
-                });
+        let merged = allDbRows
+          .map(row => {
+            const cardData = cardMap.get(row.card_id);
+            if (!cardData) return null;
+            return {
+              ...cardData,
+              id_collection: row.id_collection,
+              countById:     parseInt(row.countById, 10),
+              card_condition: row.card_condition,
+            };
+          })
+          .filter(Boolean);
 
-                console.log(`Sanitized colorzzz: ${colorsArr}`);
-                console.log(`color: ${value}`);
-              } else if (
-                //In the case of all colors selected, but no name input => bring all cards, including the colorless.
-                (!query.name || query.name === undefined) &&
-                value === "B, G, R, U, W"
-              ) {
-                const sanitizedColor = value.replace(/[, ]/g, "");
-                const colorsArr = [...sanitizedColor];
+        // Apply in-memory filters
+        if (query.name) {
+          const q = query.name.toLowerCase();
+          merged = merged.filter(c => c.name?.toLowerCase().includes(q));
+        }
+        if (query.types) {
+          const t = query.types.toLowerCase();
+          merged = merged.filter(c => c.types?.toLowerCase().includes(t));
+        }
+        if (query.setCode) {
+          merged = merged.filter(c => c.setCode === query.setCode);
+        }
+        if (query.rarity) {
+          merged = merged.filter(c => c.rarity === query.rarity);
+        }
+        if (hasEffectiveColorFilter) {
+          merged = merged.filter(c => matchesColorFilter(c.colorIdentity, query.colorIdentity));
+        }
 
-                builder.where(function () {
-                  this.where(function () {
-                    this.where(key, value);
-                    if (colorsArr.length > 1) {
-                      for (let i = 0; i < colorsArr.length; i++) {
-                        this.orWhere(key, "like", `%${colorsArr[i]}%`);
-                      }
-                    }
-                    this.orWhere(key, "");
-                  });
-                });
-
-                //Debugging
-                console.log(
-                  `Sanitized colorrr: ${colorsArr} of type:` + typeof colorsArr
-                );
-                console.log(`Value: ${value}`);
-              } else if (query.name) {
-                builder.where(key, value);
-                console.log(`name typed and color selected`);
-              }
-              continue;
-            }
-            //3)When selecting card type in Search Container, bring cards that contains that type, not only those that are strictly of that type (e.g. when selecting Arctifact, bring Creature Artifact as well)
-            if (key === "types") {
-              builder.where(key, "like", `%${value}%`);
-              console.log(`sanitized type: %${value}%`);
-              continue;
-
-            } else {
-              //General general build
-              builder.where(key, value);
-              console.log("general build (no name, no type and no color input)");
-            }
-
-            //Not necessary anymore because of DB update. Now it counts '' as colorless, and not null value. So by default when no color is selected, it will return colorless cards.
-            /*
-                //3) When No color is selected, make it return colorless cards (by default it returns value='' but we need it to return value=null)
-                if (key === 'colorIdentity' && value === 'colorless'){
-                  builder.where(key, '')
-                  return;
-
-                }
-                  */
-          }
-        })
-        
-        //This is for cards not to be repeated if more than one same card present in Collection.
-        .groupBy("supercards.id")
-        //Recent added cards first
-        .orderBy("collection.id_collection", "desc")
-
-        .limit(40)
-
-        .offset(page * 40),
-        
-        //********************** SECOND QUERY === COUNT QUERY **************************//
-
-       
-      knex("collection")
-      .where("user_id", userId)
-      .count("card_id", { as: "totalCount" })
-
-      ]);
-      
-      const totalCount = countResult[0].totalCount; //totalCount is an array of jsons returning all rows of query. In this case there is just one row [0], and we're gonna directly yield it's only value - totalCount (.totalCount).
-
-      console.log(`Collection Get Request successful by ${req.ip} of user${userId} at ${formattedDate}`);
-      return res.json({total: totalCount, cards: cardsResult});
-    } catch (error) {
-      console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
-      return res.status(500).json({
-        error:
-          "Probably request keys are mispelled. Try querying for it on phpMyAdmin or take a look at the column values to check for virgules, spaces or any other detail.",
-      });
-    }
-  },
-
-  //Post on Colecction
-  async postOnCollection(req, res) {
-    //Console logging with IP and Date (in yellow)
-    const now = new Date();
-    let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-
-    //This is a body request. Data comes in json and not in params.
-    const body = req.body;
-    const { card_id } = body;
-    const { card_condition } = body;
-    const user_id = req.userId;
-    try {
-      const result = await knex("collection").insert({
-        card_id,
-        card_condition,
-        user_id
-      });
+        total = merged.length;
+        cards = merged.slice(page * 40, (page + 1) * 40);
+      }
 
       console.log(
-        `Post successful of ${card_id} on Collection of user${user_id} by ${req.ip} at ${formattedDate}`
+        `Collection request by ${req.ip} of user${userId} at ${formattedDate} ` +
+        `(${cards.length}/${total} cards, page ${page})`
       );
+      return res.json({ total, cards });
 
-      return res.json(result);
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
-      return res.status(500).json({
-        error:
-          "TO BE UPDATE // TO BE UPDATED  // TO BE UPDATED // TO BE UPDATED // TO BE UPDATED // TO BE UPDATED.",
-      });
+      return res.status(500).json({ error: 'Failed to load collection.' });
     }
   },
 
-  //This is a function to get card by ID. This is used to check if card is in Collection and how many of it are there.
+  // Add a card to the user's collection.
+  // card_id is now a Scryfall UUID (VARCHAR 36).
+  async postOnCollection(req, res) {
+    const now           = new Date();
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+    const { card_id, card_condition } = req.body;
+    const user_id = req.userId;
 
-  async getById(req, res) {
-    const { id } = req.params;
-
-    const userId = req.userId
-    //SELECT * FROM cards WHERE id = {id}
     try {
-      const result = await knex
-        //SELECT just id
-        .select("supercards.id")
-
-        //COUNT (`id`)
-        .count("id", { as: "countById" })
-        //FROM supercards;
-        .from("supercards")
-        //JOIN collection
-        .join("collection", "collection.card_id", "=", "supercards.id")
-        .where("collection.user_id", userId)
-        .where({ id })
-        
-        .groupBy("id");
-
+      const result = await knex('collection').insert({ card_id, card_condition, user_id });
+      console.log(`Post successful of ${card_id} on Collection of user${user_id} by ${req.ip} at ${formattedDate}`);
       return res.json(result);
     } catch (error) {
+      console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
+      return res.status(500).json({ error: 'Failed to add card to collection.' });
+    }
+  },
+
+  // Check how many copies of a card (by Scryfall UUID) are in the user's collection.
+  async getById(req, res) {
+    const { id }  = req.params; // Scryfall UUID
+    const userId  = req.userId;
+
+    try {
+      const result = await knex('collection')
+        .select('card_id')
+        .count('id_collection as countById')
+        .where('user_id', userId)
+        .where('card_id', id)
+        .groupBy('card_id');
+
+      // Return shape matches original: [{ id, countById }]
+      return res.json(result.map(r => ({ id: r.card_id, countById: parseInt(r.countById, 10) })));
+    } catch (error) {
       console.error(`ip: ${req.ip}, ERROR:`, error);
-      return res.status(500).json({
-        error: "TO BE UPDATED",
-      });
+      return res.status(500).json({ error: 'Failed to check collection count.' });
     }
   },
 
   async deleteById(req, res) {
-    //Console logging with IP and Date (in yellow)
-    const now = new Date();
-    let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-
-    //Params request
+    const now           = new Date();
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
     const { id_collection } = req.params;
-
-    //Authenticated userId
     const user_id = req.userId;
 
     try {
-      const result = await knex
-        .select("id_collection")
-        .from("collection")
-        .where("collection.user_id", user_id)
-        .where(`id_collection`, id_collection)
+      const result = await knex('collection')
+        .where('user_id', user_id)
+        .where('id_collection', id_collection)
         .del();
 
-      console.log(
-        `Delete successful of card number "${id_collection}" on Collection  of user${user_id} by ${req.ip} at ${formattedDate}`
-      );
-
+      console.log(`Delete successful of id_collection "${id_collection}" of user${user_id} by ${req.ip} at ${formattedDate}`);
       return res.json(result);
     } catch (error) {
-      console.error(
-        `IP: ${req.ip}, Time: ${formattedDate}, id_collection: ${id_collection} ERROR:`,
-        error
-      );
-      return res.status(500).json({
-        error: "something went wrong",
-      });
+      console.error(`IP: ${req.ip}, Time: ${formattedDate}, id_collection: ${id_collection} ERROR:`, error);
+      return res.status(500).json({ error: 'Failed to delete card from collection.' });
     }
   },
 };

@@ -5,6 +5,18 @@ const knex = require("../database/index");
 const nodeMailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
+
+function createTransporter() {
+  return nodeMailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
 /*
     
 
@@ -19,23 +31,15 @@ const bcryptjs = require('bcryptjs');
 
 */
 async function mainMail(name, email, subject, message) {
-  const transporter = await nodeMailer.createTransport({
-    host: "box.bestcontact.email",
-    port: 465,
-    secure: true,
-    auth: {
-      user: "noreply@mtgchest.com",
-      pass: process.env.NOREPLY_PASSWORD,
-    }
-  });
+  const transporter = createTransporter();
 
   //Some sanitization is necessary, as the JSON Literal comes with \n for newlines and we need to translate it to HTML <br> tag. 
   const htmledMessage = message.replace(/\n/g, '<br>');
 
   //Also did some <b/> tags and <br> tags to better format our email bodies from Contact Form.
   const mailOption = {
-    from: "noreply@mtgchest.com",
-    to: "contact@mtgchest.com",
+    from: process.env.EMAIL_FROM,
+    to: process.env.EMAIL_TO,
     subject: `${subject} // ${email}`, /* I want it to display the subject and the email right in the inbox */
     html: `You got a message from<br><b>Email</b> : ${email}<br><b>Name:</b> ${name}<br><b>Subject:</b> ${subject}<br><b>Message:</b><br> ${htmledMessage}`,
   };
@@ -68,15 +72,7 @@ async function mainMail(name, email, subject, message) {
 */
 
 async function configMail(email) {
-  const transporter = await nodeMailer.createTransport({
-    host: "box.bestcontact.email",
-    port: 465,
-    secure: true,
-    auth: {
-      user: "noreply@mtgchest.com",
-      pass: process.env.NOREPLY_PASSWORD,
-    }
-  });
+  const transporter = createTransporter();
 
   const emailToken = jwt.sign({ email: email }, process.env.CONFIRM_EMAIL_TOKEN_TAG)
 
@@ -84,7 +80,7 @@ async function configMail(email) {
 
   //Also did some <b/> tags and <br> tags to better format our email bodies from Contact Form.
   const mailOption = {
-    from: "noreply@mtgchest.com",
+    from: process.env.EMAIL_FROM,
     to: email,
     subject: `MTG Chest: Confirmation Email`, /* I want it to display the subject and the email right in the inbox */
     html: `Please, click <a href="${url}">here</a> to <strong>confirm your email</strong> and finish sign in:<br><br><a href="${url}">${url}</a>`,
@@ -116,23 +112,15 @@ async function configMail(email) {
 */
 
 async function resetMail(email) {
-  const transporter = await nodeMailer.createTransport({
-    host: "box.bestcontact.email",
-    port: 465,
-    secure: true,
-    auth: {
-      user: "noreply@mtgchest.com",
-      pass: process.env.NOREPLY_PASSWORD,
-    }
-  });
+  const transporter = createTransporter();
 
   const resetToken = jwt.sign({ email: email }, process.env.RESET_PASSWORD_TOKEN_TAG)
 
-  const url = `http://mtgchest.com/reset-confirmation/${resetToken}`
+  const url = `${process.env.FRONTEND_ADDRESS}/reset-confirmation/${resetToken}`
 
   //Also did some <b/> tags and <br> tags to better format our email bodies from Contact Form.
   const mailOption = {
-    from: "noreply@mtgchest.com",
+    from: process.env.EMAIL_FROM,
     to: email,
     subject: `MTG Chest: Reset Password`, /* I want it to display the subject and the email right in the inbox */
     html: `Please, click <a href="${url}">here</a> to <strong>reset your password</strong>:<br><br><a href="${url}">${url}</a>`,

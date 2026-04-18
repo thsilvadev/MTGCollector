@@ -1,4 +1,5 @@
-const knex = require("../database/index");
+const knex     = require('../database/index');
+const scryfall = require('../utils/scryfall');
 
 //METHODS
 
@@ -36,56 +37,62 @@ function isDraggable(collectionId, deckCards, collectionCards) {
 
 module.exports = {
   async getDeck(req, res) {
-    //Console logging with IP and Date
-    const now = new Date();
+    const now           = new Date();
     const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-
-    const { id } = req.params; // deck.deck (OR decks.id_deck)
-
-    //Authenticated userId
-    const user_id = req.userId;
+    const { id }    = req.params; // decks.id_deck
+    const user_id   = req.userId;
 
     try {
-      const result = await knex
+      // ── Step 1: Get the deck's cards from the DB ─────────────────────────────
+      // Each row is one card-slot in the deck (aggregated across duplicate copies).
+      const deckRows = await knex('deck')
         .select(
-          "supercards.id",
-          "supercards.name",
-          "supercards.manaCost",
-          "supercards.manaValue",
-          "supercards.colorIdentity",
-          "supercards.keywords",
-          "supercards.types",
-          "supercards.uuid",
-          "supercards.scryfallId",
-          "supercards.supertypes",
-          "collection.id_collection",
-          "deck.id_card",
-          "deck.id_constructed",
-          "decks.id_deck"
+          'collection.card_id',
+          'deck.deck as id_deck',
+          knex.raw('MIN(collection.id_collection) as id_collection'),
+          knex.raw('MIN(deck.id_card)             as id_card'),
+          knex.raw('MIN(deck.id_constructed)      as id_constructed'),
+          knex.raw('COUNT(deck.id_card)           as countById'),
         )
-        .count("id", { as: "countById" })
-        .from("supercards")
-        .join("collection", "collection.card_id", "=", "supercards.id")
-        .join("deck", "deck.id_card", "=", "collection.id_collection")
-        .join("decks", "decks.id_deck", "=", "deck.deck")
-        .where("deck.user_id", user_id)
-        .where("decks.id_deck", id)
-
-        //This is for cards not to be repeated if more than one same card present in Collection.
-        .groupBy("supercards.id")
-        //Recent added cards first
-        .orderBy("collection.id_collection", "desc")
-
+        .join('collection', 'collection.id_collection', '=', 'deck.id_card')
+        .join('decks',      'decks.id_deck',            '=', 'deck.deck')
+        .where('deck.user_id', user_id)
+        .where('decks.id_deck', id)
+        .groupBy('collection.card_id', 'deck.deck')
+        .orderBy(knex.raw('MIN(collection.id_collection)'), 'desc')
         .limit(120);
 
-      console.log(`Successfully got deck of id ${id} of user${user_id} ${req.ip} at ${formattedDate}`);
+      if (!deckRows.length) {
+        return res.json([]);
+      }
+
+      // ── Step 2: Fetch card data from Scryfall ────────────────────────────────
+      const scryfallIds  = [...new Set(deckRows.map(r => r.card_id))];
+      const scryfallCards = await scryfall.batchGetCards(scryfallIds);
+      const cardMap       = new Map(scryfallCards.map(c => [c.id, c]));
+
+      // ── Step 3: Merge DB rows with Scryfall data ─────────────────────────────
+      const result = deckRows
+        .map(row => {
+          const cardData = cardMap.get(row.card_id);
+          if (!cardData) return null;
+          return {
+            ...cardData,
+            id_collection: row.id_collection,
+            id_card:       row.id_card,
+            id_constructed: row.id_constructed,
+            id_deck:       row.id_deck,
+            countById:     parseInt(row.countById, 10),
+          };
+        })
+        .filter(Boolean);
+
+      console.log(`Successfully got deck ${id} of user${user_id} at ${formattedDate}`);
       return res.json(result);
+
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
-      return res.status(500).json({
-        error:
-          "Probably request keys are mispelled. Try querying for it on phpMyAdmin or take a look at the column values to check for virgules, spaces or any other detail.",
-      });
+      return res.status(500).json({ error: 'Failed to load deck.' });
     }
   },
 

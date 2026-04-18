@@ -11,6 +11,10 @@ const jwt = require("jsonwebtoken");
 //Send Email
 const nodeMailing = require("../email/email")
 
+// In-memory rate limit: email -> timestamp of last resend
+const resendCooldowns = new Map();
+const RESEND_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+
 module.exports = {
     async postUser(req, res) {
         const now = new Date();
@@ -49,6 +53,51 @@ module.exports = {
             return res.status(500).json({
                 error: "User could not be registered.",
             });
+        }
+    }
+    ,
+
+    async resendConfirmation(req, res) {
+        const now = new Date();
+        let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required.' });
+        }
+
+        try {
+            const user = await knex('users').where('email', email).first();
+
+            if (!user) {
+                return res.status(404).json({ error: 'No account found with this email.' });
+            }
+
+            if (user.confirmed) {
+                return res.status(400).json({ error: 'This account is already confirmed.' });
+            }
+
+            const lastSent = resendCooldowns.get(email);
+            if (lastSent && (Date.now() - lastSent) < RESEND_COOLDOWN_MS) {
+                const waitSec = Math.ceil((RESEND_COOLDOWN_MS - (Date.now() - lastSent)) / 1000);
+                const waitMin = Math.ceil(waitSec / 60);
+                return res.status(429).json({ error: `Please wait ${waitMin} minute(s) before requesting another email.` });
+            }
+
+            resendCooldowns.set(email, Date.now());
+            const result = await nodeMailing.confirmEmail(email);
+
+            if (result === 'Confirmation email successfully sent!') {
+                console.log(`Resent confirmation email to ${email}. IP: ${req.ip}, Time: ${formattedDate}`);
+                return res.json({ message: 'Confirmation email resent successfully!' });
+            } else {
+                resendCooldowns.delete(email); // allow retry if send failed
+                console.error('Error resending confirmation email:', result);
+                return res.status(500).json({ error: 'Could not send email. Please try again later.' });
+            }
+        } catch (error) {
+            console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
+            return res.status(500).json({ error: 'An unexpected error occurred.' });
         }
     }
     ,
