@@ -1,5 +1,13 @@
 {
-    "rewrites": [
-      {"source": "/confirmation/:emailToken", "destination": "/confirmation/:emailToken"}
-    ]
+  "rewrites": [
+    {
+      "source": "/confirmation/:emailToken",
+      "destination": "/confirmation/:emailToken"
+    }
+  ],
+  "github": {
+    "enabled": true,
+    "silent": false,
+    "autoAlias": true
   }
+}
