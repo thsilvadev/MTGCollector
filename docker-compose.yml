@@ -29,7 +29,7 @@ services:
       HOST:           db
       PORT:           3000
       IP:             0.0.0.0
-      USER:           root
+      DB_USER:        root
       PASSWORD:       ${MYSQL_ROOT_PASSWORD}
       DATABASE:       ${MYSQL_DATABASE:-mtgchest}
       AUTH_TOKEN_TAG: ${JWT_SECRET}
