@@ -268,19 +268,31 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
     const storedSets = localStorage.getItem("localSets");
     const storedSetsVersion = localStorage.getItem("localSetsVersion");
     if (storedSets && storedSetsVersion === "2") {
-      setLocalSets(JSON.parse(storedSets));
-    } else {
-      Axios.get(`${window.name}/sets`)
-        .then((response) => {
-          const sets = response.data;
-          localStorage.setItem("localSets", JSON.stringify(sets));
-          localStorage.setItem("localSetsVersion", "2");
-          setLocalSets(sets); // Update localSets and trigger a re-render
-        })
-        .then(() => {
-          console.log(`localSets has just been set`);
-        });
+      const parsed = JSON.parse(storedSets);
+      // Guard: only use cache if it's a non-empty array with the expected shape.
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].keyruneCode) {
+        setLocalSets(parsed);
+        return;
+      }
+      // Stale/invalid cache — clear it and re-fetch below.
+      localStorage.removeItem("localSets");
+      localStorage.removeItem("localSetsVersion");
     }
+    Axios.get(`${window.name}/sets`)
+      .then((response) => {
+        const sets = response.data;
+        if (!Array.isArray(sets)) {
+          console.error("Sets response is not an array:", sets);
+          return;
+        }
+        localStorage.setItem("localSets", JSON.stringify(sets));
+        localStorage.setItem("localSetsVersion", "2");
+        setLocalSets(sets);
+        console.log(`localSets has just been set`);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch sets:", err);
+      });
   }, []);
 
 

@@ -1,0 +1,53 @@
+# Production override: db + backend + Caddy (HTTPS via Let's Encrypt).
+# Frontend is served by Vercel.
+#
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+
+  db:
+    ports: []   # do NOT expose 3306 to the internet in production
+
+  backend:
+    environment:
+      HOST:                    db
+      PORT:                    3000
+      IP:                      0.0.0.0
+      DB_USER:                 root
+      PASSWORD:                ${MYSQL_ROOT_PASSWORD}
+      DATABASE:                ${MYSQL_DATABASE:-mtgchest}
+      AUTH_TOKEN_TAG:          ${JWT_SECRET}
+      CONFIRM_EMAIL_TOKEN_TAG: ${CONFIRM_EMAIL_TOKEN_TAG}
+      RESET_PASSWORD_TOKEN_TAG: ${RESET_PASSWORD_TOKEN_TAG}
+      FRONTEND_ADDRESS:        ${FRONTEND_ADDRESS}
+      SMTP_HOST:               ${SMTP_HOST}
+      SMTP_PORT:               ${SMTP_PORT}
+      SMTP_USER:               ${SMTP_USER}
+      SMTP_PASS:               ${SMTP_PASS}
+      EMAIL_FROM:              ${EMAIL_FROM}
+      EMAIL_TO:                ${EMAIL_TO}
+    ports: []   # not exposed to host — Caddy reaches it via Docker network
+
+  # ── Caddy reverse proxy (auto HTTPS via Let's Encrypt) ───────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  frontend:
+    profiles:
+      - disabled  # exclude from production deploy
+
+volumes:
+  caddy_data:
+  caddy_config:
