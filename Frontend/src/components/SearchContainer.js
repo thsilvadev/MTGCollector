@@ -5,12 +5,14 @@ import styles from "../styles/SearchContainer.module.css";
 import React, { useCallback, useEffect, useState } from "react";
 import Axios from "axios";
 
+
 //imgs
 import black from "../images/black.png";
 import green from "../images/green.png";
 import red from "../images/red.png";
 import blue from "../images/blue.png";
 import white from "../images/white.png";
+import Camera from "./Camera";
 
 const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [selectedType, setSelectedType] = useState("");
@@ -27,11 +29,10 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   //Statelifting queryParams
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;
 
-    // Use useEffect to call modalHandler when sideBar changes
-    useEffect(() => {
-      onParamsChange(queryParams);
-    }, [queryParams, onParamsChange]);
-  
+  // Use useEffect to call modalHandler when sideBar changes
+  useEffect(() => {
+    onParamsChange(queryParams);
+  }, [queryParams, onParamsChange]);
 
   // Handle inputs
 
@@ -73,6 +74,23 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
       setSelectedName("");
     }
   };
+
+  //Webcam Card Name Detector
+  const handleWebcamName = (string) => {
+    if (string) {
+      //This means that whenever user types anything, it will search for the card in all table, unless new color check.
+      setBlackIsChecked(false);
+      setGreenIsChecked(false);
+      setRedIsChecked(false);
+      setBlueIsChecked(false);
+      setWhiteIsChecked(false);
+      console.log(`colors unchecked: ${whiteIsChecked}`);
+      setSelectedColor("");
+      setSelectedName(`&name=${string}`);
+    } else {
+      setSelectedName("");
+    }
+  }
 
   //Color checkbox handler
 
@@ -237,32 +255,47 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   //Getting Sets
 
   // In the useEffect, we check if localSets is an empty array [] instead of null. If it's empty, we make the Axios request to fetch the data, and then we store it in localStorage as a JSON string using JSON.stringify(response.data).
- 
+
   //Local Storage will be used to not fetch data everytime component is rendered.
 
   //Also we will locally control LocalSets version, so whenever there are any updates in the database, we re-fetch on client side.
-  
+
   const [localSets, setLocalSets] = useState([]);
 
+  //version 2 -> 02.04.2024
 
   useEffect(() => {
     const storedSets = localStorage.getItem("localSets");
     const storedSetsVersion = localStorage.getItem("localSetsVersion");
-    if (storedSets && storedSetsVersion === "1") {
-        setLocalSets(JSON.parse(storedSets));
-    } else {
-      Axios.get(`${window.name}/sets`)
-        .then((response) => {
-          const sets = response.data;
-          localStorage.setItem("localSets", JSON.stringify(sets));
-          localStorage.setItem("localSetsVersion", "1");
-          setLocalSets(sets); // Update localSets and trigger a re-render
-        })
-        .then(() => {
-          console.log(`localSets has just been set`);
-        });
+    if (storedSets && storedSetsVersion === "2") {
+      const parsed = JSON.parse(storedSets);
+      // Guard: only use cache if it's a non-empty array with the expected shape.
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].keyruneCode) {
+        setLocalSets(parsed);
+        return;
+      }
+      // Stale/invalid cache — clear it and re-fetch below.
+      localStorage.removeItem("localSets");
+      localStorage.removeItem("localSetsVersion");
     }
+    Axios.get(`${window.name}/sets`)
+      .then((response) => {
+        const sets = response.data;
+        if (!Array.isArray(sets)) {
+          console.error("Sets response is not an array:", sets);
+          return;
+        }
+        localStorage.setItem("localSets", JSON.stringify(sets));
+        localStorage.setItem("localSetsVersion", "2");
+        setLocalSets(sets);
+        console.log(`localSets has just been set`);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch sets:", err);
+      });
   }, []);
+
+
 
   //Returns
 
@@ -274,7 +307,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           <div className="row justify-content-around mb-4 gap-3">
             <div className="col-12">
               <select
-                
                 value={selectedType}
                 className={styles.FilterBox}
                 onChange={handleTypeChange}
@@ -294,7 +326,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
             <div className="col-12">
               <select
-                
                 value={selectedSet}
                 className={styles.FilterBox}
                 onChange={handleSetChange}
@@ -321,7 +352,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
             <div className="col-12">
               <select
-                
                 value={selectedRarity}
                 className={styles.FilterBox}
                 onChange={handleRarityChange}
@@ -417,6 +447,9 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
             </div>
           </form>
         </div>
+        <div className="col mt-4 justify-content-center d-flex flex-wrap">
+          <Camera fetchByDetection = {handleWebcamName}/>
+        </div>
       </div>
     );
 
@@ -510,7 +543,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           <div className="row justify-content-around">
             <div className="col-12 col-sm-12 col-lg-4">
               <select
-                
                 value={selectedType}
                 className={styles.FilterBox}
                 onChange={handleTypeChange}
@@ -530,7 +562,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
             <div className="col-12 col-sm-12 col-lg-4">
               <select
-                
                 value={selectedSet}
                 className={styles.FilterBox}
                 onChange={handleSetChange}
@@ -557,7 +588,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
             <div className="col-12 col-sm-12 col-lg-4">
               <select
-                
                 value={selectedRarity}
                 className={styles.FilterBox}
                 onChange={handleRarityChange}

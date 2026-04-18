@@ -77,6 +77,7 @@ routes.post('/register', usersController.postUser); //Register user
 /* *** */
 /* While registering, usersController is also calling email.confirmEmail */
 /* *** */
+routes.post('/resend-confirmation', usersController.resendConfirmation); //Resend confirmation email
 routes.post('/login', usersController.loginUser) //Login user
 //routes.post('/reset', usersController.resetPassword); Reset Password
 

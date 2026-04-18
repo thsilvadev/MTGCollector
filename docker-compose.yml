@@ -1,0 +1,64 @@
+services:
+
+  # ── MySQL database ───────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE:      ${MYSQL_DATABASE:-mtgchest}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./Backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "root", "--password=${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout:  5s
+      retries:  12
+    networks:
+      - app_network
+
+  # ── Node.js backend ──────────────────────────────────────────────────────────
+  backend:
+    build: ./Backend
+    restart: unless-stopped
+    environment:
+      HOST:           db
+      PORT:           3000
+      IP:             0.0.0.0
+      USER:           root
+      PASSWORD:       ${MYSQL_ROOT_PASSWORD}
+      DATABASE:       ${MYSQL_DATABASE:-mtgchest}
+      AUTH_TOKEN_TAG: ${JWT_SECRET}
+      NOREPLY_PASSWORD: ${NOREPLY_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # ── React frontend served by nginx ───────────────────────────────────────────
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        REACT_APP_API_URL: /api
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app_network:
+    driver: bridge

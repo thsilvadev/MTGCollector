@@ -3,37 +3,33 @@ import { ReactComponent as Sun } from "../images/Sun.svg";
 import { ReactComponent as Moon } from "../images/Moon.svg";
 import "../styles/DarkMode.css";
 
-const DarkMode = ({ navbarToggler, darkModeToggler }) => {
+const DarkMode = ({ navbarToggler, theme, handleSetTheme }) => {
   const positionHandler = navbarToggler ? "dark_mode" : "toggled_dark_mode";
 
+  // const selectedTheme = localStorage.getItem("selectedTheme");
+
+  const isThemeDark = theme === "dark";
+
   // State variable to store the checkbox state
-  const [isChecked, setIsChecked] = useState(true);
+  const [isChecked, setIsChecked] = useState(isThemeDark);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const selectedTheme = localStorage.getItem("selectedTheme");
+
     setIsLoading(false);
 
-    if (selectedTheme === "dark") {
-      setIsChecked(true);
-    } else {
-      setIsChecked(false);
-    }
+    // if (selectedTheme === "dark") {
+    //   setIsChecked(true);
+    // } else {
+    //   setIsChecked(false);
+    // }
   }, []);
 
   useEffect(() => {
     if (!isLoading) {
-      if (isChecked) {
-        document.querySelector("body").setAttribute("data-theme", "dark");
-        localStorage.setItem("selectedTheme", "dark");
-      } else {
-        document.querySelector("body").setAttribute("data-theme", "light");
-        localStorage.setItem("selectedTheme", "light");
-      }
-
-      darkModeToggler(isChecked);
+      handleSetTheme(isChecked ? 'dark' : 'light')
     }
-  }, [isChecked, darkModeToggler, isLoading]);
+  }, [isChecked, isLoading, handleSetTheme]);
 
   // Function to handle checkbox change
   const handleCheckboxChange = () => {

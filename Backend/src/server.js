@@ -1,33 +1,17 @@
 const express = require('express');
-const cors = require('cors');
-require(`dotenv`).config({path: './.env'});
-//SSL
-const fs = require('fs');
-const https = require('https');
+const cors    = require('cors');
+require('dotenv').config({ path: './.env' });
 
-
-
-
-const app = express();
+const app    = express();
 const routes = require('./routes');
 
-const port = process.env.PORT;
-const ip = process.env.IP;
-
-
+const port = process.env.PORT || 3000;
+const ip   = process.env.IP   || '0.0.0.0';
 
 app.use(cors());
-app.use(express.json()); // Tells express that the response will be in JSON
-
-app.use(routes); // Use routes provided by controllers
+app.use(express.json());
+app.use(routes);
 
 app.listen(port, ip, () => {
-
-    console.log(`Server is on - Running at http://${ip}:${port}/   !!`)
-})
-
-
-https.createServer({
-    cert: fs.readFileSync('src/ssl/code.crt'),
-    key: fs.readFileSync('src/ssl/code.key')
-}, app).listen(443, () => console.log("Runnning in https"))
+  console.log(`Server running at http://${ip}:${port}/`);
+});

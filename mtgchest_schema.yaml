@@ -1,0 +1,379 @@
+database: mtgchest
+description: >
+  MTG card vault application. Combines MTGJSON data (cards, sets, tokens)
+  with application-level tables (users, collection, decks, wishlist).
+  Cards are linked via uuid (varchar 36). Application tables use integer PKs.
+
+# ─────────────────────────────────────────────
+# APPLICATION TABLES
+# ─────────────────────────────────────────────
+
+tables:
+
+  users:
+    description: Registered user accounts
+    primary_key: id_user
+    columns:
+      id_user: int AUTO_INCREMENT
+      email: varchar(45) NOT NULL
+      password: varchar(200) NOT NULL
+      confirmed: varchar(200)
+
+  supercards:
+    description: >
+      Denormalized/simplified card view used as the application-level card reference.
+      Referenced by collection and wishlist. Populated from cards table data.
+    primary_key: id
+    columns:
+      id: int NOT NULL
+      name: text
+      types: text
+      setCode: text
+      manaCost: text
+      manaValue: float
+      rarity: text
+      uuid: varchar(36)
+      colorIdentity: text
+      keywords: text
+      multiverseId: text
+      scryfallId: text
+      supertypes: text
+
+  collection:
+    description: Cards owned by a user
+    primary_key: id_collection
+    columns:
+      id_collection: int AUTO_INCREMENT
+      card_id: int  # FK → supercards.id
+      card_condition: varchar(255)
+      user_id: int  # FK → users.id_user
+    foreign_keys:
+      card_id: supercards.id
+      user_id: users.id_user
+
+  decks:
+    description: Deck definitions created by users
+    primary_key: id_deck
+    columns:
+      id_deck: int AUTO_INCREMENT
+      name: varchar(255)
+      color: varchar(255)
+      description: varchar(255)
+      format: varchar(20)
+      card_count: int
+      user_id: int  # FK → users.id_user
+    foreign_keys:
+      user_id: users.id_user
+
+  deck:
+    description: Junction table — cards (from collection) assigned to a deck
+    primary_key: id_constructed
+    columns:
+      id_constructed: int AUTO_INCREMENT
+      id_card: int   # FK → collection.id_collection (CASCADE DELETE)
+      deck: int      # FK → decks.id_deck (CASCADE DELETE)
+      user_id: int   # FK → users.id_user
+    foreign_keys:
+      id_card: collection.id_collection (ON DELETE CASCADE)
+      deck: decks.id_deck (ON DELETE CASCADE)
+      user_id: users.id_user
+
+  wishlist:
+    description: Cards a user wants to acquire
+    primary_key: id_wishlist
+    columns:
+      id_wishlist: int NOT NULL
+      card_id: int    # FK → supercards.id
+      quantity: int
+      in_collection: int NOT NULL
+      user_id: int    # FK → users.id_user
+    foreign_keys:
+      card_id: supercards.id
+      user_id: users.id_user
+
+# ─────────────────────────────────────────────
+# MTGJSON DATA TABLES (read-only reference data)
+# ─────────────────────────────────────────────
+
+  cards:
+    description: >
+      Full card data from MTGJSON. One row per card printing.
+      Linked to satellite tables via uuid.
+    primary_key: id
+    key_columns:
+      id: int AUTO_INCREMENT
+      uuid: varchar(36)
+      name: text
+      setCode: text
+      number: text
+      rarity: text
+      manaCost: text
+      manaValue: float
+      colorIdentity: text
+      colors: text
+      types: text
+      subtypes: text
+      supertypes: text
+      keywords: text
+      text: text
+      power: text
+      toughness: text
+      loyalty: text
+      layout: text
+      side: text
+      artist: text
+      borderColor: text
+      frameVersion: text
+      language: text
+      availability: text
+      finishes: text
+      isReprint: tinyint(1)
+      isPromo: tinyint(1)
+      hasFoil: tinyint(1)
+      hasNonFoil: tinyint(1)
+      edhrecRank: int
+      # ... ~70 total columns, mostly optional metadata flags
+
+  cardforeigndata:
+    description: Foreign language printings data per card uuid
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      uuid: varchar(36)  # ref → cards.uuid
+      language: text
+      name: text
+      faceName: text
+      text: text
+      type: text
+      flavorText: text
+      multiverseId: int
+
+  cardidentifiers:
+    description: External platform IDs for each card (Scryfall, TCGPlayer, MTGO, etc.)
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      uuid: varchar(36)  # ref → cards.uuid
+      scryfallId: text
+      scryfallOracleId: text
+      scryfallIllustrationId: text
+      multiverseId: text
+      mtgArenaId: text
+      mtgoId: text
+      mtgoFoilId: text
+      tcgplayerProductId: text
+      tcgplayerEtchedProductId: text
+      cardKingdomId: text
+      cardKingdomFoilId: text
+      cardKingdomEtchedId: text
+      cardmarket: text  # mcmId / mcmMetaId
+      cardsphereId: text
+      mtgjsonV4Id: text
+      mtgjsonFoilVersionId: text
+      mtgjsonNonFoilVersionId: text
+
+  cardlegalities:
+    description: Format legality status per card uuid
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      uuid: varchar(36)  # ref → cards.uuid
+      # One column per format, values: Legal / Banned / Restricted / Not Legal
+      standard: text
+      pioneer: text
+      modern: text
+      legacy: text
+      vintage: text
+      commander: text
+      pauper: text
+      historic: text
+      alchemy: text
+      explorer: text
+      brawl: text
+      historicbrawl: text
+      gladiator: text
+      oathbreaker: text
+      paupercommander: text
+      duel: text
+      oldschool: text
+      premodern: text
+      predh: text
+      penny: text
+      future: text
+
+  cardpurchaseurls:
+    description: Purchase URLs per card uuid
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      uuid: varchar(36)  # ref → cards.uuid
+      tcgplayer: text
+      tcgplayerEtched: text
+      cardKingdom: text
+      cardKingdomFoil: text
+      cardKingdomEtched: text
+      cardmarket: text
+
+  cardrulings:
+    description: Official rulings per card uuid (one row per ruling)
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      uuid: varchar(36)  # ref → cards.uuid
+      date: date
+      text: text
+
+  tokens:
+    description: Token cards data (similar structure to cards)
+    primary_key: id
+    key_columns:
+      id: int AUTO_INCREMENT
+      uuid: text
+      name: text
+      setCode: text
+      colors: text
+      colorIdentity: text
+      types: text
+      subtypes: text
+      supertypes: text
+      power: text
+      toughness: text
+      text: text
+      keywords: text
+      layout: text
+      artist: text
+      hasFoil: tinyint(1)
+      hasNonFoil: tinyint(1)
+      isPromo: tinyint(1)
+      isReprint: tinyint(1)
+      # ... ~45 total columns
+
+  tokenidentifiers:
+    description: External platform IDs for tokens (same structure as cardidentifiers)
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      uuid: varchar(36)  # ref → tokens.uuid
+      scryfallId: text
+      multiverseId: text
+      # ... same fields as cardidentifiers
+
+  sets:
+    description: MTG set/expansion definitions
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      code: varchar(8) UNIQUE NOT NULL
+      name: text
+      type: text
+      releaseDate: text
+      baseSetSize: int
+      totalSetSize: int
+      block: text
+      parentCode: text
+      languages: text
+      keyruneCode: text
+      isFoilOnly: tinyint(1)
+      isForeignOnly: tinyint(1)
+      isNonFoilOnly: tinyint(1)
+      isOnlineOnly: tinyint(1)
+      isPartialPreview: tinyint(1)
+      mcmId: int
+      mcmIdExtras: int
+      mcmName: text
+      mtgoCode: text
+      tcgplayerGroupId: int
+      cardsphereSetId: int
+      tokenSetCode: text
+
+  settranslations:
+    description: Translated names for sets per language
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      uuid: varchar(36)  # ref → sets (by set uuid, not code)
+      language: text
+      translation: text
+
+  setboostersheets:
+    description: Named card sheets used in booster pack construction
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      setCode: varchar(20)
+      sheetName: varchar(255)
+      sheetHasBalanceColors: tinyint(1)
+      sheetIsFoil: tinyint(1)
+
+  setboostersheetcards:
+    description: Cards and their weights within a booster sheet
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      setCode: varchar(20)
+      sheetName: varchar(255)
+      cardUuid: varchar(36)  # ref → cards.uuid
+      cardWeight: bigint
+
+  setboostercontents:
+    description: Which sheets (and how many picks) form a booster slot
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      setCode: varchar(20)
+      boosterName: varchar(255)
+      boosterIndex: int
+      sheetName: varchar(255)
+      sheetPicks: int
+
+  setboostercontentweights:
+    description: Probability weights for each booster configuration
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      setCode: varchar(20)
+      boosterName: varchar(255)
+      boosterIndex: int
+      boosterWeight: int
+
+  meta:
+    description: MTGJSON database version metadata
+    primary_key: id
+    columns:
+      id: int AUTO_INCREMENT
+      date: date
+      version: text
+
+# ─────────────────────────────────────────────
+# RELATIONSHIPS SUMMARY
+# ─────────────────────────────────────────────
+
+relationships:
+
+  # Application relationships (enforced via FK constraints)
+  - users.id_user ←── collection.user_id
+  - users.id_user ←── deck.user_id
+  - users.id_user ←── decks.user_id
+  - users.id_user ←── wishlist.user_id
+  - supercards.id ←── collection.card_id
+  - supercards.id ←── wishlist.card_id
+  - collection.id_collection ←── deck.id_card  (CASCADE DELETE)
+  - decks.id_deck ←── deck.deck               (CASCADE DELETE)
+
+  # MTGJSON cross-table links (by uuid, no FK constraints enforced)
+  - cards.uuid ←── cardforeigndata.uuid
+  - cards.uuid ←── cardidentifiers.uuid
+  - cards.uuid ←── cardlegalities.uuid
+  - cards.uuid ←── cardpurchaseurls.uuid
+  - cards.uuid ←── cardrulings.uuid
+  - cards.uuid ←── setboostersheetcards.cardUuid
+  - tokens.uuid ←── tokenidentifiers.uuid
+  - sets.code ←── cards.setCode
+  - sets.code ←── tokens.setCode
+  - sets.code ←── setboostersheets.setCode
+  - sets.code ←── setboostersheetcards.setCode
+  - sets.code ←── setboostercontents.setCode
+  - sets.code ←── setboostercontentweights.setCode
+
+  # Bridge between MTGJSON and application data
+  - cards.id == supercards.id  (supercards is a subset/view of cards)

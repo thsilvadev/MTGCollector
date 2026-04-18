@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as yup from "yup"; //yup needs to be imported like that or destructured for specific resources.
 import Axios from "axios";
@@ -10,6 +11,24 @@ import styles from "../styles/Login.module.css";
 function Login() {
   const navigate = useNavigate();
   const signIn = useSignIn();
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendMsg, setResendMsg] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+
+  const handleResendConfirmation = async (e) => {
+    e.preventDefault();
+    if (!resendEmail) return;
+    setResendLoading(true);
+    setResendMsg('');
+    try {
+      const response = await Axios.post(`${window.name}/resend-confirmation`, { email: resendEmail });
+      setResendMsg(response.data.message || response.data.error);
+    } catch (err) {
+      setResendMsg(err.response?.data?.error || 'An error occurred.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   
 
@@ -181,6 +200,23 @@ function Login() {
           </button>
         </Form>
       </Formik>
+      <h2 className={styles.title}>Resend confirmation</h2>
+      <form className={styles.loginForm} onSubmit={handleResendConfirmation}>
+        <div className={styles.loginFormGroup}>
+          <input
+            className={styles.formField}
+            type="email"
+            placeholder="Your registered email"
+            value={resendEmail}
+            onChange={(e) => setResendEmail(e.target.value)}
+            required
+          />
+        </div>
+        {resendMsg && <span className={styles.formError}>{resendMsg}</span>}
+        <button className={styles.button} type="submit" disabled={resendLoading}>
+          {resendLoading ? 'Sending...' : 'Resend confirmation email'}
+        </button>
+      </form>
     </div>
   );
 }
