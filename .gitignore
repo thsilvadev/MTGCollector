@@ -36,12 +36,10 @@ Thumbs.db
 .vscode/
 .idea/
 
-# ── Project large/binary files (legacy) ──────────────────────────────────────
-Project/large_files/
-Project/AllPrintings(22.05.23).sql
-Project/AllPrintings(13.06.23).sql
-Project/cards.psd
-Project/closed-chest.psd
-Project/Magic_The_Gathering_logo_PNG1.png
-Project/Magic_The_Gathering_logo_PNG7.png
-Project/welcome MTG.psd
+# ── Spec / planning docs ─────────────────────────────────────────────────────
+card_scanner_spec.md
+
+# ── Loose project images ─────────────────────────────────────────────────────
+Project/*.jpg
+Project/*.png
+

@@ -4,6 +4,66 @@
 const knex    = require('../database/index');
 const scryfall = require('../utils/scryfall');
 
+const PRICE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+/**
+ * Refresh prices for any card_ids that are missing or older than PRICE_TTL_MS.
+ * Upserts into card_prices using Scryfall's batch endpoint.
+ */
+async function refreshStalePrices(cardIds) {
+  if (!cardIds.length) return;
+
+  const existing = await knex('card_prices')
+    .select('card_id', 'updated_at')
+    .whereIn('card_id', cardIds);
+
+  const existingMap = new Map(existing.map(r => [r.card_id, r.updated_at]));
+  const cutoff      = new Date(Date.now() - PRICE_TTL_MS);
+
+  const staleIds = cardIds.filter(id => {
+    const updatedAt = existingMap.get(id);
+    return !updatedAt || new Date(updatedAt) < cutoff;
+  });
+
+  if (!staleIds.length) return;
+
+  const freshCards = await scryfall.batchGetCards(staleIds);
+  if (!freshCards.length) return;
+
+  const rows = freshCards.map(c => ({
+    card_id:    c.id,
+    usd:        c.prices?.usd ? parseFloat(c.prices.usd) : null,
+    updated_at: new Date(),
+  }));
+
+  // INSERT ... ON DUPLICATE KEY UPDATE for upsert
+  await knex.raw(
+    `INSERT INTO card_prices (card_id, usd, updated_at)
+     VALUES ${rows.map(() => '(?, ?, ?)').join(', ')}
+     ON DUPLICATE KEY UPDATE usd = VALUES(usd), updated_at = VALUES(updated_at)`,
+    rows.flatMap(r => [r.card_id, r.usd, r.updated_at]),
+  );
+}
+
+/**
+ * Calculate the total USD networth for a user's collection using cached prices.
+ * Returns a string like "12.34".
+ */
+async function getNetworth(userId) {
+  const result = await knex.raw(
+    `SELECT COALESCE(SUM(cp.usd * counts.cnt), 0) AS networth
+     FROM (
+       SELECT card_id, COUNT(*) AS cnt
+       FROM collection
+       WHERE user_id = ?
+       GROUP BY card_id
+     ) AS counts
+     JOIN card_prices cp ON cp.card_id = counts.card_id`,
+    [userId],
+  );
+  return parseFloat(result[0][0].networth).toFixed(2);
+}
+
 // Apply the same color-identity filter logic as the original SQL query, but in memory.
 function matchesColorFilter(colorIdentity, filterValue) {
   if (!filterValue || filterValue === 'B, G, R, U, W') return true;
@@ -44,10 +104,12 @@ module.exports = {
         .orderBy(knex.raw('MAX(id_collection)'), 'desc');
 
       if (!allDbRows.length) {
-        return res.json({ total: 0, cards: [] });
+        return res.json({ total: 0, cards: [], networth: '0.00' });
       }
 
-      // ── Step 2: Decide whether filters require a full-collection fetch ───────
+      // ── Step 1b: Refresh stale prices for all cards in this user's collection ─
+      const allCardIds = allDbRows.map(r => r.card_id);
+      await refreshStalePrices(allCardIds);
       const hasEffectiveColorFilter =
         query.colorIdentity && query.colorIdentity !== 'B, G, R, U, W';
       const hasFilters =
@@ -118,11 +180,13 @@ module.exports = {
         cards = merged.slice(page * 40, (page + 1) * 40);
       }
 
+      const networth = await getNetworth(userId);
+
       console.log(
         `Collection request by ${req.ip} of user${userId} at ${formattedDate} ` +
         `(${cards.length}/${total} cards, page ${page})`
       );
-      return res.json({ total, cards });
+      return res.json({ total, cards, networth });
 
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
