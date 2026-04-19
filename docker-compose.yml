@@ -33,8 +33,10 @@ services:
       PASSWORD:       ${MYSQL_ROOT_PASSWORD}
       DATABASE:       ${MYSQL_DATABASE:-mtgchest}
       AUTH_TOKEN_TAG: ${JWT_SECRET}
-      NOREPLY_PASSWORD: ${NOREPLY_PASSWORD:-}    volumes:
-      - backend_data:/app/data   # persists set icons index across deploys    depends_on:
+      NOREPLY_PASSWORD: ${NOREPLY_PASSWORD:-}
+    volumes:
+      - backend_data:/app/data   # persists set icons index across deploys
+    depends_on:
       db:
         condition: service_healthy
     networks:
