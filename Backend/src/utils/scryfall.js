@@ -44,6 +44,7 @@ function normalizeCard(card) {
     keywords:      (card.keywords      || []).join(', '),
     multiverseId:  card.multiverse_ids?.[0] ?? null,
     layout:        card.layout,
+    prices:        card.prices,
   };
 }
 

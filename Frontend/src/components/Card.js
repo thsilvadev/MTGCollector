@@ -31,6 +31,7 @@ function Card({
   getChosenDeck,
   getDeckCards,
   getCollectionCards,
+  prices,
 }) {
   //Scryfall ID management
 
@@ -232,12 +233,13 @@ function Card({
 
   const renderer = () => {
     if (isMouseOver || istouchOver) {
+      const priceLabel = prices?.usd ? ` · $${prices.usd}` : '';
       if (collectionCard.length === 0) {
-        return <span>not obtained</span>;
+        return <span>not obtained{priceLabel}</span>;
       } else {
         return collectionCard.map((hoveredCard) => (
           <span key={hoveredCard.id}>
-            on Collection: {hoveredCard.countById}
+            on Collection: {hoveredCard.countById}{priceLabel}
           </span>
         ));
       }

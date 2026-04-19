@@ -53,6 +53,9 @@ function Collection() {
   //Total cards in collection
   const [totalCards, setTotalCards] = useState(0);
 
+  //Total USD value of the entire collection
+  const [networth, setNetworth] = useState(null);
+
   //Handle Droppable
   const [isDroppable, setIsDroppable] = useState(true);
 
@@ -107,6 +110,9 @@ function Collection() {
       .then((response) => {
         setTotalCards(response.data.total);
         setCards(response.data.cards);
+        if (response.data.networth !== undefined) {
+          setNetworth(response.data.networth);
+        }
         //used to block dragging as many cards as user wants before req is complete.
         setIsDroppable(true);
       })
@@ -456,7 +462,9 @@ function Collection() {
         onDragOver={handleDragOver}
       >
         <h1 className={styles.title}>
-          You have {totalCards} cards in your collection.
+          You have {totalCards} cards
+          {networth && parseFloat(networth) > 0 ? ` worth $${networth}` : ""} in
+          your collection.
         </h1>
         <SearchContainer
           baseOfSearch="collection"
@@ -486,6 +494,7 @@ function Collection() {
                   getChosenDeck={selectedDeck}
                   getDeckCards={deckCards}
                   getCollectionCards={cards}
+                  prices={card.prices}
                 />
               ))}
             </div>

@@ -22,3 +22,10 @@ jobs:
             git reset --hard origin/main
             git clean -fd
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build db backend caddy
+
+            # Build set-icon index if it hasn't been built yet.
+            # The output lives in the persistent backend_data volume, so this
+            # only does real work on the very first deploy (or after a volume wipe).
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+              exec -T backend sh -c \
+              '[ -f data/setIconIndex.json ] && echo "Icon index already exists, skipping." || node src/scripts/buildSetIconIndex.js'

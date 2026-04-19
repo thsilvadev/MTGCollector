@@ -12,6 +12,7 @@ const decksController = require('./controllers/decksController');
 const eachDeckController = require('./controllers/eachDeckController');
 const setsController = require('./controllers/setsController')
 const usersController = require('./controllers/usersController');
+const scanController = require('./controllers/scanController');
 //const wishlistController = require('./controllers/wishlistController');
 
 /////////// EMAIL ////////////
@@ -80,6 +81,9 @@ routes.post('/register', usersController.postUser); //Register user
 routes.post('/resend-confirmation', usersController.resendConfirmation); //Resend confirmation email
 routes.post('/login', usersController.loginUser) //Login user
 //routes.post('/reset', usersController.resetPassword); Reset Password
+
+///////ROUTES AND REQUISITIONS FOR CARD SCANNER
+routes.post('/scan', authMiddleware, scanController.upload, scanController.scan);
 
 
 

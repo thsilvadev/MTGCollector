@@ -45,3 +45,14 @@ CREATE TABLE IF NOT EXISTS wishlist (
   user_id       INT,
   CONSTRAINT fk_wishlist_user FOREIGN KEY (user_id) REFERENCES users (id_user)
 );
+
+CREATE TABLE IF NOT EXISTS card_prices (
+  card_id    VARCHAR(36)   NOT NULL PRIMARY KEY,
+  usd        DECIMAL(10,4),
+  updated_at DATETIME      NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  name    VARCHAR(255) NOT NULL PRIMARY KEY,
+  run_at  DATETIME     NOT NULL
+);
