@@ -199,12 +199,24 @@ module.exports = {
   async postOnCollection(req, res) {
     const now           = new Date();
     const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-    const { card_id, card_condition } = req.body;
+    const { card_id, card_condition, ocr_fragment, oracle_id } = req.body;
     const user_id = req.userId;
 
     try {
       const result = await knex('collection').insert({ card_id, card_condition, user_id });
       console.log(`Post successful of ${card_id} on Collection of user${user_id} by ${req.ip} at ${formattedDate}`);
+
+      // Update scan cache if the client supplied the OCR fragment that led to this card.
+      // Fire-and-forget — don't block or fail the response if the cache write errors.
+      if (ocr_fragment && oracle_id) {
+        knex.raw(
+          `INSERT INTO scan_cache (fragment, oracle_id, hits)
+           VALUES (?, ?, 1)
+           ON DUPLICATE KEY UPDATE hits = hits + 1, last_seen = CURRENT_TIMESTAMP`,
+          [ocr_fragment.slice(0, 255), oracle_id],
+        ).catch(err => console.warn('[Collection] Cache write failed:', err.message));
+      }
+
       return res.json(result);
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
