@@ -7,13 +7,17 @@ const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
 
 function createTransporter() {
+  const port = Number(process.env.SMTP_PORT);
   return nodeMailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: false,
+    port,
+    secure: port === 465,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: true,
     },
   });
 }
@@ -153,12 +157,13 @@ module.exports = {
   //As user registers or try to login in a not confirmed account > send email to confirm.
   //This function is being used in usersController.js .
   async confirmEmail(email) {
-    console.log(email)
+    console.log('Sending confirmation email to:', email);
     try {
       await configMail(email);
 
       return ("Confirmation email successfully sent!");
     } catch (error) {
+      console.error('confirmEmail failed for', email, ':', error.message || error);
       return ("Confirmation email could not be Sent");
     }
   }

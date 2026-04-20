@@ -16,4 +16,4 @@ CREATE TABLE IF NOT EXISTS scan_cache (
   PRIMARY KEY (fragment(191), oracle_id)
 );
 
-CREATE INDEX scan_cache_fragment_idx ON scan_cache (fragment(191)
+CREATE INDEX scan_cache_fragment_idx ON scan_cache (fragment(191));
