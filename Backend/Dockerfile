@@ -17,7 +17,9 @@ RUN wget -q -O eng.traineddata \
 
 COPY knexfile.js ./
 COPY src/ ./src/
+COPY database/ ./database/
 
 EXPOSE 3000
 
-CMD ["node", "src/server.js"]
+# Run pending SQL migrations then start the server.
+CMD ["sh", "-c", "node database/migrate.js && node src/server.js"]
