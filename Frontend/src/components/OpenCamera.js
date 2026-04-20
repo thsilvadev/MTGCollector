@@ -1,42 +1,32 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useAuthHeader } from 'react-auth-kit';
 
-// ── Card presence detection ────────────────────────────────────────────────
-// MTG cards have a uniform border (black OR white) on all 4 sides.
-// We sample thin edge strips and check if pixels are consistently dark (<65)
-// OR consistently bright (>190). Either qualifies as a card border.
-function hasCardBorder(canvas) {
-  const ctx = canvas.getContext('2d');
-  const w   = canvas.width;
-  const h   = canvas.height;
-  const s   = Math.max(4, Math.round(w * 0.05)); // edge strip thickness (~5%)
-
-  // Returns ratio of pixels that are clearly dark OR clearly light (uniform border color)
-  const borderRatio = (imgData) => {
-    const d = imgData.data;
-    let dark = 0, bright = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      const lum = (d[i] + d[i + 1] + d[i + 2]) / 3;
-      if (lum < 65)  dark++;
-      if (lum > 190) bright++;
-    }
-    const total = d.length / 4;
-    return Math.max(dark / total, bright / total);
-  };
-
-  const l = borderRatio(ctx.getImageData(0,     0, s, h));
-  const r = borderRatio(ctx.getImageData(w - s, 0, s, h));
-  const t = borderRatio(ctx.getImageData(0,     0, w, s));
-  const b = borderRatio(ctx.getImageData(0, h - s, w, s));
-  const avg = (l + r + t + b) / 4;
-  console.log(`[Scanner] Border ratio: avg=${(avg * 100).toFixed(1)}% L=${(l*100).toFixed(0)}% R=${(r*100).toFixed(0)}% T=${(t*100).toFixed(0)}% B=${(b*100).toFixed(0)}%`);
-  return avg > 0.20;
+// ── Text / content presence detection ───────────────────────────────────────
+// For a name strip (not a full card), we check contrast variance.
+// A blank/uniform frame has low stddev; a name strip with text has higher.
+function hasText(canvas) {
+  const ctx  = canvas.getContext('2d');
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = data.length / 4;
+  let sum = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
+  }
+  const mean = sum / pixels;
+  let variance = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    const lum = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    variance += (lum - mean) ** 2;
+  }
+  const stddev = Math.sqrt(variance / pixels);
+  console.log(`[Scanner] Strip stddev: ${stddev.toFixed(1)} (need >20 to pass)`);
+  return stddev > 20;
 }
 
 // ── Frame stability config ───────────────────────────────────────────────────
 const STABILITY_THRESHOLD = 15;  // max average pixel difference to be considered "stable"
-const STABILITY_FRAMES    = 4;   // consecutive stable frames required before scanning
-const SAMPLE_INTERVAL_MS  = 200; // ms between frame diff samples
+const STABILITY_FRAMES    = 3;   // consecutive stable frames required before scanning
+const SAMPLE_INTERVAL_MS  = 300; // ms between frame diff samples
 const SCAN_COOLDOWN_MS    = 3000; // minimum ms between scans
 
 // ── Inline styles ─────────────────────────────────────────────────────────────
@@ -58,12 +48,11 @@ const S = {
   },
   reticleBase: {
     position: 'absolute', top: '50%', left: '50%',
-    transform: 'translate(-50%, -55%)',
-    // Portrait card ratio: 63.5 mm × 88.9 mm ≈ 0.714
-    height: '86vh',
-    aspectRatio: '63.5 / 88.9',
-    maxWidth: '88vw',
-    borderRadius: 10, pointerEvents: 'none',
+    transform: 'translate(-50%, -50%)',
+    // Name strip: wide and short
+    width: '92vw',
+    height: '18vh',
+    borderRadius: 8, pointerEvents: 'none',
     transition: 'border-color 0.3s',
   },
   statusBar: {
@@ -74,23 +63,46 @@ const S = {
   resultPanel: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     background: 'rgba(0,0,0,0.92)', borderRadius: '20px 20px 0 0',
-    padding: '20px', display: 'flex', flexDirection: 'column',
+    paddingBottom: 28, paddingTop: 20,
+    display: 'flex', flexDirection: 'column',
     alignItems: 'center', gap: 16, pointerEvents: 'auto',
   },
-  cardImg:  { width: 180, borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' },
-  cardName: { margin: '0 0 4px', fontSize: 18, color: '#fff' },
-  cardMeta: { margin: 0, color: '#aaa', fontSize: 14 },
-  cardPrice:{ margin: '4px 0 0', color: '#f0c040', fontSize: 13 },
+  carousel: {
+    display: 'flex',
+    overflowX: 'scroll',
+    scrollSnapType: 'x mandatory',
+    WebkitOverflowScrolling: 'touch',
+    width: '100%',
+    // Padding lets the first and last items scroll to center position.
+    // Item width = 28vw, so center offset = (100vw - 28vw) / 2 = 36vw.
+    // We subtract half the gap (1.5vw) because gap only applies between items.
+    paddingLeft: 'calc(50% - 14vw - 1.5vw)',
+    paddingRight: 'calc(50% - 14vw - 1.5vw)',
+    boxSizing: 'border-box',
+    gap: '3vw',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+  },
+  carouselItem: {
+    flex: '0 0 28vw',
+    scrollSnapAlign: 'center',
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', gap: 8,
+  },
+  cardImg:  { width: '100%', maxWidth: 200, borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' },
+  cardName: { margin: '0 0 2px', fontSize: 16, color: '#fff', textAlign: 'center' },
+  cardMeta: { margin: 0, color: '#aaa', fontSize: 13, textAlign: 'center' },
+  cardPrice:{ margin: '2px 0 0', color: '#f0c040', fontSize: 13 },
   counter:  { color: '#aaa', fontSize: 12, margin: 0 },
-  btnRow:   { display: 'flex', gap: 32 },
+  btnRow:   { display: 'flex', gap: 32, marginTop: 8 },
   btnReject: {
-    width: 64, height: 64, borderRadius: '50%',
-    background: '#c0392b', border: 'none', fontSize: 28,
+    width: 56, height: 56, borderRadius: '50%',
+    background: '#c0392b', border: 'none', fontSize: 24,
     cursor: 'pointer', color: '#fff', pointerEvents: 'auto',
   },
   btnConfirm: {
-    width: 64, height: 64, borderRadius: '50%',
-    background: '#27ae60', border: 'none', fontSize: 28,
+    width: 56, height: 56, borderRadius: '50%',
+    background: '#27ae60', border: 'none', fontSize: 24,
     cursor: 'pointer', color: '#fff', pointerEvents: 'auto',
   },
   // ── UI layer ──────────────────────────────────────────────────────────────
@@ -135,13 +147,17 @@ function OpenCamera({ close }) {
   const isScanningRef    = useRef(false);
   const intervalRef      = useRef(null);
 
-  const [status, setStatus]                 = useState('initializing');
+  const [status, setStatus]           = useState('initializing');
   // 'initializing' | 'scanning' | 'processing' | 'result' | 'error'
-  const [candidates, setCandidates]         = useState([]);
-  const [candidateIndex, setCandidateIndex] = useState(0);
-  const [scanTier, setScanTier]             = useState(null);
-  const [devices, setDevices]               = useState([]);
-  const [deviceIndex, setDeviceIndex]       = useState(0);
+  const [candidates, setCandidates]   = useState([]);
+  const [nextPage, setNextPage]       = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [centeredIdx, setCenteredIdx] = useState(0);
+  const [ocrFragment, setOcrFragment] = useState(null);
+  const [scanOracleId, setScanOracleId] = useState(null);
+  const [devices, setDevices]         = useState([]);
+  const [deviceIndex, setDeviceIndex] = useState(0);
+  const carouselRef = useRef(null);
 
   const authHeader = useAuthHeader();
 
@@ -152,12 +168,11 @@ function OpenCamera({ close }) {
     streamRef.current = null;
 
     try {
-      // If no specific deviceId, let the browser pick (triggers permission dialog).
-      // We intentionally do NOT pass facingMode here — it causes the browser to
-      // override the user's camera choice in the permission dialog on desktop.
+      // If no specific deviceId, prefer the rear camera via facingMode: ideal.
+      // Using 'ideal' (not 'exact') is a soft preference — desktop webcams still work.
       const videoConstraints = deviceId
         ? { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-        : { width: { ideal: 1280 }, height: { ideal: 720 } };
+        : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } };
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: videoConstraints,
@@ -223,30 +238,24 @@ function OpenCamera({ close }) {
       const videoW = video.videoWidth;
       const videoH = video.videoHeight;
 
-      // ── Crop to the reticle region before sending ─────────────────────────
-      // The full video frame includes background. We map the reticle rect
-      // (defined in CSS/display px) back to native video pixel coords,
-      // accounting for objectFit:cover scaling.
+      // ── Crop to the name-strip reticle before sending ───────────────────────
+      // Reticle CSS: width:92vw, height:13vh, centered (top:50%, translate(-50%,-50%))
       const displayW = window.innerWidth;
       const displayH = window.innerHeight;
       const scale    = Math.max(displayW / videoW, displayH / videoH); // cover scale
-      const offsetX  = (displayW - videoW * scale) / 2; // display→video origin offset
+      const offsetX  = (displayW - videoW * scale) / 2;
       const offsetY  = (displayH - videoH * scale) / 2;
 
-      // Reticle CSS: height:78vh, aspectRatio:63.5/88.9, maxWidth:88vw,
-      //              top:50%, transform:translate(-50%,-55%)
-      const rawCardH    = 0.86 * displayH;
-      const rawCardW    = rawCardH * (63.5 / 88.9);
-      const cardDisplayW = Math.min(rawCardW, 0.88 * displayW);
-      const cardDisplayH = cardDisplayW * (88.9 / 63.5);
-      const cardDisplayLeft = (displayW - cardDisplayW) / 2;
-      const cardDisplayTop  = 0.5 * displayH - 0.55 * cardDisplayH;
+      const nameDisplayW    = 0.92 * displayW;
+      const nameDisplayH    = 0.18 * displayH;
+      const nameDisplayLeft = (displayW - nameDisplayW) / 2;
+      const nameDisplayTop  = (displayH - nameDisplayH) / 2;
 
       // Convert to video native coordinates
-      const srcLeft = (cardDisplayLeft - offsetX) / scale;
-      const srcTop  = (cardDisplayTop  - offsetY) / scale;
-      const srcW    = cardDisplayW / scale;
-      const srcH    = cardDisplayH / scale;
+      const srcLeft = (nameDisplayLeft - offsetX) / scale;
+      const srcTop  = (nameDisplayTop  - offsetY) / scale;
+      const srcW    = nameDisplayW / scale;
+      const srcH    = nameDisplayH / scale;
 
       const cl = Math.max(0, Math.round(srcLeft));
       const ct = Math.max(0, Math.round(srcTop));
@@ -266,9 +275,9 @@ function OpenCamera({ close }) {
         console.warn(`[Scanner] Reticle crop failed — sending full ${videoW}×${videoH} frame`);
       }
 
-      // Card presence check — skip backend call if no dark border detected
-      if (!hasCardBorder(canvas)) {
-        console.log('[Scanner] No card border detected — skipping (point camera at a card)');
+      // Content check — skip if the strip looks blank/uniform
+      if (!hasText(canvas)) {
+        console.log('[Scanner] Strip looks blank — skipping (center name bar in the reticle)');
         setStatus('scanning');
         isScanningRef.current = false;
         return;
@@ -293,20 +302,21 @@ function OpenCamera({ close }) {
       }
 
       const data = await res.json();
-      console.log(`[Scanner] Response — tier: ${data.tier}, candidates: ${data.candidates?.length ?? 0}`,
+      console.log(`[Scanner] candidates: ${data.candidates?.length ?? 0}`,
         data.warnings?.length ? `| warnings: ${data.warnings.join('; ')}` : '');
 
-      // Discard Tier 3 set-guesses — no specific card to confirm
-      if (!data.candidates?.length || data.candidates[0]?._setGuess) {
-        console.log('[Scanner] No confirmed card candidate — back to scanning');
+      if (!data.candidates?.length) {
+        console.log('[Scanner] No candidates — back to scanning');
         setStatus('scanning');
         return;
       }
 
-      console.log(`[Scanner] Showing: "${data.candidates[0].name}" (tier ${data.tier}) — ${data.candidates.length} candidate(s)`);
+      console.log(`[Scanner] Showing: "${data.candidates[0].name}" — ${data.candidates.length} printing(s)${data.nextPage ? ' + more' : ''}`);
       setCandidates(data.candidates);
-      setCandidateIndex(0);
-      setScanTier(data.tier);
+      setNextPage(data.nextPage || null);
+      setCenteredIdx(0);
+      setOcrFragment(data.ocrFragment || null);
+      setScanOracleId(data.oracleId || null);
       setStatus('result');
     } catch (err) {
       console.error('[Scanner] Scan error:', err);
@@ -362,29 +372,67 @@ function OpenCamera({ close }) {
   }, [status, captureAndScan]);
 
   // ── User actions ───────────────────────────────────────────────────────────
-  const handleConfirm = useCallback(async (card) => {
+  const handleConfirm = useCallback(async () => {
+    const card = candidates[centeredIdx];
+    if (!card) return;
     try {
       await fetch(`${window.name}/collection`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', authorization: authHeader() },
-        body:    JSON.stringify({ card_id: card.id }),
+        body:    JSON.stringify({
+          card_id:      card.id,
+          ...(ocrFragment && scanOracleId
+            ? { ocr_fragment: ocrFragment, oracle_id: scanOracleId }
+            : {}),
+        }),
       });
     } catch (err) {
       console.error('Failed to add card:', err);
     }
     setCandidates([]);
+    setNextPage(null);
+    setOcrFragment(null);
+    setScanOracleId(null);
     setStatus('scanning');
-  }, [authHeader]);
+  }, [authHeader, candidates, centeredIdx, ocrFragment, scanOracleId]);
 
-  const handleReject = useCallback(() => {
-    const nextIndex = candidateIndex + 1;
-    if (nextIndex < candidates.length) {
-      setCandidateIndex(nextIndex);
-    } else {
-      setCandidates([]);
-      setStatus('scanning');
+  const handleDismiss = useCallback(() => {
+    setCandidates([]);
+    setNextPage(null);
+    setOcrFragment(null);
+    setScanOracleId(null);
+    setStatus('scanning');
+  }, []);
+
+  const handleLoadMore = useCallback(async () => {
+    if (!nextPage || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(
+        `${window.name}/scan/more?url=${encodeURIComponent(nextPage)}`,
+        { headers: { authorization: authHeader() } },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setCandidates(prev => [...prev, ...(data.candidates || [])]);
+        setNextPage(data.nextPage || null);
+      }
+    } catch (err) {
+      console.error('Load more error:', err);
+    } finally {
+      setLoadingMore(false);
     }
-  }, [candidateIndex, candidates.length]);
+  }, [nextPage, loadingMore, authHeader]);
+
+  // Detect which carousel item is centered
+  const handleCarouselScroll = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    // Each item is 28vw wide + 3vw gap = 31vw per slot
+    const itemW = window.innerWidth * 0.31;
+    const idx   = Math.round(el.scrollLeft / itemW);
+    setCenteredIdx(Math.max(0, Math.min(idx, candidates.length - 1)));
+  }, [candidates.length]);
 
   const handleClose = useCallback(() => {
     clearInterval(intervalRef.current);
@@ -403,14 +451,9 @@ function OpenCamera({ close }) {
   }, [devices, deviceIndex, startCamera]);
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const card     = candidates[candidateIndex];
-  const imageUrl = card
-    ? (card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? null)
-    : null;
-
   const STATUS_MSG = {
     initializing: 'Starting camera...',
-    scanning:     'Point at a card and hold steady',
+    scanning:     'Center the card name in the strip and hold steady',
     processing:   '🔍 Identifying...',
     error:        'Camera unavailable — check browser permissions',
   };
@@ -419,12 +462,6 @@ function OpenCamera({ close }) {
     ...S.reticleBase,
     border: `2px solid ${status === 'processing' ? '#f0c040' : 'rgba(255,255,255,0.6)'}`,
   };
-
-  const tierLabel = scanTier === 1
-    ? '✓ Identified by set code'
-    : scanTier === 2
-      ? '✓ Identified by name'
-      : '';
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -456,32 +493,62 @@ function OpenCamera({ close }) {
           <div style={S.statusBar}>{STATUS_MSG[status] || ''}</div>
         )}
 
-        {/* Card result panel — slides up from bottom */}
-        {status === 'result' && card && (
+        {/* Card result panel — swipeable carousel */}
+        {status === 'result' && candidates.length > 0 && (
           <div style={S.resultPanel}>
-          {candidates.length > 1 && (
-            <p style={S.counter}>
-              Option {candidateIndex + 1} of {candidates.length}
-              {scanTier === 2 && ' — press ❌ to see another printing'}
-            </p>
-          )}
+            {candidates.length > 1 && (
+              <p style={S.counter}>Swipe to choose a printing · {centeredIdx + 1} / {candidates.length}{nextPage ? '+' : ''}</p>
+            )}
 
-          {imageUrl && <img src={imageUrl} alt={card.name} style={S.cardImg} />}
+            {/* Carousel */}
+            <div
+              ref={carouselRef}
+              style={S.carousel}
+              onScroll={handleCarouselScroll}
+            >
+              {candidates.map((c, i) => {
+                const img = c.image_uris?.normal ?? c.card_faces?.[0]?.image_uris?.normal ?? null;
+                return (
+                  <div key={c.id ?? i} style={S.carouselItem}>
+                    {img && <img src={img} alt={c.name} style={S.cardImg} />}
+                    <h2 style={S.cardName}>{c.name}</h2>
+                    <p style={S.cardMeta}>{c.set_name} · #{c.collector_number} · {c.rarity}</p>
+                    {c.prices?.usd && <p style={S.cardPrice}>${c.prices.usd}</p>}
+                  </div>
+                );
+              })}
+              {/* Load-more ghost card */}
+              {nextPage && (
+                <div style={S.carouselItem}>
+                  <div
+                    style={{
+                      width: '100%', maxWidth: 200, aspectRatio: '63.5 / 88.9',
+                      borderRadius: 8, background: 'rgba(255,255,255,0.08)',
+                      border: '2px dashed rgba(255,255,255,0.3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', flexDirection: 'column', gap: 8,
+                    }}
+                    onClick={handleLoadMore}
+                  >
+                    {loadingMore
+                      ? <span style={{ color: '#aaa', fontSize: 13 }}>Loading...</span>
+                      : <>
+                          <span style={{ fontSize: 28 }}>＋</span>
+                          <span style={{ color: '#aaa', fontSize: 12 }}>Load more</span>
+                        </>
+                    }
+                  </div>
+                  <h2 style={S.cardName}> </h2>
+                  <p style={S.cardMeta}> </p>
+                </div>
+              )}
+            </div>
 
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={S.cardName}>{card.name}</h2>
-            <p style={S.cardMeta}>
-              {card.set_name} · #{card.collector_number} · {card.rarity}
-            </p>
-            {card.prices?.usd && <p style={S.cardPrice}>${card.prices.usd}</p>}
-            {tierLabel && <p style={{ ...S.counter, marginTop: 4 }}>{tierLabel}</p>}
+            <div style={S.btnRow}>
+              <button style={S.btnReject}  onClick={handleDismiss}>❌</button>
+              <button style={S.btnConfirm} onClick={handleConfirm}>✅</button>
+            </div>
           </div>
-
-          <div style={S.btnRow}>
-            <button style={S.btnReject}  onClick={handleReject}>❌</button>
-            <button style={S.btnConfirm} onClick={() => handleConfirm(card)}>✅</button>
-          </div>
-        </div>
         )}
 
       </div>{/* end uiLayer */}

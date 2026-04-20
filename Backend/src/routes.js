@@ -84,6 +84,7 @@ routes.post('/login', usersController.loginUser) //Login user
 
 ///////ROUTES AND REQUISITIONS FOR CARD SCANNER
 routes.post('/scan', authMiddleware, scanController.upload, scanController.scan);
+routes.get('/scan/more', authMiddleware, scanController.more);
 
 
 
