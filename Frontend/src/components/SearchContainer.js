@@ -13,9 +13,11 @@ import red from "../images/red.png";
 import blue from "../images/blue.png";
 import white from "../images/white.png";
 import Camera from "./Camera";
+import { useI18n } from '../i18n/LanguageContext';
 
 const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [selectedType, setSelectedType] = useState("");
+  const { t } = useI18n();
 
   const [selectedSet, setSelectedSet] = useState("");
 
@@ -302,7 +304,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   if (baseOfSearch === "AllCards") {
     return (
       <div className={styles.SearchContainer}>
-        <h3> Filter by:</h3>
+        <h3>{t('search.filterBy')}</h3>
         <div className="container">
           <div className="row justify-content-around mb-4 gap-3">
             <div className="col-12">
@@ -312,15 +314,15 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleTypeChange}
                 aria-label="Default select example"
               >
-                <option value="">Select Type </option>
-                <option value="&types=Creature">Creature</option>
-                <option value="&types=Artifact">Artifact</option>
-                <option value="&types=Land">Land</option>
-                <option value="&types=Sorcery">Sorcery</option>
-                <option value="&types=Enchantment">Enchantment</option>
-                <option value="&types=Instant">Instant</option>
-                <option value="&types=Battle">Battle</option>
-                <option value="&types=Plane">Plane</option>
+                <option value="">{t('search.selectType')}</option>
+                <option value="&types=Creature">{t('search.creature')}</option>
+                <option value="&types=Artifact">{t('search.artifact')}</option>
+                <option value="&types=Land">{t('search.land')}</option>
+                <option value="&types=Sorcery">{t('search.sorcery')}</option>
+                <option value="&types=Enchantment">{t('search.enchantment')}</option>
+                <option value="&types=Instant">{t('search.instant')}</option>
+                <option value="&types=Battle">{t('search.battle')}</option>
+                <option value="&types=Plane">{t('search.plane')}</option>
               </select>
             </div>
 
@@ -331,15 +333,11 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleSetChange}
                 aria-label="Default select example"
               >
-                <option value="">Select Set</option>
+                <option value="">{t('search.selectSet')}</option>
                 {localSets
                   .sort((a, b) => {
-                    if (a.name < b.name) {
-                      return -1;
-                    }
-                    if (a.name > b.name) {
-                      return 1;
-                    }
+                    if (a.name < b.name) { return -1; }
+                    if (a.name > b.name) { return 1; }
                     return 0;
                   })
                   .map((set, key) => (
@@ -357,13 +355,13 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleRarityChange}
                 aria-label="Default select example"
               >
-                <option value="">Select Rarity</option>
-                <option value="&rarity=common">Common</option>
-                <option value="&rarity=uncommon">Uncommon</option>
-                <option value="&rarity=rare">Rare</option>
-                <option value="&rarity=mythic">Mythic</option>
-                <option value="&rarity=special">Special</option>
-                <option value="&rarity=bonus">Bonus</option>
+                <option value="">{t('search.selectRarity')}</option>
+                <option value="&rarity=common">{t('search.common')}</option>
+                <option value="&rarity=uncommon">{t('search.uncommon')}</option>
+                <option value="&rarity=rare">{t('search.rare')}</option>
+                <option value="&rarity=mythic">{t('search.mythic')}</option>
+                <option value="&rarity=special">{t('search.special')}</option>
+                <option value="&rarity=bonus">{t('search.bonus')}</option>
               </select>
             </div>
           </div>
@@ -441,14 +439,14 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 className={styles.Input}
                 onChange={debouncedHandleNameChange}
                 type="search"
-                placeholder="Type card name"
+                placeholder={t('search.placeholder')}
                 aria-label="Search"
               />
             </div>
           </form>
         </div>
         <div className="col mt-4 justify-content-center d-flex flex-wrap">
-          <Camera fetchByDetection = {handleWebcamName}/>
+          <Camera fetchByDetection={handleWebcamName} />
         </div>
       </div>
     );
@@ -465,7 +463,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                   className={styles.Input}
                   onChange={debouncedHandleNameChange}
                   type="search"
-                  placeholder="Type card name"
+                  placeholder={t('search.placeholder')}
                   aria-label="Search"
                 />
               </form>
@@ -534,7 +532,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </div>
             </div>
             <div className="col-sm">
-              <button onClick={advancedToggler}>Advanced Search</button>
+              <button onClick={advancedToggler}>{t('search.advanced')}</button>
             </div>
           </div>
         </div>
@@ -548,15 +546,15 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleTypeChange}
                 aria-label="Default select example"
               >
-                <option value="">Select Type</option>
-                <option value="&types=Creature">Creature</option>
-                <option value="&types=Artifact">Artifact</option>
-                <option value="&types=Land">Land</option>
-                <option value="&types=Sorcery">Sorcery</option>
-                <option value="&types=Enchantment">Enchantment</option>
-                <option value="&types=Instant">Instant</option>
-                <option value="&types=Battle">Battle</option>
-                <option value="&types=Plane">Plane</option>
+                <option value="">{t('search.selectType')}</option>
+                <option value="&types=Creature">{t('search.creature')}</option>
+                <option value="&types=Artifact">{t('search.artifact')}</option>
+                <option value="&types=Land">{t('search.land')}</option>
+                <option value="&types=Sorcery">{t('search.sorcery')}</option>
+                <option value="&types=Enchantment">{t('search.enchantment')}</option>
+                <option value="&types=Instant">{t('search.instant')}</option>
+                <option value="&types=Battle">{t('search.battle')}</option>
+                <option value="&types=Plane">{t('search.plane')}</option>
               </select>
             </div>
 
@@ -567,15 +565,11 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleSetChange}
                 aria-label="Default select example"
               >
-                <option value="">Select Set</option>
+                <option value="">{t('search.selectSet')}</option>
                 {localSets
                   .sort((a, b) => {
-                    if (a.name < b.name) {
-                      return -1;
-                    }
-                    if (a.name > b.name) {
-                      return 1;
-                    }
+                    if (a.name < b.name) { return -1; }
+                    if (a.name > b.name) { return 1; }
                     return 0;
                   })
                   .map((set, key) => (
@@ -593,13 +587,13 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 onChange={handleRarityChange}
                 aria-label="Default select example"
               >
-                <option value="">Select Rarity</option>
-                <option value="&rarity=common">Common</option>
-                <option value="&rarity=uncommon">Uncommon</option>
-                <option value="&rarity=rare">Rare</option>
-                <option value="&rarity=mythic">Mythic</option>
-                <option value="&rarity=special">Special</option>
-                <option value="&rarity=bonus">Bonus</option>
+                <option value="">{t('search.selectRarity')}</option>
+                <option value="&rarity=common">{t('search.common')}</option>
+                <option value="&rarity=uncommon">{t('search.uncommon')}</option>
+                <option value="&rarity=rare">{t('search.rare')}</option>
+                <option value="&rarity=mythic">{t('search.mythic')}</option>
+                <option value="&rarity=special">{t('search.special')}</option>
+                <option value="&rarity=bonus">{t('search.bonus')}</option>
               </select>
             </div>
           </div>

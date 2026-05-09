@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as yup from "yup"; //yup needs to be imported like that or destructured for specific resources.
+import * as yup from "yup";
 import Axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import { useSignIn } from "react-auth-kit";
+import { toast } from 'react-toastify';
+import { useI18n } from '../i18n/LanguageContext';
 
 //styles
 import styles from "../styles/Login.module.css";
@@ -11,6 +13,7 @@ import styles from "../styles/Login.module.css";
 function Login() {
   const navigate = useNavigate();
   const signIn = useSignIn();
+  const { t } = useI18n();
   const [resendEmail, setResendEmail] = useState('');
   const [resendMsg, setResendMsg] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
@@ -40,10 +43,10 @@ function Login() {
         // Check if the response contains an error property
         if (response.data.error) {
           // Handle the error case
-          alert(`${response.data.error}`);
+          toast.error(response.data.error);
         } else {
           // Handle the success case
-          alert(response.data.message);
+          toast.success(response.data.message);
           
           //get Json Web Token and store it
           signIn({
@@ -58,7 +61,7 @@ function Login() {
       .catch((error) => {
         // Handle any network or other errors
         console.error("An error occurred:", error);
-        alert("An error occurred while attempting to login.");
+        toast.error("An error occurred while attempting to login.");
       });
   };
 
@@ -70,42 +73,42 @@ function Login() {
         // Check if the response contains an error property
         if (response.data.error) {
           // Handle the error case
-          alert(`Error: ${response.data.error}`);
+          toast.error(`Error: ${response.data.error}`);
         } else {
           // Handle the success case
-          alert(response.data.message);
-          alert(response.data.confirm);
+          toast.success(response.data.message);
+          if (response.data.confirm) toast.info(response.data.confirm);
         }
       })
       .catch((error) => {
         // Handle any network or other errors
         console.error("An error occurred:", error);
-        alert("An error occurred while attempting to register.");
+        toast.error("An error occurred while attempting to register.");
       });
   };
 
   const validationLogin = yup.object({
-    email: yup.string().email("Not an email").required("Email Required"),
+    email: yup.string().email(t('login.notEmail')).required(t('login.emailRequired')),
     password: yup
       .string()
-      .min(8, "Password must be 8 characters minimum")
-      .required("Password Required"),
+      .min(8, t('login.passwordMin'))
+      .required(t('login.passwordRequired')),
   });
 
   const validationRegister = yup.object({
-    email: yup.string().email("Not an email").required("Email Required"),
+    email: yup.string().email(t('login.notEmail')).required(t('login.emailRequired')),
     password: yup
       .string()
-      .min(8, "Password must be 8 characters minimum")
-      .required("Password Required"),
+      .min(8, t('login.passwordMin'))
+      .required(t('login.passwordRequired')),
     confirmPassword: yup
       .string()
-      .oneOf([yup.ref('password')], 'Passwords must match').required('Confirm password'),
+      .oneOf([yup.ref('password')], t('login.passwordsMustMatch')).required(t('login.confirmPasswordReq')),
   });
 
   return (
     <div className={styles.loginContainer} onLoad={window.scrollTo({ top: 0, behavior: "smooth" })}>
-      <h1 className={styles.title}>Login</h1>
+      <h1 className={styles.title}>{t('login.title')}</h1>
       <Formik
         initialValues={{}}
         onSubmit={handleClickLogin}
@@ -116,7 +119,7 @@ function Login() {
             <Field
               name="email"
               className={styles.formField}
-              placeholder="Email"
+              placeholder={t('login.emailPlaceholder')}
             />
 
             <ErrorMessage
@@ -129,7 +132,7 @@ function Login() {
             <Field
               name="password"
               className={styles.formField}
-              placeholder="Password"
+              placeholder={t('login.passwordPlaceholder')}
               type="password"
             />
             
@@ -140,14 +143,14 @@ function Login() {
               type="password"
             />
             <br/>
-            <a className={styles.Forgot} href="/forgot">Forgot your password?</a>
+            <a className={styles.Forgot} href="/forgot">{t('login.forgotPassword')}</a>
           </div>
           <button className={styles.button} type="submit">
-            Login
+            {t('login.title')}
           </button>
         </Form>
       </Formik>
-      <h2 className={styles.title}>Register</h2>
+      <h2 className={styles.title}>{t('login.register')}</h2>
       <Formik
         initialValues={{}}
         onSubmit={handleClickRegister}
@@ -158,7 +161,7 @@ function Login() {
             <Field
               name="email"
               className={styles.formField}
-              placeholder="Email"
+              placeholder={t('login.emailPlaceholder')}
             />
 
             <ErrorMessage
@@ -171,7 +174,7 @@ function Login() {
             <Field
               name="password"
               className={styles.formField}
-              placeholder="Password"
+              placeholder={t('login.passwordPlaceholder')}
               type="password"
             />
 
@@ -185,7 +188,7 @@ function Login() {
             <Field
               name="confirmPassword"
               className={styles.formField}
-              placeholder="Confirm Password"
+              placeholder={t('login.confirmPlaceholder')}
               type="password"
             />
 
@@ -196,17 +199,17 @@ function Login() {
             />
           </div>
           <button className={styles.button} type="submit">
-            Sign up
+            {t('login.signUp')}
           </button>
         </Form>
       </Formik>
-      <h2 className={styles.title}>Resend confirmation</h2>
+      <h2 className={styles.title}>{t('login.resend')}</h2>
       <form className={styles.loginForm} onSubmit={handleResendConfirmation}>
         <div className={styles.loginFormGroup}>
           <input
             className={styles.formField}
             type="email"
-            placeholder="Your registered email"
+            placeholder={t('login.yourEmailPlaceholder')}
             value={resendEmail}
             onChange={(e) => setResendEmail(e.target.value)}
             required
@@ -214,7 +217,7 @@ function Login() {
         </div>
         {resendMsg && <span className={styles.formError}>{resendMsg}</span>}
         <button className={styles.button} type="submit" disabled={resendLoading}>
-          {resendLoading ? 'Sending...' : 'Resend confirmation email'}
+          {resendLoading ? t('login.sending') : t('login.resendBtn')}
         </button>
       </form>
     </div>

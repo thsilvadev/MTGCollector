@@ -22,10 +22,12 @@ import { useAuthHeader } from "react-auth-kit";
 
 import MiniCard from "../components/MiniCard";
 import { useLocation } from "react-router-dom";
+import { useI18n } from "../i18n/LanguageContext";
 
 //Component
 
 function Collection() {
+  const { t } = useI18n();
   //On Decks page, clicking on a deck will bring the user up here in Collection and automatically selects clicked deck, showing it´s cards.
   /**/ const location = useLocation();
   /**/ const searchParams = new URLSearchParams(location.search);
@@ -462,9 +464,12 @@ function Collection() {
         onDragOver={handleDragOver}
       >
         <h1 className={styles.title}>
-          You have {totalCards} cards
-          {networth && parseFloat(networth) > 0 ? ` worth $${networth}` : ""} in
-          your collection.
+          {t('collection.title', {
+            n: totalCards,
+            worth: networth && parseFloat(networth) > 0
+              ? t('collection.worth', { v: networth })
+              : '',
+          })}
         </h1>
         <SearchContainer
           baseOfSearch="collection"
@@ -535,7 +540,7 @@ function Collection() {
               onChange={handleDeckChange}
               aria-label="Default select example"
             >
-              <option value="Default">Select Deck</option>
+              <option value="Default">{t('collection.selectDeck')}</option>
               {decks.map((deck, key) => (
                 <option key={key} value={deck.id_deck}>
                   {deck.name}
@@ -548,7 +553,7 @@ function Collection() {
           </div>
           <div>
             <a href="/decks">
-              <button className={styles.newDeckButton}>Add New Deck</button>
+              <button className={styles.newDeckButton}>{t('collection.addNewDeck')}</button>
             </a>
           </div>
         </div>

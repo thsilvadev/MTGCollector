@@ -42,6 +42,7 @@ routes.get('/collection/:page', authMiddleware, collectionController.getCollecti
 routes.post('/collection/', authMiddleware, collectionController.postOnCollection) // POST on collection
 routes.get('/card/:id', authMiddleware, collectionController.getById); // GET card by it's ID number
 routes.delete('/card/:id_collection', authMiddleware, collectionController.deleteById); //DELETE card by it's ID number
+routes.delete('/collection/card/:card_id', authMiddleware, collectionController.deleteByCardId); //DELETE N copies of a card by Scryfall UUID
 
 
 

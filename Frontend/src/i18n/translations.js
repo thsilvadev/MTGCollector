@@ -1,0 +1,307 @@
+const translations = {
+  en: {
+    // NAV
+    'nav.collection':      'Collection',
+    'nav.decks':           'Decks',
+    'nav.about':           'About Us',
+    'nav.contact':         'Contact',
+    'nav.wishlist':        'Wishlist',
+    'nav.aiDeck':          'AI Deck Builder',
+    'nav.comingSoon':      'coming soon',
+    'nav.registerOrLogin': 'Register or Login',
+    'nav.welcome':         'Welcome,',
+    'nav.logOff':          'Log off',
+
+    // HOME
+    'home.intro':       'MTG Chest is the perfect solution for organizing your',
+    'home.intro2':      'cards. Here you\'ll be able to:',
+    'home.li1':         'Mirror your physical cards by adding cards to your collection;',
+    'home.li2':         'Build multiple decks with the same cards that you have so you don\'t need to take notes on shared cards;',
+    'home.li3':         'Fill your wishlist and write a description on each card to remember their role in your malevolent strategies;',
+    'home.li4':         '... and much more! All this with actual 3rd millenium user interface! We keep it clean, we keep it safe.',
+    'home.h1':          'All',
+    'home.h1b':         'cards',
+    'home.guide.modal':   'Click on cards to add to your collection, or drag \'em to the side bar on the right side.',
+    'home.guide.noModal': 'Click on cards to add to your collection.',
+
+    // COLLECTION
+    'collection.title':      'You have {n} cards{worth} in your collection.',
+    'collection.worth':      ' worth ${v}',
+    'collection.selectDeck': 'Select Deck',
+    'collection.addNewDeck': 'Add New Deck',
+
+    // DECKS PAGE
+    'decks.title': 'Decks',
+
+    // ABOUT
+    'about.title': 'About MTG Chest',
+    'about.p1':    'I\'m thsilladev but you can call me Thiagosauro, a casual Magic: The Gathering player. I used to play it many years ago back in the school days. Classic nerd twelve year olds group started to visit "Pergaminho" (portuguese word for \'Scroll\'), a RPG store near our school. There we took part in dubious RPG sessions until the dungeon\'s keepers showed us Magic. It was unbeliavably magical. We all know it is.',
+    'about.p2':    'Unfortunately at that time I had to choose between eating, going to the nearest LAN House and buying cards. So I pretty much stopped playing MTG (and eating) until recently I bought 467 cards, almost randomly. With that amount, how many decks are possible? Soon I realized, though, I had just a few good cards I wish to use in more than one deck. But interchanging \'em like that would get a bit confused, I\'d had to take notes and... why not make a digital collector? That\'s just it!',
+    'about.p3pre': 'And it\'s public! Enjoy! Nevertheless, if you have any doubts or feedback, please contact us',
+    'about.p3pos': ', it would be much appreciated!',
+    'about.here':  'here',
+
+    // LOGIN
+    'login.title':                  'Login',
+    'login.register':               'Register',
+    'login.signUp':                 'Sign up',
+    'login.forgotPassword':         'Forgot your password?',
+    'login.resend':                 'Resend confirmation',
+    'login.resendBtn':              'Resend confirmation email',
+    'login.sending':                'Sending...',
+    'login.emailPlaceholder':       'Email',
+    'login.passwordPlaceholder':    'Password',
+    'login.confirmPlaceholder':     'Confirm Password',
+    'login.yourEmailPlaceholder':   'Your registered email',
+    'login.notEmail':               'Not an email',
+    'login.emailRequired':          'Email Required',
+    'login.passwordMin':            'Password must be 8 characters minimum',
+    'login.passwordRequired':       'Password Required',
+    'login.passwordsMustMatch':     'Passwords must match',
+    'login.confirmPasswordReq':     'Confirm password',
+
+    // FORGOT PASSWORD
+    'forgot.title':  'Please, enter your email:',
+    'forgot.submit': 'Submit',
+
+    // RESET CONFIRMATION
+    'reset.title':  'Please, enter your new password:',
+    'reset.submit': 'Submit',
+
+    // CONTACT
+    'contact.pageTitle': 'Contact',
+    'contact.feedback':  'Please, any feedback is much appreciated!',
+    'contact.name':      'Name',
+    'contact.subject':   'Subject',
+    'contact.email':     'Email',
+    'contact.message':   'Message',
+    'contact.send':      'Send',
+    'contact.sending':   'Submitting...',
+    'contact.submitted': 'Contact submitted. Thanks for your feedback!',
+
+    // SEARCH CONTAINER
+    'search.filterBy':     'Filter by:',
+    'search.selectType':   'Select Type',
+    'search.selectSet':    'Select Set',
+    'search.selectRarity': 'Select Rarity',
+    'search.advanced':     'Advanced Search',
+    'search.placeholder':  'Type card name',
+    'search.creature':     'Creature',
+    'search.artifact':     'Artifact',
+    'search.land':         'Land',
+    'search.sorcery':      'Sorcery',
+    'search.enchantment':  'Enchantment',
+    'search.instant':      'Instant',
+    'search.battle':       'Battle',
+    'search.plane':        'Plane',
+    'search.common':       'Common',
+    'search.uncommon':     'Uncommon',
+    'search.rare':         'Rare',
+    'search.mythic':       'Mythic',
+    'search.special':      'Special',
+    'search.bonus':        'Bonus',
+
+    // SIDEBAR
+    'sidebar.collection': 'Collection',
+    'sidebar.cards':      'cards',
+
+    // APP MODAL
+    'modal.cancel':      'Cancel',
+    'modal.confirm':     'Confirm',
+    'modal.save':        'Save',
+    'modal.editDeck':    'Edit Deck',
+    'modal.deckName':    'Deck name',
+    'modal.deckDesc':    'Description (optional)',
+    'modal.removeTitle': 'Remove {name}',
+    'modal.howMany':     'How many copies do you want to remove?',
+    'modal.maxQty':      ' (max {max})',
+    'modal.remove1':     '1 copy',
+    'modal.removeN':     '{n} copies',
+
+    // TOASTS
+    'toast.cardAdded':      'Card added to collection!',
+    'toast.cardDeleted':    'Card was deleted from your collection!',
+    'toast.failedQty':      'Failed to update quantity. Please try again.',
+    'toast.failedRemove':   'Failed to remove card from collection.',
+    'toast.mustLogin':      'You must be logged in.',
+    'toast.loginError':     'An error occurred while attempting to login.',
+    'toast.registerError':  'An error occurred while attempting to register.',
+
+    // DECK COMPONENT
+    'deck.deleteTitle': 'Delete Deck',
+    'deck.deleteMsg':   'Delete deck "{name}"? This cannot be undone.',
+    'deck.deleteBtn':   'Delete',
+    'deck.editTitle':   'Edit Deck',
+    'deck.createTitle': 'Create New Deck',
+    'deck.createBtn':   'Create',
+    'deck.maxDecks':    'You have reached the maximum number of decks. Please delete some to free space or donate for 100 deck slots.',
+    'deck.labelName':   'Deck name: ',
+    'deck.labelDesc':   'Description:',
+    'deck.labelCards':  'Cards:',
+    'deck.labelColor':  'Color:',
+
+    // CARD / MINICARD
+    'card.deleteTitle':         'Remove from Collection',
+    'card.notObtained':         'not obtained',
+    'card.inCollection':        'in Collection:',
+    'minicard.removeDeckTitle': 'Remove from Deck',
+    'minicard.removeDeckMsg':   'Remove {name} from this deck?',
+
+    // WISHLIST
+    'wishlist.title': 'Wishlist',
+  },
+
+  pt: {
+    // NAV
+    'nav.collection':      'Coleção',
+    'nav.decks':           'Decks',
+    'nav.about':           'Sobre Nós',
+    'nav.contact':         'Contato',
+    'nav.wishlist':        'Lista de Desejos',
+    'nav.aiDeck':          'Construtor de Deck com IA',
+    'nav.comingSoon':      'em breve',
+    'nav.registerOrLogin': 'Registrar ou Entrar',
+    'nav.welcome':         'Bem-vindo(a),',
+    'nav.logOff':          'Sair',
+
+    // HOME
+    'home.intro':       'MTG Chest é a solução perfeita para organizar suas',
+    'home.intro2':      'cartas. Aqui você poderá:',
+    'home.li1':         'Espelhar suas cartas físicas adicionando-as à sua coleção;',
+    'home.li2':         'Construir múltiplos decks com as mesmas cartas que você tem, sem precisar anotar as cartas compartilhadas;',
+    'home.li3':         'Preencher sua lista de desejos e escrever uma descrição em cada carta para lembrar do papel delas em suas estratégias malévolas;',
+    'home.li4':         '... e muito mais! Tudo isso com uma interface do 3º milênio! Mantemos limpo, mantemos seguro.',
+    'home.h1':          'Todas as',
+    'home.h1b':         'cartas',
+    'home.guide.modal':   'Clique nas cartas para adicioná-las à coleção, ou arraste-as para a barra lateral à direita.',
+    'home.guide.noModal': 'Clique nas cartas para adicioná-las à coleção.',
+
+    // COLLECTION
+    'collection.title':      'Você tem {n} cartas{worth} na sua coleção.',
+    'collection.worth':      ' no valor de ${v}',
+    'collection.selectDeck': 'Selecionar Deck',
+    'collection.addNewDeck': 'Adicionar Novo Deck',
+
+    // DECKS PAGE
+    'decks.title': 'Decks',
+
+    // ABOUT
+    'about.title': 'Sobre o MTG Chest',
+    'about.p1':    'Sou o thsilvadev mas pode me chamar de Thiagosauro, um jogador casual de Magic: The Gathering. Costumava jogar há muitos anos na época da escola. Um clássico grupo de nerds de doze anos começou a frequentar o "Pergaminho", uma loja de RPG perto da escola. Lá participamos de sessões duvidosas de RPG até os donos da masmorra nos mostrarem o Magic. Era incrivelmente mágico. Todos sabemos que é.',
+    'about.p2':    'Infelizmente na época eu tinha que escolher entre comer, ir à LAN House mais próxima e comprar cartas. Então praticamente parei de jogar MTG (e de comer) até recentemente comprar 467 cartas, quase aleatoriamente. Com essa quantidade, quantos decks são possíveis? Logo percebi que tinha apenas algumas boas cartas que queria usar em mais de um deck. Mas trocar assim ficaria confuso, teria que tomar notas e... por que não fazer um colecionador digital? É exatamente isso!',
+    'about.p3pre': 'E é público! Aproveite! Mas se tiver dúvidas ou feedback, entre em contato',
+    'about.p3pos': ', será muito apreciado!',
+    'about.here':  'aqui',
+
+    // LOGIN
+    'login.title':                  'Entrar',
+    'login.register':               'Cadastrar',
+    'login.signUp':                 'Criar conta',
+    'login.forgotPassword':         'Esqueceu sua senha?',
+    'login.resend':                 'Reenviar confirmação',
+    'login.resendBtn':              'Reenviar e-mail de confirmação',
+    'login.sending':                'Enviando...',
+    'login.emailPlaceholder':       'E-mail',
+    'login.passwordPlaceholder':    'Senha',
+    'login.confirmPlaceholder':     'Confirmar Senha',
+    'login.yourEmailPlaceholder':   'Seu e-mail cadastrado',
+    'login.notEmail':               'E-mail inválido',
+    'login.emailRequired':          'E-mail obrigatório',
+    'login.passwordMin':            'A senha deve ter no mínimo 8 caracteres',
+    'login.passwordRequired':       'Senha obrigatória',
+    'login.passwordsMustMatch':     'As senhas devem coincidir',
+    'login.confirmPasswordReq':     'Confirme a senha',
+
+    // FORGOT PASSWORD
+    'forgot.title':  'Por favor, insira seu e-mail:',
+    'forgot.submit': 'Enviar',
+
+    // RESET CONFIRMATION
+    'reset.title':  'Por favor, insira sua nova senha:',
+    'reset.submit': 'Enviar',
+
+    // CONTACT
+    'contact.pageTitle': 'Contato',
+    'contact.feedback':  'Por favor, qualquer feedback é muito apreciado!',
+    'contact.name':      'Nome',
+    'contact.subject':   'Assunto',
+    'contact.email':     'E-mail',
+    'contact.message':   'Mensagem',
+    'contact.send':      'Enviar',
+    'contact.sending':   'Enviando...',
+    'contact.submitted': 'Mensagem enviada. Obrigado pelo feedback!',
+
+    // SEARCH CONTAINER
+    'search.filterBy':     'Filtrar por:',
+    'search.selectType':   'Selecionar Tipo',
+    'search.selectSet':    'Selecionar Coleção',
+    'search.selectRarity': 'Selecionar Raridade',
+    'search.advanced':     'Busca Avançada',
+    'search.placeholder':  'Digite o nome da carta',
+    'search.creature':     'Criatura',
+    'search.artifact':     'Artefato',
+    'search.land':         'Terra',
+    'search.sorcery':      'Feitiço',
+    'search.enchantment':  'Encantamento',
+    'search.instant':      'Mágica Instantânea',
+    'search.battle':       'Batalha',
+    'search.plane':        'Plano',
+    'search.common':       'Comum',
+    'search.uncommon':     'Incomum',
+    'search.rare':         'Rara',
+    'search.mythic':       'Mítica',
+    'search.special':      'Especial',
+    'search.bonus':        'Bônus',
+
+    // SIDEBAR
+    'sidebar.collection': 'Coleção',
+    'sidebar.cards':      'cartas',
+
+    // APP MODAL
+    'modal.cancel':      'Cancelar',
+    'modal.confirm':     'Confirmar',
+    'modal.save':        'Salvar',
+    'modal.editDeck':    'Editar Deck',
+    'modal.deckName':    'Nome do deck',
+    'modal.deckDesc':    'Descrição (opcional)',
+    'modal.removeTitle': 'Remover {name}',
+    'modal.howMany':     'Quantas cópias você quer remover?',
+    'modal.maxQty':      ' (máx. {max})',
+    'modal.remove1':     '1 cópia',
+    'modal.removeN':     '{n} cópias',
+
+    // TOASTS
+    'toast.cardAdded':      'Carta adicionada à coleção!',
+    'toast.cardDeleted':    'Carta removida da sua coleção!',
+    'toast.failedQty':      'Falha ao atualizar quantidade. Tente novamente.',
+    'toast.failedRemove':   'Falha ao remover carta da coleção.',
+    'toast.mustLogin':      'Você precisa estar logado.',
+    'toast.loginError':     'Ocorreu um erro ao tentar fazer login.',
+    'toast.registerError':  'Ocorreu um erro ao tentar registrar.',
+
+    // DECK COMPONENT
+    'deck.deleteTitle': 'Excluir Deck',
+    'deck.deleteMsg':   'Excluir o deck "{name}"? Isso não pode ser desfeito.',
+    'deck.deleteBtn':   'Excluir',
+    'deck.editTitle':   'Editar Deck',
+    'deck.createTitle': 'Criar Novo Deck',
+    'deck.createBtn':   'Criar',
+    'deck.maxDecks':    'Você atingiu o número máximo de decks. Exclua alguns para liberar espaço ou doe para obter 100 slots.',
+    'deck.labelName':   'Nome do deck: ',
+    'deck.labelDesc':   'Descrição:',
+    'deck.labelCards':  'Cartas:',
+    'deck.labelColor':  'Cor:',
+
+    // CARD / MINICARD
+    'card.deleteTitle':         'Remover da Coleção',
+    'card.notObtained':         'não obtida',
+    'card.inCollection':        'na Coleção:',
+    'minicard.removeDeckTitle': 'Remover do Deck',
+    'minicard.removeDeckMsg':   'Remover {name} deste deck?',
+
+    // WISHLIST
+    'wishlist.title': 'Lista de Desejos',
+  },
+};
+
+export default translations;

@@ -25,6 +25,9 @@ import 'react-toastify/dist/ReactToastify.css';
 //Google Analytics
 import ReactGA from 'react-ga';
 
+//i18n
+import { LanguageProvider } from './i18n/LanguageContext';
+
 
 const TRACKING_ID = "G-7GC9T8B9ZJ"; // OUR_TRACKING_ID
 ReactGA.initialize(TRACKING_ID);
@@ -38,14 +41,16 @@ function App() {
   }, []);
   
   return (
-    <div className="App">
-      <BrowserRouter basename="/">
-        <Header />
-        <Container />
-        <Footer />
-      </BrowserRouter>
-      <ToastContainer />
-    </div>
+    <LanguageProvider>
+      <div className="App">
+        <BrowserRouter basename="/">
+          <Header />
+          <Container />
+          <Footer />
+        </BrowserRouter>
+        <ToastContainer />
+      </div>
+    </LanguageProvider>
   );
 }
 

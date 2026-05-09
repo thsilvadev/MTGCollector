@@ -3,8 +3,11 @@
 //imports
 import { React, useState, useEffect } from "react";
 import Axios from "axios";
+import { toast } from 'react-toastify';
 
 import { useAuthHeader } from "react-auth-kit";
+import AppModal from './AppModal';
+import { useI18n } from '../i18n/LanguageContext';
 
 //styles
 
@@ -122,6 +125,7 @@ function Card({
 
   //Headers configuration
   const authHeader = useAuthHeader();
+  const { t } = useI18n();
 
   const config = {
     headers: {
@@ -131,52 +135,46 @@ function Card({
 
   //postOnCollection
   const postOnCollection = () => {
-    //Use prompt() method for card condition. Just for instance.
-    let cardCondition;
-    console.log(authHeader())
     if (authHeader()) {
-      let userCondition = prompt(
-        `You're adding ${name} to your collection. What's it's condition?`,
-        "Undescribed"
-      );
-
-      if (userCondition !== null) {
-        if (userCondition === "") {
-          cardCondition = `Undescribed`;
-        } else {
-          cardCondition = userCondition;
-        }
-
-        Axios.post(
-          `${window.name}/collection/`,
-          {
-            card_id: id,
-            card_condition: cardCondition,
-            id_collection: null /* later implement that */,
-          },
-          config
-        ).then(() => {
-          console.log(`Card posted of id: ${id}`);
-          toggleRefresh();
-        });
-      }
+      Axios.post(
+        `${window.name}/collection/`,
+        {
+          card_id: id,
+          card_condition: 'Undescribed',
+          id_collection: null,
+        },
+        config
+      ).then(() => {
+        console.log(`Card posted of id: ${id}`);
+        toggleRefresh();
+      });
     } else {
-      alert("You must login");
+      toast.error(t('toast.mustLogin'));
       navigate("/login");
-      
     }
   };
 
   //Delete
   //Delete from Collection
   const deleteFromCollection = () => {
-    if (
-      window.confirm(`You're deleting ${name} from your collection. Confirm?`)
-    ) {
-      Axios.delete(`${window.name}/card/${id_collection}`, config)
-        .then(console.log(`${name} deleted from collection`))
-        .then(toggleRefresh());
-    }
+    setModal({
+      type: 'delete-qty',
+      cardName: name,
+      maxQty: count || 1,
+      onCancel: () => setModal(null),
+      onConfirm: (qty) => {
+        setModal(null);
+        Axios.delete(`${window.name}/collection/card/${id}?count=${qty}`, config)
+          .then(() => {
+            console.log(`${name} deleted from collection`);
+            toggleRefresh();
+          })
+          .catch((err) => {
+            console.error(err);
+            toast.error(t('toast.failedRemove'));
+          });
+      },
+    });
   };
 
   //How many in collection?
@@ -235,11 +233,11 @@ function Card({
     if (isMouseOver || istouchOver) {
       const priceLabel = prices?.usd ? ` · $${prices.usd}` : '';
       if (collectionCard.length === 0) {
-        return <span>not obtained{priceLabel}</span>;
+        return <span>{t('card.notObtained')}{priceLabel}</span>;
       } else {
         return collectionCard.map((hoveredCard) => (
           <span key={hoveredCard.id}>
-            on Collection: {hoveredCard.countById}{priceLabel}
+            {t('card.inCollection')} {hoveredCard.countById}{priceLabel}
           </span>
         ));
       }
@@ -462,9 +460,13 @@ function Card({
 
   const draggableClass = isDraggableToggler || !getChosenDeck ? "" : styles.Undraggable;
 
+  // Modal state
+  const [modal, setModal] = useState(null);
+
 
   return (
     <div className={componentContainer}>
+      {modal && <AppModal {...modal} />}
       {isLoading ? <Loading page={table}/> : <div className={`${isAllCards}`}>
         <img
           src={ImgSrc}

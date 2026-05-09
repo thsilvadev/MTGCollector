@@ -8,6 +8,7 @@ import { Scrollbars } from "react-custom-scrollbars-2";
 import { useAuthHeader } from "react-auth-kit";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
+import { useI18n } from '../i18n/LanguageContext';
 
 //Components
 import MiniCard from "./MiniCard";
@@ -17,6 +18,7 @@ const SideBox = ({ modalToggler, refresher }) => {
 
   //auto navigations
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   //toastify
   const notify = () => toast("Card added to collection!");
@@ -70,7 +72,7 @@ const SideBox = ({ modalToggler, refresher }) => {
         console.log("no data was caught");
       }
     } else {
-      alert("You must login");
+      toast.error(t('toast.mustLogin'));
       navigate("/login");
     }
   };
@@ -172,10 +174,10 @@ const SideBox = ({ modalToggler, refresher }) => {
       >
         <h6>
           <a className={styles.Link} href="/collection">
-            Collection
+            {t('sidebar.collection')}
           </a>
         </h6>
-        <span className={styles.total}>{totalCards} cards</span>
+        <span className={styles.total}>{totalCards} {t('sidebar.cards')}</span>
         <PrevNext
           onPageChange={handlePage}
           page={page}

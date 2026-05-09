@@ -8,30 +8,26 @@ import loginDark from "../images/login-dark.png";
 import loginWhite from "../images/login-white.png";
 
 //tools
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useAuthUser, useSignOut } from "react-auth-kit";
 import { useNavigate } from "react-router-dom";
 
 //components
 import DarkMode from "../components/DarkMode";
 import { useTheme } from "../hooks/useTheme";
+import LanguageSwitcher from "../components/LanguageSwitcher";
+import { useI18n } from "../i18n/LanguageContext";
 
 function Header() {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const { theme, handleSetTheme } = useTheme();
+  const { t } = useI18n();
 
   const handleToggle = () => {
     setIsCollapsed((prevState) => !prevState);
     console.log(isCollapsed);
   };
-  
-
-  // const [isDarkMode, setIsDarkMode] = useState(true);
-
-  // const darkModeHandler = (darkModeToggle) => {
-  //   setIsDarkMode(darkModeToggle);
-  // };
 
   const { darkIcon, darkLogin } = useMemo(() => {
     console.log({theme})
@@ -45,8 +41,7 @@ function Header() {
       }
   }, [theme]) 
   
-  let loginClass = isCollapsed ? styles.Login : styles.toggledLogin;
-  let darkNavbar = theme === "dark" ? `navbar-dark bg-${theme}` : "navbar bg-light";
+  let darkNavbar = theme === "dark" ? "navbar-dark bg-dark" : "navbar-light bg-light";
 
 
   const auth = useAuthUser();
@@ -64,32 +59,28 @@ function Header() {
   
     if (!user || !user.email) {
       return (
-        <div>
-          <a className={`nav-link ${loginClass}`} href="/login">
-            <img
-              src={darkLogin}
-              className={styles.LoginImg}
-              width="40"
-              alt="Logo"
-            />
-            Register or Login
-          </a>
-        </div>
+        <a className={`nav-link ${styles.Login}`} href="/login">
+          <img
+            src={darkLogin}
+            className={styles.LoginImg}
+            width="40"
+            alt="Logo"
+          />
+          {t('nav.registerOrLogin')}
+        </a>
       );
     } else {
       return (
-        <div>
-          <span className={`nav-link ${loginClass}`}>
-            <img
-              src={darkLogin}
-              className={styles.LoginImg}
-              width="40"
-              alt="Logo"
-            />
-            Welcome, {user.email}!
-            <button className={styles.signOut} onClick={logOut}>Log off</button>
-          </span>
-        </div>
+        <span className={`nav-link ${styles.Login}`}>
+          <img
+            src={darkLogin}
+            className={styles.LoginImg}
+            width="40"
+            alt="Logo"
+          />
+          {t('nav.welcome')} {user.email}!
+          <button className={styles.signOut} onClick={logOut}>{t('nav.logOff')}</button>
+        </span>
       );
     }
   };
@@ -98,70 +89,50 @@ function Header() {
     <nav className={`navbar navbar-expand-lg ${darkNavbar} ps-3 pe-3 fixed-top`}>
       <div className="container-fluid">
         <a className="navbar-brand" href="/">
-          <span>
-            <img
-              src={darkIcon}
-              className={styles.title}
-              width="40"
-              alt="Logo"
-            />
-          </span>
+          <img src={darkIcon} className={styles.title} width="40" alt="Logo" />
         </a>
 
         <button className="navbar-toggler" type="button" onClick={handleToggle}>
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        <div
-          className={`collapse navbar-collapse ${
-            isCollapsed ? "hide" : "show"
-          }`}
-        >
-          <ul className="navbar-nav mr-auto align-items-center">
-            <li className="nav-item active">
-              <a className="nav-link" href="/collection">
-                Collection
-              </a>
+        <div className={`collapse navbar-collapse ${isCollapsed ? "hide" : "show"}`}>
+          {/* Left nav links */}
+          <ul className="navbar-nav me-auto align-items-lg-center">
+            <li className="nav-item">
+              <a className="nav-link" href="/collection">{t('nav.collection')}</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="/decks">
-                Decks
-              </a>
-            </li>
-            
-            <li className="nav-item">
-              <a className="nav-link" href="/about">
-                About Us
-              </a>
+              <a className="nav-link" href="/decks">{t('nav.decks')}</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="/contact">
-                Contact
+              <a className="nav-link" href="/about">{t('nav.about')}</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" href="/contact">{t('nav.contact')}</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" id={styles.off} href="/wishlist">
+                {t('nav.wishlist')} <span className={styles.coming}>{t('nav.comingSoon')}</span>
               </a>
             </li>
             <li className="nav-item">
               <a className="nav-link" id={styles.off} href="/wishlist">
-                Wishlist <span className={styles.coming}>coming soon</span>
+                {t('nav.aiDeck')} <span className={styles.coming}>{t('nav.comingSoon')}</span>
               </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" id={styles.off} href="/wishlist">
-                AI Deck Builder <span className={styles.coming}>coming soon</span>
-              </a>
-            </li>
-            <li className="nav-item">
-              {isLoggedIn()}
-            </li>
-            <li className="nav-item">
-              <span className="nav-link">
-                <DarkMode
-                  navbarToggler={isCollapsed}
-                  theme={theme}
-                  handleSetTheme={handleSetTheme}
-                />
-              </span>
             </li>
           </ul>
+
+          {/* Right controls — login · dark mode · flags */}
+          <div className={styles.rightControls}>
+            {isLoggedIn()}
+            <DarkMode
+              navbarToggler={isCollapsed}
+              theme={theme}
+              handleSetTheme={handleSetTheme}
+            />
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
     </nav>

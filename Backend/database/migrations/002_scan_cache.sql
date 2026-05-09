@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS scan_cache (
   oracle_id  VARCHAR(36)  NOT NULL,
   hits       INT          NOT NULL DEFAULT 1,
   last_seen  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (fragment(191), oracle_id)
+  PRIMARY KEY (fragment(191), oracle_id),
+  KEY scan_cache_fragment_idx (fragment(191))
 );
-
-CREATE INDEX scan_cache_fragment_idx ON scan_cache (fragment(191));

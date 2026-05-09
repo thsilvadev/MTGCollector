@@ -4,11 +4,14 @@ import styles from "../styles/Decks.module.css";
 //components
 import PrevNext from "../components/PrevNext";
 import Deck from "../components/Deck";
+import AppModal from "../components/AppModal";
 
 //tools
 import { React, useState, useEffect } from "react";
 import Axios from "axios";
 import { useAuthHeader } from "react-auth-kit";
+import { toast } from 'react-toastify';
+import { useI18n } from '../i18n/LanguageContext';
 
 //imgs
 import newDeck from "../images/newDeck.png";
@@ -17,6 +20,8 @@ function Decks() {
   const [decks, setDecks] = useState([]);
   const [page, setPage] = useState(0);
   const [refresh, setRefresh] = useState(false);
+  const [modal, setModal] = useState(null);
+  const { t } = useI18n();
 
   const handlePage = (pageData) => {
     setPage(pageData);
@@ -63,27 +68,31 @@ function Decks() {
 
   const createDeck = () => {
     if (decks.length >= 15) {
-      alert(
-        "You have reached the maximum number of decks. Please delete some to free space or donate for 100 deck slots."
-      );
+      toast.warning(t('deck.maxDecks'));
     } else {
-      let deckName = prompt(`What is the name of the deck?`, "Default");
-      if (deckName !== null) {
-        let deckDescription = prompt(`Describe your deck`, "...");
-        if (deckDescription !== null) {
+      setModal({
+        type: 'deck-edit',
+        title: t('deck.createTitle'),
+        deckName: '',
+        deckDesc: '',
+        confirmLabel: t('deck.createBtn'),
+        onCancel: () => setModal(null),
+        onConfirm: (deckName, deckDescription) => {
+          setModal(null);
+          if (!deckName) return;
           Axios.post(
             `${window.name}/decks`,
             {
               name: deckName,
               description: deckDescription,
-              color: "",
+              color: '',
               card_count: 0,
               id_deck: null,
             },
             config
           ).then(() => toggleRefresh());
-        }
-      }
+        },
+      });
     }
   };
 
@@ -115,8 +124,9 @@ function Decks() {
 
   return (
     <div className={styles.Background}>
+      {modal && <AppModal {...modal} />}
       <div className="container">
-        <h1 className={styles.title}>Decks</h1>
+        <h1 className={styles.title}>{t('decks.title')}</h1>
         <div className={`row ${mobile}`}>
           <div className="col-12 col-sm-6 col-lg-4 col-xl-3">
             <div className={styles.addDeck} onClick={createDeck}>

@@ -264,4 +264,35 @@ module.exports = {
       return res.status(500).json({ error: 'Failed to delete card from collection.' });
     }
   },
+
+  // Delete N copies of a card (by Scryfall UUID) from the user's collection,
+  // removing the rows with the highest id_collection values first.
+  async deleteByCardId(req, res) {
+    const now           = new Date();
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+    const { card_id }   = req.params;
+    const count         = Math.max(1, parseInt(req.query.count, 10) || 1);
+    const user_id       = req.userId;
+
+    try {
+      const rows = await knex('collection')
+        .select('id_collection')
+        .where({ user_id, card_id })
+        .orderBy('id_collection', 'desc')
+        .limit(count);
+
+      if (!rows.length) {
+        return res.status(404).json({ error: 'Card not found in collection.' });
+      }
+
+      const ids = rows.map(r => r.id_collection);
+      await knex('collection').whereIn('id_collection', ids).del();
+
+      console.log(`Bulk delete of ${ids.length}x "${card_id}" for user${user_id} by ${req.ip} at ${formattedDate}`);
+      return res.json({ deleted: ids.length });
+    } catch (error) {
+      console.error(`IP: ${req.ip}, Time: ${formattedDate}, card_id: ${card_id} ERROR:`, error);
+      return res.status(500).json({ error: 'Failed to delete cards from collection.' });
+    }
+  },
 };

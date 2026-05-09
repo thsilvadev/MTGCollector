@@ -3,9 +3,9 @@
 }
 
 .Login {
-    position: absolute;
-    right: 93px;
-    top: 11px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
 .LoginImg {
@@ -69,4 +69,21 @@
 
 #off {
     pointer-events: none;
+}
+
+.rightControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .rightControls {
+        width: auto;
+        justify-content: flex-end;
+    }
 }

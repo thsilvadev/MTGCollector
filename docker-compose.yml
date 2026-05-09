@@ -7,8 +7,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE:      ${MYSQL_DATABASE:-mtgchest}
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./Backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -25,6 +23,8 @@ services:
   backend:
     build: ./Backend
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
       HOST:           db
       PORT:           3000
@@ -32,13 +32,16 @@ services:
       DB_USER:        root
       PASSWORD:       ${MYSQL_ROOT_PASSWORD}
       DATABASE:       ${MYSQL_DATABASE:-mtgchest}
-      AUTH_TOKEN_TAG: ${JWT_SECRET}
+      AUTH_TOKEN_TAG:   ${JWT_SECRET}
       NOREPLY_PASSWORD: ${NOREPLY_PASSWORD:-}
+      PYTHON_OCR_URL:   http://python-ocr:8001
     volumes:
       - backend_data:/app/data   # persists set icons index across deploys
     depends_on:
       db:
         condition: service_healthy
+      python-ocr:
+        condition: service_started
     networks:
       - app_network
 
@@ -53,6 +56,18 @@ services:
       - "80:80"
     depends_on:
       - backend
+    networks:
+      - app_network
+
+  # ── Python OCR microservice ─────────────────────────────────────────────────
+  python-ocr:
+    build: ./python-ocr
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      OMP_NUM_THREADS: "4"
+    mem_limit: 3g
     networks:
       - app_network
 

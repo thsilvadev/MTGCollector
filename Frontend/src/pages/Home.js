@@ -17,6 +17,8 @@ import React, { useState, useEffect } from "react";
 
 import { useAuthHeader } from "react-auth-kit";
 
+import { useI18n } from "../i18n/LanguageContext";
+
 import { toast } from "react-toastify";
 
 //imgs
@@ -25,6 +27,7 @@ import openedchest from "../images/opened-chest.png";
 import floatingCards from "../images/cards.png";
 
 function Home() {
+  const { t } = useI18n();
   //all cards
   const [cards, setCards] = useState([]);
 
@@ -175,9 +178,8 @@ function Home() {
   }, []);
 
   const guideChangesWithModal = isWideScreen
-    ? `Click on cards to add to your collection, or drag 'em to the side bar
-    on the right side.`
-    : `Click on cards to add to your collection.`;
+    ? t('home.guide.modal')
+    : t('home.guide.noModal');
 
   // Function to handle scroll event
 
@@ -195,7 +197,7 @@ function Home() {
   }, []);
 
   //Toastify
-  const notify = () => toast("Card was deleted from your collection!");
+  const notify = () => toast(t('toast.cardDeleted'));
 
   return (
     <>
@@ -230,35 +232,32 @@ function Home() {
 
         <p className={styles.Paragraph}>
           {" "}
-          MTG Chest is the perfect solution for organizing your{" "}
-          <i>Magic: The Gathering</i> cards. <br/>Here you'll be able to:
+          {t('home.intro')}{" "}
+          <i>Magic: The Gathering</i> {t('home.intro2')}
         </p>
         <ul className={styles.list}>
           <li className={styles.listItem}>
-            Mirror your physical cards by adding cards to your collection;
+            {t('home.li1')}
           </li>
           <li className={styles.listItem}>
-            Build multiple decks with the same cards that you have so you don't
-            need to take notes on shared cards;
-          </li>
-
-          <li className={styles.listItem}>
-            Fill your wishlist and write a description on each card to remember
-            their role in your malevolent strategies;
+            {t('home.li2')}
           </li>
 
           <li className={styles.listItem}>
-            ... and much more! All this with actual 3rd millenium user
-            interface! We keep it clean, we keep it safe.
+            {t('home.li3')}
+          </li>
+
+          <li className={styles.listItem}>
+            {t('home.li4')}
           </li>
         </ul>
 
         <h1 className={styles.h1}>
-          All{" "}
+          {t('home.h1')}{" "}
           <span className={styles.MTG}>
             <i>Magic: The Gathering</i>
           </span>{" "}
-          cards
+          {t('home.h1b')}
         </h1>
         <SearchContainer
           baseOfSearch="AllCards"

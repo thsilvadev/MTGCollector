@@ -26,6 +26,7 @@ services:
       SMTP_PASS:               ${SMTP_PASS}
       EMAIL_FROM:              ${EMAIL_FROM}
       EMAIL_TO:                ${EMAIL_TO}
+      PYTHON_OCR_URL:          http://python-ocr:8001
     ports: []   # not exposed to host — Caddy reaches it via Docker network
 
   # ── Caddy reverse proxy (auto HTTPS via Let's Encrypt) ───────────────────────
@@ -47,6 +48,16 @@ services:
   frontend:
     profiles:
       - disabled  # exclude from production deploy
+
+  # ── Python OCR microservice ─────────────────────────────────────────────────
+  python-ocr:
+    build: ./python-ocr
+    restart: unless-stopped
+    environment:
+      OMP_NUM_THREADS: "4"
+    mem_limit: 3g
+    networks:
+      - app_network
 
 volumes:
   caddy_data:

@@ -2,22 +2,25 @@ import { React } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import Axios from "axios";
-import * as yup from "yup"; //yup needs to be imported like that or destructured for specific resources.
+import * as yup from "yup";
 import styles from "../styles/ForgotPassword.module.css";
+import { toast } from 'react-toastify';
+import { useI18n } from '../i18n/LanguageContext';
 
 const ResetConfirmation = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
-  const { resetToken } = useParams();  
+  const { resetToken } = useParams();
 
   const validationPassword = yup.object({
     password: yup
       .string()
-      .min(8, "Password must be 8 characters minimum")
-      .required("Password Required"),
+      .min(8, t('login.passwordMin'))
+      .required(t('login.passwordRequired')),
     confirmPassword: yup
       .string()
-      .oneOf([yup.ref('password')], 'Passwords must match').required('Confirm password'),
+      .oneOf([yup.ref('password')], t('login.passwordsMustMatch')).required(t('login.confirmPasswordReq')),
   });
 
   const handleSubmit = (values) => {
@@ -27,13 +30,13 @@ const ResetConfirmation = () => {
       })
         .then((response) => {
           if (response.data.message) {
-            alert(response.data.message);
+            toast.success(response.data.message);
             navigate("/login");
           }
         })
         .catch((error) => {
           console.error(error);
-          alert(error.response.data.error);
+          toast.error(error.response?.data?.error || 'An error occurred.');
         });
     }
   };
@@ -43,7 +46,7 @@ const ResetConfirmation = () => {
       className={styles.loginContainer}
       onLoad={window.scrollTo({ top: 0, behavior: "smooth" })}
     >
-      <h1 className={styles.title}>Please, enter your new password:</h1>
+      <h1 className={styles.title}>{t('reset.title')}</h1>
       <Formik
         initialValues={{}}
         onSubmit={handleSubmit}
@@ -54,7 +57,7 @@ const ResetConfirmation = () => {
             <Field
               name="password"
               className={styles.formField}
-              placeholder="Password"
+              placeholder={t('login.passwordPlaceholder')}
               type="password"
             />
 
@@ -69,7 +72,7 @@ const ResetConfirmation = () => {
             <Field
               name="confirmPassword"
               className={styles.formField}
-              placeholder="Confirm Password"
+              placeholder={t('login.confirmPlaceholder')}
               type="password"
             />
 
@@ -81,7 +84,7 @@ const ResetConfirmation = () => {
           </div>
 
           <button className={styles.button} type="submit">
-            Submit
+            {t('reset.submit')}
           </button>
         </Form>
       </Formik>

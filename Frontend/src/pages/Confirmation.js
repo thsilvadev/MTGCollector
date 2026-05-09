@@ -1,6 +1,7 @@
 import { React, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Confirmation = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const Confirmation = () => {
         confirmed: "confirmed",
       }).then((response) => {
         if (response.data.message){
-            alert(response.data.message);
+            toast.success(response.data.message);
             navigate("/login");
         }
         }).catch((error) => {

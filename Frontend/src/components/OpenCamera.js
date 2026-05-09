@@ -1,28 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useAuthHeader } from 'react-auth-kit';
 
-// ── Text / content presence detection ───────────────────────────────────────
-// For a name strip (not a full card), we check contrast variance.
-// A blank/uniform frame has low stddev; a name strip with text has higher.
-function hasText(canvas) {
-  const ctx  = canvas.getContext('2d');
-  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const pixels = data.length / 4;
-  let sum = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
-  }
-  const mean = sum / pixels;
-  let variance = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    const lum = (data[i] + data[i + 1] + data[i + 2]) / 3;
-    variance += (lum - mean) ** 2;
-  }
-  const stddev = Math.sqrt(variance / pixels);
-  console.log(`[Scanner] Strip stddev: ${stddev.toFixed(1)} (need >20 to pass)`);
-  return stddev > 20;
-}
-
 // ── Frame stability config ───────────────────────────────────────────────────
 const STABILITY_THRESHOLD = 15;  // max average pixel difference to be considered "stable"
 const STABILITY_FRAMES    = 3;   // consecutive stable frames required before scanning
@@ -45,15 +23,6 @@ const S = {
     color: '#fff', fontSize: 26, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     lineHeight: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.6)', pointerEvents: 'auto',
-  },
-  reticleBase: {
-    position: 'absolute', top: '50%', left: '50%',
-    transform: 'translate(-50%, -50%)',
-    // Name strip: wide and short
-    width: '92vw',
-    height: '18vh',
-    borderRadius: 8, pointerEvents: 'none',
-    transition: 'border-color 0.3s',
   },
   statusBar: {
     position: 'absolute', bottom: 40, left: 0, right: 0,
@@ -149,17 +118,55 @@ function OpenCamera({ close }) {
 
   const [status, setStatus]           = useState('initializing');
   // 'initializing' | 'scanning' | 'processing' | 'result' | 'error'
+  const [cardDetected, setCardDetected] = useState(false); // polygon visible, no result yet
   const [candidates, setCandidates]   = useState([]);
   const [nextPage, setNextPage]       = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [centeredIdx, setCenteredIdx] = useState(0);
   const [ocrFragment, setOcrFragment] = useState(null);
   const [scanOracleId, setScanOracleId] = useState(null);
+  const [polygon, setPolygon]         = useState(null);
   const [devices, setDevices]         = useState([]);
   const [deviceIndex, setDeviceIndex] = useState(0);
-  const carouselRef = useRef(null);
+  const carouselRef      = useRef(null);
+  const overlayCanvasRef = useRef(null);
 
   const authHeader = useAuthHeader();
+
+  // Draws the detected card polygon over the video using CSS cover-scale math.
+  // pts: [[x,y], ...] in native video coordinates. Pass null to clear.
+  const drawPolygon = useCallback((pts) => {
+    const canvas = overlayCanvasRef.current;
+    const video  = videoRef.current;
+    if (!canvas || !video) return;
+
+    const displayW = canvas.width  = window.innerWidth;
+    const displayH = canvas.height = window.innerHeight;
+    const videoW   = video.videoWidth;
+    const videoH   = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, displayW, displayH);
+
+    if (!pts || pts.length !== 4) return;
+
+    const scale   = Math.max(displayW / videoW, displayH / videoH);
+    const offsetX = (displayW - videoW * scale) / 2;
+    const offsetY = (displayH - videoH * scale) / 2;
+
+    const toDisplay = ([x, y]) => [x * scale + offsetX, y * scale + offsetY];
+    const mapped = pts.map(toDisplay);
+
+    ctx.beginPath();
+    ctx.moveTo(...mapped[0]);
+    mapped.slice(1).forEach(p => ctx.lineTo(...p));
+    ctx.closePath();
+    ctx.strokeStyle = '#00e676';
+    ctx.lineWidth   = 3;
+    ctx.shadowColor = '#00e676';
+    ctx.shadowBlur  = 8;
+    ctx.stroke();
+  }, []);
 
   // ── Camera start (called on mount and on camera switch) ────────────────────
   const startCamera = useCallback(async (deviceId = null) => {
@@ -218,6 +225,8 @@ function OpenCamera({ close }) {
       clearInterval(intervalRef.current);
       streamRef.current?.getTracks().forEach(t => t.stop());
       streamRef.current = null;
+      const ctx = overlayCanvasRef.current?.getContext('2d');
+      ctx?.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
     };
   }, [startCamera]);
 
@@ -238,56 +247,14 @@ function OpenCamera({ close }) {
       const videoW = video.videoWidth;
       const videoH = video.videoHeight;
 
-      // ── Crop to the name-strip reticle before sending ───────────────────────
-      // Reticle CSS: width:92vw, height:13vh, centered (top:50%, translate(-50%,-50%))
-      const displayW = window.innerWidth;
-      const displayH = window.innerHeight;
-      const scale    = Math.max(displayW / videoW, displayH / videoH); // cover scale
-      const offsetX  = (displayW - videoW * scale) / 2;
-      const offsetY  = (displayH - videoH * scale) / 2;
+      // Capture full frame — Python OCR handles card detection and perspective warp
+      canvas.width  = videoW;
+      canvas.height = videoH;
+      canvas.getContext('2d').drawImage(video, 0, 0);
 
-      const nameDisplayW    = 0.92 * displayW;
-      const nameDisplayH    = 0.18 * displayH;
-      const nameDisplayLeft = (displayW - nameDisplayW) / 2;
-      const nameDisplayTop  = (displayH - nameDisplayH) / 2;
-
-      // Convert to video native coordinates
-      const srcLeft = (nameDisplayLeft - offsetX) / scale;
-      const srcTop  = (nameDisplayTop  - offsetY) / scale;
-      const srcW    = nameDisplayW / scale;
-      const srcH    = nameDisplayH / scale;
-
-      const cl = Math.max(0, Math.round(srcLeft));
-      const ct = Math.max(0, Math.round(srcTop));
-      const cw = Math.min(videoW - cl, Math.round(srcW));
-      const ch = Math.min(videoH - ct, Math.round(srcH));
-      const validCrop = cw > 80 && ch > 80;
-
-      if (validCrop) {
-        canvas.width  = cw;
-        canvas.height = ch;
-        canvas.getContext('2d').drawImage(video, cl, ct, cw, ch, 0, 0, cw, ch);
-        console.log(`[Scanner] Reticle crop: x=${cl}, y=${ct}, ${cw}×${ch} (from ${videoW}×${videoH} frame)`);
-      } else {
-        canvas.width  = videoW;
-        canvas.height = videoH;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        console.warn(`[Scanner] Reticle crop failed — sending full ${videoW}×${videoH} frame`);
-      }
-
-      // Content check — skip if the strip looks blank/uniform
-      if (!hasText(canvas)) {
-        console.log('[Scanner] Strip looks blank — skipping (center name bar in the reticle)');
-        setStatus('scanning');
-        isScanningRef.current = false;
-        return;
-      }
-
-      // PNG for lossless quality — JPEG artifacts hurt OCR significantly
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-      console.log(`[Scanner] Sending ${canvas.width}×${canvas.height} PNG to /scan...`);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.7));
       const form = new FormData();
-      form.append('frame', blob, 'frame.png');
+      form.append('frame', blob, 'frame.jpg');
 
       const res = await fetch(`${window.name}/scan`, {
         method:  'POST',
@@ -305,6 +272,18 @@ function OpenCamera({ close }) {
       console.log(`[Scanner] candidates: ${data.candidates?.length ?? 0}`,
         data.warnings?.length ? `| warnings: ${data.warnings.join('; ')}` : '');
 
+      // Always draw polygon if the Python service detected card borders,
+      // even when OCR hasn't produced a confident result yet.
+      if (data.polygon) {
+        setPolygon(data.polygon);
+        drawPolygon(data.polygon);
+        setCardDetected(true);
+      } else {
+        setPolygon(null);
+        drawPolygon(null);
+        setCardDetected(false);
+      }
+
       if (!data.candidates?.length) {
         console.log('[Scanner] No candidates — back to scanning');
         setStatus('scanning');
@@ -317,6 +296,9 @@ function OpenCamera({ close }) {
       setCenteredIdx(0);
       setOcrFragment(data.ocrFragment || null);
       setScanOracleId(data.oracleId || null);
+      setCardDetected(false);
+      setPolygon(data.polygon || null);
+      drawPolygon(data.polygon || null);
       setStatus('result');
     } catch (err) {
       console.error('[Scanner] Scan error:', err);
@@ -324,7 +306,7 @@ function OpenCamera({ close }) {
     } finally {
       isScanningRef.current = false;
     }
-  }, [authHeader]);
+  }, [authHeader, drawPolygon]);
 
   // ── Frame stability loop ────────────────────────────────────────────────────
   useEffect(() => {
@@ -393,16 +375,22 @@ function OpenCamera({ close }) {
     setNextPage(null);
     setOcrFragment(null);
     setScanOracleId(null);
+    setCardDetected(false);
+    setPolygon(null);
+    drawPolygon(null);
     setStatus('scanning');
-  }, [authHeader, candidates, centeredIdx, ocrFragment, scanOracleId]);
+  }, [authHeader, candidates, centeredIdx, drawPolygon, ocrFragment, scanOracleId]);
 
   const handleDismiss = useCallback(() => {
     setCandidates([]);
     setNextPage(null);
     setOcrFragment(null);
     setScanOracleId(null);
+    setCardDetected(false);
+    setPolygon(null);
+    drawPolygon(null);
     setStatus('scanning');
-  }, []);
+  }, [drawPolygon]);
 
   const handleLoadMore = useCallback(async () => {
     if (!nextPage || loadingMore) return;
@@ -453,20 +441,25 @@ function OpenCamera({ close }) {
   // ── Derived values ─────────────────────────────────────────────────────────
   const STATUS_MSG = {
     initializing: 'Starting camera...',
-    scanning:     'Center the card name in the strip and hold steady',
+    scanning:     cardDetected ? 'Card detected — hold steady...' : 'Point the camera at a Magic card',
     processing:   '🔍 Identifying...',
     error:        'Camera unavailable — check browser permissions',
-  };
-
-  const reticleStyle = {
-    ...S.reticleBase,
-    border: `2px solid ${status === 'processing' ? '#f0c040' : 'rgba(255,255,255,0.6)'}`,
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={S.overlay}>
       <video ref={videoRef} style={S.video} playsInline muted autoPlay />
+      {/* Overlay canvas — draws the detected card polygon */}
+      <canvas
+        ref={overlayCanvasRef}
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
       <canvas ref={diffCanvasRef}    style={{ display: 'none' }} />
       <canvas ref={captureCanvasRef} style={{ display: 'none' }} />
 
@@ -481,11 +474,6 @@ function OpenCamera({ close }) {
           <button style={S.switchBtn} onClick={handleSwitchCamera} title={`Camera ${deviceIndex + 1}/${devices.length}`}>
             🔄
           </button>
-        )}
-
-        {/* Aiming reticle */}
-        {(status === 'scanning' || status === 'processing') && (
-          <div style={reticleStyle} />
         )}
 
         {/* Status message */}

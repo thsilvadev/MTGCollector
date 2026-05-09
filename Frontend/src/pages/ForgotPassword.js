@@ -1,11 +1,18 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import Axios from "axios";
-import * as yup from "yup"; //yup needs to be imported like that or destructured for specific resources.
+import * as yup from "yup";
 import styles from "../styles/ForgotPassword.module.css";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
+import { useI18n } from '../i18n/LanguageContext';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
+
+  const validationEmail = yup.object({
+    email: yup.string().email(t('login.notEmail')).required(t('login.emailRequired')),
+  });
 
   const handleSubmit = (values) => {
     Axios.post(`${window.name}/reset`, {
@@ -15,27 +22,23 @@ const ForgotPassword = () => {
         // Check if the response contains an error property
         if (response.data.unregistered) {
           // Handle the error case
-          alert(`Error: ${response.data.unregistered}`);
+          toast.error(`Error: ${response.data.unregistered}`);
         } else {
           // Handle the success case
-          alert(response.data.message);
+          toast.success(response.data.message);
           navigate("/login");
         }
       })
       .catch((error) => {
         // Handle any network or other errors
         console.error("An error occurred:", error);
-        alert("An error occurred while attempting to register.");
+        toast.error("An error occurred while attempting to register.");
       });
   };
 
-  const validationEmail = yup.object({
-    email: yup.string().email("Not an email").required("Email required"),
-  });
-
   return (
     <div className={styles.loginContainer} onLoad={window.scrollTo({ top: 0, behavior: "smooth" })}>
-      <h1 className={styles.title}>Please, enter your email:</h1>
+      <h1 className={styles.title}>{t('forgot.title')}</h1>
       <Formik
         initialValues={{}}
         onSubmit={handleSubmit}
@@ -46,7 +49,7 @@ const ForgotPassword = () => {
             <Field
               name="email"
               className={styles.formField}
-              placeholder="Email"
+              placeholder={t('login.emailPlaceholder')}
             />
 
             <ErrorMessage
@@ -57,7 +60,7 @@ const ForgotPassword = () => {
           </div>
 
           <button className={styles.button} type="submit">
-            Submit
+            {t('forgot.submit')}
           </button>
         </Form>
       </Formik>
