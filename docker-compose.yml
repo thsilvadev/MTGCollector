@@ -23,6 +23,9 @@ services:
   backend:
     build: ./Backend
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "3000:3000"
     environment:

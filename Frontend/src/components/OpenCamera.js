@@ -1,11 +1,15 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useAuthHeader } from 'react-auth-kit';
 
-// ── Frame stability config ───────────────────────────────────────────────────
-const STABILITY_THRESHOLD = 15;  // max average pixel difference to be considered "stable"
-const STABILITY_FRAMES    = 3;   // consecutive stable frames required before scanning
-const SAMPLE_INTERVAL_MS  = 300; // ms between frame diff samples
-const SCAN_COOLDOWN_MS    = 3000; // minimum ms between scans
+// ── Detection config ─────────────────────────────────────────────────────────
+// /detect fires continuously regardless of camera motion. Stability is measured
+// by the polygon centroid position across frames, not pixel-diff of the whole frame.
+// This works naturally with handheld tremor: the hand moves the card AND the
+// camera together, so the centroid stays roughly fixed even while the frame shifts.
+const DETECT_INTERVAL_MS          = 400;  // ms between /detect polls
+const POLYGON_STABLE_FRAMES       = 3;    // consecutive detections within drift limit → trigger /scan
+const POLYGON_STABLE_MAX_DRIFT_PX = 30;  // max centroid drift in 480px-wide space (~9% card width)
+const SCAN_COOLDOWN_MS            = 3000; // minimum ms between /scan calls
 
 // ── Inline styles ─────────────────────────────────────────────────────────────
 const S = {
@@ -118,6 +122,7 @@ function OpenCamera({ close }) {
   const isMountedRef        = useRef(true);
   const abortControllerRef  = useRef(null);
   const cardDetectedRef     = useRef(false); // mirrors cardDetected state for use inside interval
+  const polygonHistoryRef   = useRef([]);    // recent polygon centroids [cx,cy] in 480px space
 
   const [status, setStatus]           = useState('initializing');
   // 'initializing' | 'scanning' | 'processing' | 'result' | 'error'
@@ -348,101 +353,80 @@ function OpenCamera({ close }) {
     }
   }, [authHeader, drawPolygon]);
 
-  // ── Frame stability loop ────────────────────────────────────────────────────
+  // ── Card detection loop ───────────────────────────────────────────────────
+  // Polls /detect at a fixed interval WITHOUT requiring frame pixel-stability.
+  // Stability is inferred from the card polygon centroid: if the centroid stays
+  // within POLYGON_STABLE_MAX_DRIFT_PX across POLYGON_STABLE_FRAMES consecutive
+  // detections, the card is "held steadily enough" and /scan fires.
   useEffect(() => {
     if (status !== 'scanning') {
       clearInterval(intervalRef.current);
       return;
     }
 
-    let detectTickRef = 0;
-
     intervalRef.current = setInterval(() => {
-      const video  = videoRef.current;
-      const canvas = diffCanvasRef.current;
-      if (!video || !canvas || video.readyState < 2) return;
+      const video     = videoRef.current;
+      const capCanvas = captureCanvasRef.current;
+      if (!video || !capCanvas || video.readyState < 2 || isScanningRef.current) return;
 
-      const ctx = canvas.getContext('2d');
-      canvas.width  = 160;
-      canvas.height = 120;
-      ctx.drawImage(video, 0, 0, 160, 120);
-      const { data } = ctx.getImageData(0, 0, 160, 120);
+      const DETECT_W = 480;
+      const DETECT_H = Math.round(video.videoHeight * (DETECT_W / video.videoWidth));
+      capCanvas.width  = DETECT_W;
+      capCanvas.height = DETECT_H;
+      capCanvas.getContext('2d').drawImage(video, 0, 0, DETECT_W, DETECT_H);
 
-      if (prevFrameRef.current) {
-        let diff = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          diff += Math.abs(data[i] - prevFrameRef.current[i]);
-        }
-        const avgDiff = diff / (data.length / 4);
+      capCanvas.toBlob(blob => {
+        if (!blob || !isMountedRef.current || isScanningRef.current) return;
+        const form = new FormData();
+        form.append('frame', blob, 'frame.jpg');
+        fetch(`${window.name}/detect`, {
+          method:  'POST',
+          headers: { authorization: authHeader() },
+          body:    form,
+          signal:  abortControllerRef.current?.signal,
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            if (!isMountedRef.current) return;
 
-        if (avgDiff < STABILITY_THRESHOLD) {
-          stableCountRef.current++;
-          console.log(`[Scanner] Frame diff: ${avgDiff.toFixed(1)} (stable ${stableCountRef.current}/${STABILITY_FRAMES})`);
-          if (stableCountRef.current >= STABILITY_FRAMES) {
-            if (cardDetectedRef.current) {
-              // Card confirmed by /detect — go ahead and identify
-              stableCountRef.current = 0;
-              console.log('[Scanner] Stability + card detected — triggering scan');
-              captureAndScan();
-            } else {
-              // Stable but no card yet — hold at threshold, wait for /detect
-              stableCountRef.current = STABILITY_FRAMES;
-            }
-          }
-        } else {
-          if (stableCountRef.current > 0) console.log(`[Scanner] Movement detected (diff: ${avgDiff.toFixed(1)}) — reset stability`);
-          stableCountRef.current = 0;
-          cardDetectedRef.current = false;
-          drawPolygon(null);
-          setCardDetected(false);
-        }
-      }
+            if (d?.detected && d.polygon) {
+              // Scale polygon to native video coordinates and draw overlay
+              const scaleX = video.videoWidth  / DETECT_W;
+              const scaleY = video.videoHeight / DETECT_H;
+              const scaled = d.polygon.map(([x, y]) => [x * scaleX, y * scaleY]);
+              drawPolygon(scaled);
+              setCardDetected(true);
+              cardDetectedRef.current = true;
 
-      // Every 4th tick (~1.2s), only when frame is stable and not already scanning,
-      // run a fast /detect using a medium-res frame (480px wide).
-      detectTickRef++;
-      if (detectTickRef % 2 === 0 && !isScanningRef.current && stableCountRef.current > 0) {
-        const capCanvas = captureCanvasRef.current;
-        if (capCanvas) {
-          const DETECT_W = 480;
-          const DETECT_H = Math.round(video.videoHeight * (DETECT_W / video.videoWidth));
-          capCanvas.width  = DETECT_W;
-          capCanvas.height = DETECT_H;
-          capCanvas.getContext('2d').drawImage(video, 0, 0, DETECT_W, DETECT_H);
-          capCanvas.toBlob(blob => {
-            if (!blob || !isMountedRef.current) return;
-            const form = new FormData();
-            form.append('frame', blob, 'frame.jpg');
-            fetch(`${window.name}/detect`, {
-              method: 'POST',
-              headers: { authorization: authHeader() },
-              body: form,
-              signal: abortControllerRef.current?.signal,
-            })
-              .then(r => r.ok ? r.json() : null)
-              .then(d => {
-                if (!isMountedRef.current || !d) return;
-                if (d.detected && d.polygon) {
-                  // Scale polygon from 480px-wide frame back to native video coords
-                  const scaleX = video.videoWidth  / DETECT_W;
-                  const scaleY = video.videoHeight / DETECT_H;
-                  const scaled = d.polygon.map(([x, y]) => [x * scaleX, y * scaleY]);
-                  drawPolygon(scaled);
-                  setCardDetected(true);
-                  cardDetectedRef.current = true;
-                } else {
-                  drawPolygon(null);
-                  setCardDetected(false);
-                  cardDetectedRef.current = false;
+              // Track centroid in 480px space for drift comparison
+              const cx = d.polygon.reduce((s, p) => s + p[0], 0) / d.polygon.length;
+              const cy = d.polygon.reduce((s, p) => s + p[1], 0) / d.polygon.length;
+              const hist = polygonHistoryRef.current;
+              hist.push([cx, cy]);
+              if (hist.length > POLYGON_STABLE_FRAMES) hist.shift();
+
+              // Fire /scan when centroid has been stable enough for N consecutive frames
+              if (!isScanningRef.current && hist.length >= POLYGON_STABLE_FRAMES) {
+                const mx = hist.reduce((s, c) => s + c[0], 0) / hist.length;
+                const my = hist.reduce((s, c) => s + c[1], 0) / hist.length;
+                const isStable = hist.every(([x, y]) => Math.hypot(x - mx, y - my) <= POLYGON_STABLE_MAX_DRIFT_PX);
+                if (isStable) {
+                  console.log('[Scanner] Polygon centroid stable — triggering scan');
+                  polygonHistoryRef.current = [];
+                  captureAndScan();
                 }
-              })
-              .catch(() => {});
-          }, 'image/jpeg', 0.7);
-        }
-      }
-
-      prevFrameRef.current = new Uint8ClampedArray(data);
-    }, SAMPLE_INTERVAL_MS);
+              }
+            } else {
+              // No card in frame — clear overlay and reset centroid history
+              drawPolygon(null);
+              setCardDetected(false);
+              cardDetectedRef.current = false;
+              polygonHistoryRef.current = [];
+            }
+          })
+          .catch(() => {});
+      }, 'image/jpeg', 0.75);
+    }, DETECT_INTERVAL_MS);
 
     return () => clearInterval(intervalRef.current);
   }, [status, captureAndScan, authHeader, drawPolygon]);

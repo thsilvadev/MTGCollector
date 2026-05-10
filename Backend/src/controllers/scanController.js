@@ -1,6 +1,7 @@
 const multer   = require('multer');
 const axios    = require('axios');
 const FormData = require('form-data');
+const { sfGet } = require('../utils/scryfall');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -9,7 +10,25 @@ const upload = multer({
 
 const PYTHON_URL = process.env.PYTHON_OCR_URL || 'http://localhost:8001';
 const SCRYFALL   = 'https://api.scryfall.com';
-const SF_HEADERS = { 'User-Agent': 'mtgchest/1.0', 'Accept': 'application/json' };
+
+// ── Scryfall response cache ────────────────────────────────────────────────────
+// Scryfall recommends caching for at least 24 hours to avoid rate-limit issues.
+// Key: lowercased card name  Value: { data, expires }
+const SF_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const scryfallCache   = new Map();
+
+function cacheGet(name) {
+  const entry = scryfallCache.get(name);
+  if (!entry) return null;
+  if (Date.now() > entry.expires) { scryfallCache.delete(name); return null; }
+  return entry.data;
+}
+
+function cacheSet(name, data) {
+  scryfallCache.set(name, { data, expires: Date.now() + SF_CACHE_TTL_MS });
+}
+// All Scryfall HTTP calls go through sfGet() imported from scryfall.js,
+// which holds the single global rate-limit queue (550ms between requests).
 
 /**
  * GET /scan/more?url=<scryfall_next_page_url>
@@ -57,46 +76,60 @@ async function scan(req, res) {
       return res.status(200).json({ found: false, candidates: [], polygon: py.polygon || null });
     }
 
+    // Strip trailing non-letter garbage (stray symbols from OCR reading mana cost / set icons)
+    // e.g. "Assimilador de Ventos Etereos @" → "Assimilador de Ventos Etereos"
+    const cleanName = (py.name || '')
+      .replace(/[^a-zA-ZÀ-ÿ'',\-\s]+$/, '')  // remove trailing non-name chars
+      .replace(/\s+/g, ' ')                    // collapse multiple spaces
+      .trim();
+
+    console.log(`[Scan] Cleaned name: "${cleanName}"`);
+
     // Discard single-char / two-char garbage (partial reads from noise)
-    if (!py.name || py.name.length < 3) {
+    if (!cleanName || cleanName.length < 3) {
       return res.status(200).json({ found: false, candidates: [], polygon: py.polygon || null });
     }
 
-    // 2. Search Scryfall by extracted name — exact first, fuzzy as fallback
+    // 2. Search Scryfall by extracted name — cache first, then exact, then fuzzy
+    const cacheKey = cleanName.toLowerCase();
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      console.log(`[Scan] Cache hit for "${cleanName}" — skipping Scryfall request`);
+      return res.json({ ...cached, polygon: py.polygon });
+    }
+
     let sfRes;
     try {
-      sfRes = await axios.get(`${SCRYFALL}/cards/search`, {
-        headers: SF_HEADERS,
-        params: {
-          q:                    `"${py.name}"`,
-          include_multilingual: true,
-          unique:               'prints',
-          order:                'released',
-          dir:                  'desc',
-        },
-        timeout: 12000,
+      console.log(`[Scan] Scryfall exact search: "${cleanName}"`);
+      sfRes = await sfGet(`${SCRYFALL}/cards/search`, {
+        q:                    `!"${cleanName}"`,
+        include_multilingual: true,
+        unique:               'prints',
+        order:                'released',
+        dir:                  'desc',
       });
+      console.log(`[Scan] Scryfall exact hit: ${sfRes.data?.total_cards ?? 0} result(s)`);
     } catch (sfErr) {
       if (sfErr.response?.status === 404) {
-        console.log(`[Scan] Scryfall exact miss for "${py.name}" — trying fuzzy`);
+        console.log(`[Scan] Scryfall exact miss for "${cleanName}" — trying fuzzy`);
         try {
-          const fuzzy = await axios.get(`${SCRYFALL}/cards/named`, {
-            headers: SF_HEADERS,
-            params:  { fuzzy: py.name },
-            timeout: 12000,
-          });
-          return res.json({
+          const fuzzy = await sfGet(`${SCRYFALL}/cards/named`, { fuzzy: cleanName });
+          console.log(`[Scan] Fuzzy hit: "${fuzzy.data.name}"`);
+          const payload = {
             found:       true,
             candidates:  [fuzzy.data],
             nextPage:    null,
             ocrFragment: fuzzy.data.name,
             confidence:  py.confidence,
-            polygon:     py.polygon,
-          });
-        } catch {
+          };
+          cacheSet(cacheKey, payload);
+          return res.json({ ...payload, polygon: py.polygon });
+        } catch (fuzzyErr) {
+          console.log(`[Scan] Fuzzy miss: ${fuzzyErr.response?.status ?? fuzzyErr.message}`);
           return res.status(200).json({ found: false, candidates: [], polygon: py.polygon || null });
         }
       }
+      console.error(`[Scan] Scryfall error ${sfErr.response?.status ?? sfErr.code}: ${sfErr.message}`);
       throw sfErr;
     }
 
@@ -105,14 +138,16 @@ async function scan(req, res) {
       return res.status(200).json({ found: false, candidates: [], polygon: py.polygon || null });
     }
 
-    return res.json({
+    console.log(`[Scan] Returning ${cards.length} candidate(s) for "${cleanName}"`);
+    const payload = {
       found:       true,
       candidates:  cards,
       nextPage:    sfRes.data?.has_more ? sfRes.data.next_page : null,
-      ocrFragment: py.name,
+      ocrFragment: cleanName,
       confidence:  py.confidence,
-      polygon:     py.polygon,
-    });
+    };
+    cacheSet(cacheKey, payload);
+    return res.json({ ...payload, polygon: py.polygon });
 
   } catch (err) {
     console.error('[Scan] Error:', err.message);
@@ -133,10 +168,15 @@ async function detect(req, res) {
       timeout:          5000,
       maxContentLength: Infinity,
     });
-    return res.json(pyRes.data);
+    const result = pyRes.data;
+    if (result?.detected) {
+      console.log(`[Detect] Card detected — polygon=${JSON.stringify(result.polygon)}`);
+    }
+    return res.json(result);
   } catch (err) {
+    console.warn(`[Detect] Failed: ${err.message}`);
     return res.json({ detected: false });
   }
 }
 
-module.exports = { upload: upload.single('frame'), scan, more, detect, detect };
+module.exports = { upload: upload.single('frame'), scan, more, detect };

@@ -18,16 +18,49 @@ ocr_reader = easyocr.Reader(['en'], gpu=False)
 # Thread pool for CPU-bound OCR — keeps uvicorn's event loop free for other requests
 _ocr_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
-# MTG card aspect ratio (width/height): ~0.716 portrait, ~1.397 landscape.
-CARD_RATIO_MIN = 0.45
-CARD_RATIO_MAX = 2.20
+# MTG card aspect ratio: 63.5 mm × 88.9 mm → 0.714 portrait / 1.397 landscape.
+# Generous bounds for camera angle perspective distortion.
+CARD_RATIO_MIN = 0.50
+CARD_RATIO_MAX = 1.60
+
+# Max deviation from 90° allowed at each quad corner (degrees).
+# MTG cards are rectangles; large deviations indicate trapezoid / background noise.
+CORNER_ANGLE_TOLERANCE_DEG = 35.0  # allows up to 55°–125° at each corner
 
 # If the detected region covers more than this fraction of the frame it's
 # almost certainly the screen border / background, not a real card.
 MAX_CARD_AREA_RATIO = 0.80
 
 
-# ── Geometry helpers ───────────────────────────────────────────────────────────
+# ── Geometry helpers ─────────────────────────────────────────────────────────
+
+def _corner_angles_ok(pts):
+    """
+    Return True if all 4 corners have angles close to 90°.
+    Rejects trapezoids and highly skewed shapes that can't be an MTG card.
+    """
+    n = len(pts)
+    lo = 90.0 - CORNER_ANGLE_TOLERANCE_DEG
+    hi = 90.0 + CORNER_ANGLE_TOLERANCE_DEG
+    for i in range(n):
+        p_prev = pts[(i - 1) % n]
+        p_curr = pts[i]
+        p_next = pts[(i + 1) % n]
+        v1 = p_prev - p_curr
+        v2 = p_next - p_curr
+        norm1 = np.linalg.norm(v1)
+        norm2 = np.linalg.norm(v2)
+        if norm1 < 1e-6 or norm2 < 1e-6:
+            return False
+        cos_a = np.clip(np.dot(v1, v2) / (norm1 * norm2), -1.0, 1.0)
+        angle = np.degrees(np.arccos(cos_a))
+        if not (lo <= angle <= hi):
+            log.info(f"Corner angle {angle:.1f}° out of [{lo:.0f}°,{hi:.0f}°] — rejecting")
+            return False
+    return True
+
+
+# ── Geometry helpers (continued) ───────────────────────────────────────────────
 
 def order_points(pts):
     """
@@ -108,18 +141,26 @@ def detect_card(image_bgr):
     log.info(f"Top-3 contour areas: {top_areas} (frame {img_w}x{img_h})")
 
     MIN_AREA_RATIO = 0.08  # card must cover at least 8% of frame
-    MAX_AREA_RATIO = 0.75  # anything over 75% is likely background/whole-screen
+    MAX_AREA_RATIO = 0.90  # reject only if nearly the entire frame (background border)
 
     def valid_quad(pts, contour_area):
-        """Return True only for convex quads with card-like aspect ratio and bounded area."""
-        # Convexity check — rejects bowtie shapes where lines cross
+        """Return True only for convex, near-rectangular quads with card-like proportions."""
+        # Bounds check — coordinates outside the image make no sense and would draw
+        # a polygon beyond the canvas edge on the client.
+        if np.any(pts[:, 0] < 0) or np.any(pts[:, 0] > img_w) or \
+           np.any(pts[:, 1] < 0) or np.any(pts[:, 1] > img_h):
+            return False
+        # Convexity check — rejects bowtie shapes where lines cross.
         if not cv2.isContourConvex(pts.reshape(-1, 1, 2).astype(np.int32)):
             return False
-        # Aspect ratio check
+        # Corner angle check — MTG cards are rectangles; reject severe trapezoids.
+        if not _corner_angles_ok(pts):
+            return False
+        # Aspect ratio check — must look like a card, even under perspective.
         r = _quad_aspect_ratio(pts)
         if not (CARD_RATIO_MIN <= r <= CARD_RATIO_MAX):
             return False
-        # Area check using the *contour* area (not the simplified polygon area which can be inaccurate)
+        # Area check using the *contour* area (polygon area can be inaccurate after simplification).
         if not (img_area * MIN_AREA_RATIO <= contour_area <= img_area * MAX_AREA_RATIO):
             return False
         return True
@@ -155,11 +196,13 @@ def detect_card(image_bgr):
                     log.info(f"Detected via hull eps={eps}: {pct:.1f}% of frame")
                     return pts.tolist()
 
-        # Strategy 3: minAreaRect fallback (always convex, always 4 points)
-        rect = cv2.minAreaRect(contour)
-        box  = cv2.boxPoints(rect).astype("float32")
+        # Strategy 3: minAreaRect on convex hull — always a true rectangle (90° corners),
+        # more stable than raw contour, hull removes inner noise points.
+        hull_box  = cv2.convexHull(contour)
+        rect      = cv2.minAreaRect(hull_box)
+        box       = cv2.boxPoints(rect).astype("float32")
         if valid_quad(box, area):
-            log.info(f"Detected via minAreaRect: {pct:.1f}% of frame")
+            log.info(f"Detected via minAreaRect(hull): {pct:.1f}% of frame")
             return box.tolist()
 
     log.info("No card detected in frame")

@@ -7,15 +7,76 @@ const HEADERS = {
   'Accept':     'application/json',
 };
 
-// Rate-limit: minimum 100 ms between calls (Scryfall allows 2 req/s).
-let lastCallTime = 0;
+// ── Global Scryfall rate limiter ───────────────────────────────────────────────
+// ALL Scryfall requests from the entire application must go through sfGet().
+// This serialises requests into a single queue with a 550ms minimum gap,
+// keeping us under the 2 req/s limit for /cards/search, /cards/named, /cards/collection.
+// Both scanController and scryfall utils import this from here — one queue, one gate.
+const SF_MIN_INTERVAL_MS = 550;
+let _sfLastCall = 0;
+let _sfQueue    = Promise.resolve();
 
-async function throttle() {
-  const elapsed = Date.now() - lastCallTime;
-  if (elapsed < 100) {
-    await new Promise(r => setTimeout(r, 100 - elapsed));
-  }
-  lastCallTime = Date.now();
+function sfGet(url, params, extraConfig = {}) {
+  _sfQueue = _sfQueue.then(async () => {
+    const wait = SF_MIN_INTERVAL_MS - (Date.now() - _sfLastCall);
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    _sfLastCall = Date.now();
+  });
+  return _sfQueue.then(async () => {
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        return await axios.get(url, { headers: HEADERS, params, timeout: 15000, ...extraConfig });
+      } catch (err) {
+        if (err.response?.status === 429) {
+          console.warn('[Scryfall] 429 rate-limit received — pausing 30s');
+          await new Promise(r => setTimeout(r, 30000));
+          throw err; // don't retry 429 — we need to back off
+        }
+        const retryable = !err.response && (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED');
+        if (retryable && attempt < MAX_ATTEMPTS) {
+          const delay = attempt * 2000; // 2s, 4s
+          console.warn(`[Scryfall] ${err.code} on attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${delay}ms`);
+          await new Promise(r => setTimeout(r, delay));
+        } else {
+          throw err;
+        }
+      }
+    }
+  });
+}
+
+function sfPost(url, body) {
+  _sfQueue = _sfQueue.then(async () => {
+    const wait = SF_MIN_INTERVAL_MS - (Date.now() - _sfLastCall);
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    _sfLastCall = Date.now();
+  });
+  return _sfQueue.then(async () => {
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        return await axios.post(url, body, {
+          headers: { ...HEADERS, 'Content-Type': 'application/json' },
+          timeout: 15000,
+        });
+      } catch (err) {
+        if (err.response?.status === 429) {
+          console.warn('[Scryfall] 429 rate-limit received — pausing 30s');
+          await new Promise(r => setTimeout(r, 30000));
+          throw err;
+        }
+        const retryable = !err.response && (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED');
+        if (retryable && attempt < MAX_ATTEMPTS) {
+          const delay = attempt * 2000;
+          console.warn(`[Scryfall] ${err.code} on attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${delay}ms`);
+          await new Promise(r => setTimeout(r, delay));
+        } else {
+          throw err;
+        }
+      }
+    }
+  });
 }
 
 const SUPERTYPES = new Set(['Basic', 'Legendary', 'Snow', 'World', 'Ongoing']);
@@ -53,33 +114,19 @@ function normalizeCard(card) {
  * Returns the English name string if found, or null if not found / ambiguous.
  */
 async function resolveCardName(name) {
-  await throttle();
   try {
-    const res = await axios.get(`${SCRYFALL_BASE}/cards/named`, {
-      headers: HEADERS,
-      params: { fuzzy: name },
-    });
-    return res.data.name; // canonical English name
+    const res = await sfGet(`${SCRYFALL_BASE}/cards/named`, { fuzzy: name });
+    return res.data.name;
   } catch {
-    return null; // 404 not_found or ambiguous — caller will use original input
+    return null;
   }
 }
 
-/**
- * Full-text card search.
- * @param {object} [opts]
- * @param {boolean} [opts.includeMultilingual=false] - Include non-English prints (also searches foreign names).
- * @returns {{ data: object[], has_more: boolean, total_cards: number }}
- */
 async function searchCards(q, page = 1, opts = {}) {
-  await throttle();
   const params = { q, page, order: 'name' };
   if (opts.includeMultilingual) params.include_multilingual = true;
   try {
-    const res = await axios.get(`${SCRYFALL_BASE}/cards/search`, {
-      headers: HEADERS,
-      params,
-    });
+    const res = await sfGet(`${SCRYFALL_BASE}/cards/search`, params);
     return {
       data:        res.data.data.map(normalizeCard),
       has_more:    res.data.has_more,
@@ -93,37 +140,27 @@ async function searchCards(q, page = 1, opts = {}) {
   }
 }
 
-/**
- * Batch-fetch cards by Scryfall UUID array.
- * Chunks into groups of 75 (API maximum) with throttling between chunks.
- * @returns {object[]} Normalized card objects for found cards.
- */
 async function batchGetCards(scryfallIds) {
   if (!scryfallIds || !scryfallIds.length) return [];
 
   const results = [];
   for (let i = 0; i < scryfallIds.length; i += 75) {
-    await throttle();
     const chunk       = scryfallIds.slice(i, i + 75);
     const identifiers = chunk.map(id => ({ id }));
-    const res = await axios.post(
-      `${SCRYFALL_BASE}/cards/collection`,
-      { identifiers },
-      { headers: { ...HEADERS, 'Content-Type': 'application/json' } },
-    );
-    results.push(...res.data.data.map(normalizeCard));
+    try {
+      const res = await sfPost(`${SCRYFALL_BASE}/cards/collection`, { identifiers });
+      results.push(...res.data.data.map(normalizeCard));
+    } catch (err) {
+      console.error(`[Scryfall] batchGetCards chunk ${i}–${i + chunk.length} failed: ${err.code ?? err.message}`);
+      // Partial failure: skip chunk, continue with remaining chunks
+    }
   }
   return results;
 }
 
-/**
- * Fetch the full Scryfall set list.
- * @returns {object[]} Raw Scryfall set objects.
- */
 async function getSets() {
-  await throttle();
-  const res = await axios.get(`${SCRYFALL_BASE}/sets`, { headers: HEADERS });
+  const res = await sfGet(`${SCRYFALL_BASE}/sets`);
   return res.data.data;
 }
 
-module.exports = { searchCards, batchGetCards, getSets, normalizeCard, resolveCardName };
+module.exports = { searchCards, batchGetCards, getSets, normalizeCard, resolveCardName, sfGet };

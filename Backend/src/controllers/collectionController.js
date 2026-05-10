@@ -109,7 +109,10 @@ module.exports = {
 
       // ── Step 1b: Refresh stale prices for all cards in this user's collection ─
       const allCardIds = allDbRows.map(r => r.card_id);
-      await refreshStalePrices(allCardIds);
+      // Fire price refresh but don't let a network failure break the whole response.
+      await refreshStalePrices(allCardIds).catch(err =>
+        console.warn('[Collection] Price refresh failed (non-fatal):', err.code ?? err.message),
+      );
       const hasEffectiveColorFilter =
         query.colorIdentity && query.colorIdentity !== 'B, G, R, U, W';
       const hasFilters =
