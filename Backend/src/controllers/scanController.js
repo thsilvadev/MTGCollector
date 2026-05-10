@@ -53,14 +53,13 @@ async function scan(req, res) {
     console.log(`[Scan] Python: found=${py.found} name="${py.name || '-'}" conf=${py.confidence ?? '-'}`);
 
     if (!py.found) {
-      // Still forward the polygon so the frontend can show border feedback
-      // even before a card name has been confirmed.
-      return res.status(404).json({ found: false, polygon: py.polygon || null });
+      // Return 200 so the frontend can read the polygon for border feedback.
+      return res.status(200).json({ found: false, candidates: [], polygon: py.polygon || null });
     }
 
     // Discard single-char / two-char garbage (partial reads from noise)
     if (!py.name || py.name.length < 3) {
-      return res.status(404).json({ found: false, polygon: py.polygon || null });
+      return res.status(200).json({ found: false, candidates: [], polygon: py.polygon || null });
     }
 
     // 2. Search Scryfall by extracted name — exact first, fuzzy as fallback
@@ -95,7 +94,7 @@ async function scan(req, res) {
             polygon:     py.polygon,
           });
         } catch {
-          return res.status(404).json({ found: false });
+          return res.status(200).json({ found: false, candidates: [], polygon: py.polygon || null });
         }
       }
       throw sfErr;
@@ -103,7 +102,7 @@ async function scan(req, res) {
 
     const cards = sfRes.data?.data || [];
     if (!cards.length) {
-      return res.status(404).json({ found: false });
+      return res.status(200).json({ found: false, candidates: [], polygon: py.polygon || null });
     }
 
     return res.json({
@@ -121,4 +120,23 @@ async function scan(req, res) {
   }
 }
 
-module.exports = { upload: upload.single('frame'), scan, more };
+async function detect(req, res) {
+  if (!req.file) return res.status(400).json({ error: 'No frame received.' });
+  try {
+    const form = new FormData();
+    form.append('frame', req.file.buffer, {
+      filename:    'frame.jpg',
+      contentType: req.file.mimetype || 'image/jpeg',
+    });
+    const pyRes = await axios.post(`${PYTHON_URL}/detect`, form, {
+      headers:          form.getHeaders(),
+      timeout:          5000,
+      maxContentLength: Infinity,
+    });
+    return res.json(pyRes.data);
+  } catch (err) {
+    return res.json({ detected: false });
+  }
+}
+
+module.exports = { upload: upload.single('frame'), scan, more, detect, detect };

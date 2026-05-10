@@ -79,7 +79,10 @@ def detect_card(image_bgr):
     """
     Detect the largest convex quadrilateral (the card) in the frame.
     Returns 4 points [[x,y], ...] in native frame coordinates, or None.
-    Filters candidates by aspect ratio to reject background noise.
+    Filters candidates by:
+      - aspect ratio (must look like a card)
+      - convexity  (rejects bowtie / self-intersecting quads)
+      - area bounds (must be 8%–75% of frame — not background noise, not full frame)
     """
     img_h, img_w = image_bgr.shape[:2]
     img_area = img_h * img_w
@@ -105,15 +108,29 @@ def detect_card(image_bgr):
     log.info(f"Top-3 contour areas: {top_areas} (frame {img_w}x{img_h})")
 
     MIN_AREA_RATIO = 0.08  # card must cover at least 8% of frame
+    MAX_AREA_RATIO = 0.75  # anything over 75% is likely background/whole-screen
 
-    def valid_ratio(pts):
+    def valid_quad(pts, contour_area):
+        """Return True only for convex quads with card-like aspect ratio and bounded area."""
+        # Convexity check — rejects bowtie shapes where lines cross
+        if not cv2.isContourConvex(pts.reshape(-1, 1, 2).astype(np.int32)):
+            return False
+        # Aspect ratio check
         r = _quad_aspect_ratio(pts)
-        return CARD_RATIO_MIN <= r <= CARD_RATIO_MAX
+        if not (CARD_RATIO_MIN <= r <= CARD_RATIO_MAX):
+            return False
+        # Area check using the *contour* area (not the simplified polygon area which can be inaccurate)
+        if not (img_area * MIN_AREA_RATIO <= contour_area <= img_area * MAX_AREA_RATIO):
+            return False
+        return True
 
     for contour in contours[:6]:
         area = cv2.contourArea(contour)
         if area < img_area * MIN_AREA_RATIO:
             break
+        if area > img_area * MAX_AREA_RATIO:
+            log.info(f"Contour too large ({100*area/img_area:.1f}%) — skipping")
+            continue
 
         pct  = 100 * area / img_area
         peri = cv2.arcLength(contour, True)
@@ -123,25 +140,25 @@ def detect_card(image_bgr):
             approx = cv2.approxPolyDP(contour, eps * peri, True)
             if len(approx) == 4:
                 pts = approx.reshape(4, 2).astype("float32")
-                if valid_ratio(pts):
+                if valid_quad(pts, area):
                     log.info(f"Detected via approxPolyDP eps={eps}: {pct:.1f}% of frame")
                     return pts.tolist()
 
-        # Strategy 2: approxPolyDP on convex hull
+        # Strategy 2: approxPolyDP on convex hull (always convex — hull fixes crossing lines)
         hull      = cv2.convexHull(contour)
         hull_peri = cv2.arcLength(hull, True)
         for eps in [0.02, 0.04, 0.06, 0.08, 0.10]:
             approx = cv2.approxPolyDP(hull, eps * hull_peri, True)
             if len(approx) == 4:
                 pts = approx.reshape(4, 2).astype("float32")
-                if valid_ratio(pts):
+                if valid_quad(pts, area):
                     log.info(f"Detected via hull eps={eps}: {pct:.1f}% of frame")
                     return pts.tolist()
 
-        # Strategy 3: minAreaRect fallback (always gives exactly 4 points)
+        # Strategy 3: minAreaRect fallback (always convex, always 4 points)
         rect = cv2.minAreaRect(contour)
         box  = cv2.boxPoints(rect).astype("float32")
-        if valid_ratio(box):
+        if valid_quad(box, area):
             log.info(f"Detected via minAreaRect: {pct:.1f}% of frame")
             return box.tolist()
 
@@ -301,13 +318,8 @@ async def detect_frame(frame: UploadFile = File(...)):
         return JSONResponse({"detected": False})
 
     img_area = image_bgr.shape[0] * image_bgr.shape[1]
-    polygon  = detect_card(image_bgr)
+    polygon = detect_card(image_bgr)
     if polygon is None:
-        return JSONResponse({"detected": False})
-
-    pts       = np.array(polygon, dtype="float32")
-    poly_area = float(cv2.contourArea(pts))
-    if poly_area / img_area > MAX_CARD_AREA_RATIO:
         return JSONResponse({"detected": False})
 
     return JSONResponse({"detected": True, "polygon": polygon})

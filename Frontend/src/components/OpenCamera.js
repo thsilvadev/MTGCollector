@@ -117,6 +117,7 @@ function OpenCamera({ close }) {
   const intervalRef         = useRef(null);
   const isMountedRef        = useRef(true);
   const abortControllerRef  = useRef(null);
+  const cardDetectedRef     = useRef(false); // mirrors cardDetected state for use inside interval
 
   const [status, setStatus]           = useState('initializing');
   // 'initializing' | 'scanning' | 'processing' | 'result' | 'error'
@@ -256,6 +257,11 @@ function OpenCamera({ close }) {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
+  // Re-draw polygon whenever it changes (survives React re-renders)
+  useEffect(() => {
+    drawPolygon(polygon);
+  }, [polygon, drawPolygon]);
+
   // ── Capture frame and POST to /scan ────────────────────────────────────────
   const captureAndScan = useCallback(async () => {
     const now = Date.now();
@@ -373,24 +379,33 @@ function OpenCamera({ close }) {
           stableCountRef.current++;
           console.log(`[Scanner] Frame diff: ${avgDiff.toFixed(1)} (stable ${stableCountRef.current}/${STABILITY_FRAMES})`);
           if (stableCountRef.current >= STABILITY_FRAMES) {
-            stableCountRef.current = 0;
-            console.log('[Scanner] Stability reached — triggering scan');
-            captureAndScan();
+            if (cardDetectedRef.current) {
+              // Card confirmed by /detect — go ahead and identify
+              stableCountRef.current = 0;
+              console.log('[Scanner] Stability + card detected — triggering scan');
+              captureAndScan();
+            } else {
+              // Stable but no card yet — hold at threshold, wait for /detect
+              stableCountRef.current = STABILITY_FRAMES;
+            }
           }
         } else {
           if (stableCountRef.current > 0) console.log(`[Scanner] Movement detected (diff: ${avgDiff.toFixed(1)}) — reset stability`);
           stableCountRef.current = 0;
+          cardDetectedRef.current = false;
           drawPolygon(null);
           setCardDetected(false);
         }
       }
 
-      // Every 2nd tick (~600ms) run a fast /detect to show card border in real time
+      // Every 4th tick (~1.2s), only when frame is stable and not already scanning,
+      // run a fast /detect using a medium-res frame (480px wide).
       detectTickRef++;
-      if (detectTickRef % 2 === 0 && !isScanningRef.current) {
-        const capCanvas  = captureCanvasRef.current;
+      if (detectTickRef % 2 === 0 && !isScanningRef.current && stableCountRef.current > 0) {
+        const capCanvas = captureCanvasRef.current;
         if (capCanvas) {
-          const DETECT_W = 480, DETECT_H = Math.round(video.videoHeight * (480 / video.videoWidth));
+          const DETECT_W = 480;
+          const DETECT_H = Math.round(video.videoHeight * (DETECT_W / video.videoWidth));
           capCanvas.width  = DETECT_W;
           capCanvas.height = DETECT_H;
           capCanvas.getContext('2d').drawImage(video, 0, 0, DETECT_W, DETECT_H);
@@ -408,15 +423,21 @@ function OpenCamera({ close }) {
               .then(d => {
                 if (!isMountedRef.current || !d) return;
                 if (d.detected && d.polygon) {
-                  drawPolygon(d.polygon);
+                  // Scale polygon from 480px-wide frame back to native video coords
+                  const scaleX = video.videoWidth  / DETECT_W;
+                  const scaleY = video.videoHeight / DETECT_H;
+                  const scaled = d.polygon.map(([x, y]) => [x * scaleX, y * scaleY]);
+                  drawPolygon(scaled);
                   setCardDetected(true);
+                  cardDetectedRef.current = true;
                 } else {
                   drawPolygon(null);
                   setCardDetected(false);
+                  cardDetectedRef.current = false;
                 }
               })
               .catch(() => {});
-          }, 'image/jpeg', 0.6);
+          }, 'image/jpeg', 0.7);
         }
       }
 
@@ -523,21 +544,22 @@ function OpenCamera({ close }) {
   return (
     <div style={S.overlay}>
       <video ref={videoRef} style={S.video} playsInline muted autoPlay />
-      {/* Overlay canvas — draws the detected card polygon */}
-      <canvas
-        ref={overlayCanvasRef}
-        style={{
-          position: 'absolute', inset: 0,
-          width: '100%', height: '100%',
-          pointerEvents: 'none',
-          zIndex: 1,
-        }}
-      />
       <canvas ref={diffCanvasRef}    style={{ display: 'none' }} />
       <canvas ref={captureCanvasRef} style={{ display: 'none' }} />
 
       {/* UI layer — position:fixed escapes the <video> hardware compositor */}
       <div style={S.uiLayer}>
+
+        {/* Overlay canvas — position:fixed so it sits above the GPU video layer */}
+        <canvas
+          ref={overlayCanvasRef}
+          style={{
+            position: 'fixed', inset: 0,
+            width: '100%', height: '100%',
+            pointerEvents: 'none',
+            zIndex: 1001,
+          }}
+        />
 
         {/* Close button — top right */}
         <button style={S.closeBtn} onClick={handleClose}>×</button>
