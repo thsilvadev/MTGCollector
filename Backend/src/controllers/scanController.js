@@ -45,7 +45,7 @@ async function scan(req, res) {
 
     const pyRes = await axios.post(`${PYTHON_URL}/process`, form, {
       headers:          form.getHeaders(),
-      timeout:          8000,
+      timeout:          25000,
       maxContentLength: Infinity,
     });
 

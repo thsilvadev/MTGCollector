@@ -109,12 +109,14 @@ function OpenCamera({ close }) {
   const videoRef         = useRef(null);
   const diffCanvasRef    = useRef(null); // tiny canvas for frame stability diff
   const captureCanvasRef = useRef(null); // full-res canvas for capture
-  const streamRef        = useRef(null);
-  const prevFrameRef     = useRef(null);
-  const stableCountRef   = useRef(0);
-  const lastScanRef      = useRef(0);
-  const isScanningRef    = useRef(false);
-  const intervalRef      = useRef(null);
+  const streamRef           = useRef(null);
+  const prevFrameRef        = useRef(null);
+  const stableCountRef      = useRef(0);
+  const lastScanRef         = useRef(0);
+  const isScanningRef       = useRef(false);
+  const intervalRef         = useRef(null);
+  const isMountedRef        = useRef(true);
+  const abortControllerRef  = useRef(null);
 
   const [status, setStatus]           = useState('initializing');
   // 'initializing' | 'scanning' | 'processing' | 'result' | 'error'
@@ -220,15 +222,39 @@ function OpenCamera({ close }) {
 
   // ── Start camera on mount ───────────────────────────────────────────────────
   useEffect(() => {
+    isMountedRef.current = true;
     startCamera();
     return () => {
+      isMountedRef.current = false;
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
       clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      isScanningRef.current = false;
       streamRef.current?.getTracks().forEach(t => t.stop());
       streamRef.current = null;
       const ctx = overlayCanvasRef.current?.getContext('2d');
       ctx?.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
     };
   }, [startCamera]);
+
+  // ── Pause scanner when app goes to background (standby / app switch) ────────
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+        isScanningRef.current = false;
+        streamRef.current?.getTracks().forEach(t => { t.enabled = false; });
+      } else {
+        streamRef.current?.getTracks().forEach(t => { t.enabled = true; });
+        // Resume scanning only if we were in scanning state
+        setStatus(s => s === 'processing' ? 'scanning' : s);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
 
   // ── Capture frame and POST to /scan ────────────────────────────────────────
   const captureAndScan = useCallback(async () => {
@@ -242,6 +268,10 @@ function OpenCamera({ close }) {
     isScanningRef.current = true;
     lastScanRef.current   = now;
     setStatus('processing');
+
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       const videoW = video.videoWidth;
@@ -260,7 +290,10 @@ function OpenCamera({ close }) {
         method:  'POST',
         headers: { authorization: authHeader() },
         body:    form,
+        signal:  controller.signal,
       });
+
+      if (!isMountedRef.current) return;
 
       if (!res.ok) {
         console.warn(`[Scanner] /scan returned HTTP ${res.status}`);
@@ -301,8 +334,9 @@ function OpenCamera({ close }) {
       drawPolygon(data.polygon || null);
       setStatus('result');
     } catch (err) {
+      if (err.name === 'AbortError') return; // fetch cancelled on unmount — silent exit
       console.error('[Scanner] Scan error:', err);
-      setStatus('scanning');
+      if (isMountedRef.current) setStatus('scanning');
     } finally {
       isScanningRef.current = false;
     }
@@ -314,6 +348,8 @@ function OpenCamera({ close }) {
       clearInterval(intervalRef.current);
       return;
     }
+
+    let detectTickRef = 0;
 
     intervalRef.current = setInterval(() => {
       const video  = videoRef.current;
@@ -344,6 +380,43 @@ function OpenCamera({ close }) {
         } else {
           if (stableCountRef.current > 0) console.log(`[Scanner] Movement detected (diff: ${avgDiff.toFixed(1)}) — reset stability`);
           stableCountRef.current = 0;
+          drawPolygon(null);
+          setCardDetected(false);
+        }
+      }
+
+      // Every 2nd tick (~600ms) run a fast /detect to show card border in real time
+      detectTickRef++;
+      if (detectTickRef % 2 === 0 && !isScanningRef.current) {
+        const capCanvas  = captureCanvasRef.current;
+        if (capCanvas) {
+          const DETECT_W = 480, DETECT_H = Math.round(video.videoHeight * (480 / video.videoWidth));
+          capCanvas.width  = DETECT_W;
+          capCanvas.height = DETECT_H;
+          capCanvas.getContext('2d').drawImage(video, 0, 0, DETECT_W, DETECT_H);
+          capCanvas.toBlob(blob => {
+            if (!blob || !isMountedRef.current) return;
+            const form = new FormData();
+            form.append('frame', blob, 'frame.jpg');
+            fetch(`${window.name}/detect`, {
+              method: 'POST',
+              headers: { authorization: authHeader() },
+              body: form,
+              signal: abortControllerRef.current?.signal,
+            })
+              .then(r => r.ok ? r.json() : null)
+              .then(d => {
+                if (!isMountedRef.current || !d) return;
+                if (d.detected && d.polygon) {
+                  drawPolygon(d.polygon);
+                  setCardDetected(true);
+                } else {
+                  drawPolygon(null);
+                  setCardDetected(false);
+                }
+              })
+              .catch(() => {});
+          }, 'image/jpeg', 0.6);
         }
       }
 
@@ -351,7 +424,7 @@ function OpenCamera({ close }) {
     }, SAMPLE_INTERVAL_MS);
 
     return () => clearInterval(intervalRef.current);
-  }, [status, captureAndScan]);
+  }, [status, captureAndScan, authHeader, drawPolygon]);
 
   // ── User actions ───────────────────────────────────────────────────────────
   const handleConfirm = useCallback(async () => {

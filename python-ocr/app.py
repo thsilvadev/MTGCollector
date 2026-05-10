@@ -1,3 +1,5 @@
+import asyncio
+import concurrent.futures
 import cv2
 import numpy as np
 import easyocr
@@ -13,9 +15,16 @@ app = FastAPI()
 # Initialised once — models stay in memory
 ocr_reader = easyocr.Reader(['en'], gpu=False)
 
+# Thread pool for CPU-bound OCR — keeps uvicorn's event loop free for other requests
+_ocr_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+
 # MTG card aspect ratio (width/height): ~0.716 portrait, ~1.397 landscape.
 CARD_RATIO_MIN = 0.45
 CARD_RATIO_MAX = 2.20
+
+# If the detected region covers more than this fraction of the frame it's
+# almost certainly the screen border / background, not a real card.
+MAX_CARD_AREA_RATIO = 0.80
 
 
 # ── Geometry helpers ───────────────────────────────────────────────────────────
@@ -191,7 +200,7 @@ def run_ocr(strip_bgr):
         if conf > best_conf:
             best_conf = conf
             best_text = text
-        if best_conf >= 0.65:
+        if best_conf >= 0.50:
             break
 
     return best_text, best_conf
@@ -241,19 +250,28 @@ async def process_frame(frame: UploadFile = File(...)):
     if image_bgr is None:
         return JSONResponse({"found": False, "error": "Could not decode image"}, status_code=400)
 
+    img_area = image_bgr.shape[0] * image_bgr.shape[1]
+
     # 1. Detect card quadrilateral
     polygon = detect_card(image_bgr)
     if polygon is None:
         log.info("No card detected in frame")
         return JSONResponse({"found": False})
 
+    # Reject detections that cover most of the frame — it's the background, not a card
+    pts = np.array(polygon, dtype="float32")
+    poly_area = float(cv2.contourArea(pts))
+    if poly_area / img_area > MAX_CARD_AREA_RATIO:
+        log.info(f"Detected region too large ({100*poly_area/img_area:.1f}% of frame) — skipping")
+        return JSONResponse({"found": False})
+
     # 2. Perspective warp
-    pts    = np.array(polygon, dtype="float32")
     warped = four_point_warp(image_bgr, pts)
 
-    # 3. OCR on name strip (top of portrait-normalised warp)
-    strip            = extract_name_strip(warped)
-    name, confidence = run_ocr(strip)
+    # 3. OCR on name strip — run in thread pool so other requests aren't blocked
+    strip = extract_name_strip(warped)
+    loop  = asyncio.get_event_loop()
+    name, confidence = await loop.run_in_executor(_ocr_executor, run_ocr, strip)
 
     if not name or confidence < 0.30:
         log.info(f"OCR below threshold: '{name}' conf={confidence:.2f}")
@@ -267,6 +285,32 @@ async def process_frame(frame: UploadFile = File(...)):
         "confidence": round(confidence, 3),
         "polygon":    polygon,
     })
+
+
+@app.post("/detect")
+async def detect_frame(frame: UploadFile = File(...)):
+    """
+    Lightweight card detection only — no OCR, no warp.
+    Returns the polygon in ~10ms so the frontend can show border feedback
+    in real time while the full /process scan is pending.
+    """
+    raw       = await frame.read()
+    img_array = np.frombuffer(raw, np.uint8)
+    image_bgr = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+    if image_bgr is None:
+        return JSONResponse({"detected": False})
+
+    img_area = image_bgr.shape[0] * image_bgr.shape[1]
+    polygon  = detect_card(image_bgr)
+    if polygon is None:
+        return JSONResponse({"detected": False})
+
+    pts       = np.array(polygon, dtype="float32")
+    poly_area = float(cv2.contourArea(pts))
+    if poly_area / img_area > MAX_CARD_AREA_RATIO:
+        return JSONResponse({"detected": False})
+
+    return JSONResponse({"detected": True, "polygon": polygon})
 
 
 @app.get("/health")

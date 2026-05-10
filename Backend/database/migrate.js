@@ -16,6 +16,15 @@ const mysql   = require('mysql2/promise');
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
 async function run() {
+  // Connect without selecting a database first so we can create it if missing
+  const bootstrap = await mysql.createConnection({
+    host:     process.env.HOST,
+    user:     process.env.DB_USER,
+    password: process.env.PASSWORD,
+  });
+  await bootstrap.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DATABASE}\``);
+  await bootstrap.end();
+
   const db = await mysql.createConnection({
     host:     process.env.HOST,
     user:     process.env.DB_USER,
