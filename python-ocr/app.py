@@ -18,6 +18,10 @@ ocr_reader = easyocr.Reader(['en'], gpu=False)
 # Thread pool for CPU-bound OCR — keeps uvicorn's event loop free for other requests
 _ocr_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
+# Separate pool for parallel OCR variant batches (runs inside _ocr_executor workers).
+# max_workers=4 lets 3 variants run truly simultaneously per /process request.
+_variant_executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+
 # MTG card aspect ratio: 63.5 mm × 88.9 mm → 0.714 portrait / 1.397 landscape.
 # Generous bounds for camera angle perspective distortion.
 CARD_RATIO_MIN = 0.50
@@ -239,54 +243,78 @@ def _ocr_once(img):
 
 def _strip_variants(strip_bgr):
     """
-    Yield (preprocessed_img, label) variants of the name strip.
-    Trying multiple variants improves hit rate across different card frames
-    (old/new border, foil, light vs. dark background).
+    Return a list of (preprocessed_img, label) variants of the name strip.
+    Ordered from most to least likely to succeed:
+      - clahe / sharpened / adaptive_thresh cover the vast majority of modern cards
+      - direct / inverted / bilateral+clahe / adaptive_thresh_inv are fallbacks
+    Returning a list (not a generator) allows parallel batching in run_ocr.
     """
-    yield strip_bgr, "direct"
-
-    gray = cv2.cvtColor(strip_bgr, cv2.COLOR_BGR2GRAY)
-    yield cv2.cvtColor(cv2.bitwise_not(gray), cv2.COLOR_GRAY2BGR), "inverted"
-
+    gray  = cv2.cvtColor(strip_bgr, cv2.COLOR_BGR2GRAY)
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(4, 4))
-    yield cv2.cvtColor(clahe.apply(gray), cv2.COLOR_GRAY2BGR), "clahe"
 
     sharpen_k = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-    yield cv2.filter2D(strip_bgr, -1, sharpen_k), "sharpened"
+    thresh = cv2.adaptiveThreshold(
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 4)
 
     bilateral = cv2.bilateralFilter(strip_bgr, 9, 75, 75)
     bil_gray  = cv2.cvtColor(bilateral, cv2.COLOR_BGR2GRAY)
-    yield cv2.cvtColor(clahe.apply(bil_gray), cv2.COLOR_GRAY2BGR), "bilateral+clahe"
 
-    thresh = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 4)
-    yield cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR), "adaptive_thresh"
-    yield cv2.cvtColor(cv2.bitwise_not(thresh), cv2.COLOR_GRAY2BGR), "adaptive_thresh_inv"
+    return [
+        (cv2.cvtColor(clahe.apply(gray), cv2.COLOR_GRAY2BGR), "clahe"),
+        (cv2.filter2D(strip_bgr, -1, sharpen_k),               "sharpened"),
+        (cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR),              "adaptive_thresh"),
+        (strip_bgr,                                             "direct"),
+        (cv2.cvtColor(cv2.bitwise_not(gray), cv2.COLOR_GRAY2BGR), "inverted"),
+        (cv2.cvtColor(clahe.apply(bil_gray), cv2.COLOR_GRAY2BGR), "bilateral+clahe"),
+        (cv2.cvtColor(cv2.bitwise_not(thresh), cv2.COLOR_GRAY2BGR), "adaptive_thresh_inv"),
+    ]
 
 
 def run_ocr(strip_bgr):
     """
-    Try multiple preprocessing variants and return the best (text, confidence).
-    Short-circuits as soon as confidence >= 0.50.
-    Also aborts early if 3 consecutive variants return empty (image too blurry/dark).
-    """
-    best_text, best_conf = "", 0.0
-    consecutive_empty = 0
+    Run OCR variants in parallel batches of 3 using _variant_executor.
 
-    for variant, label in _strip_variants(strip_bgr):
-        text, conf = _ocr_once(variant)
-        log.info(f"OCR {label}: '{text}' conf={conf:.2f}")
-        if conf > best_conf:
-            best_conf = conf
-            best_text = text
+    Strategy:
+      - Build all variant images up-front (pure-Python/NumPy, fast).
+      - Submit the first batch of 3 simultaneously; wait for all to complete.
+      - If any result reaches >= 0.50 confidence, return immediately.
+      - If the whole first batch returns empty text, the image is likely too
+        blurry — abort early rather than burning time on remaining variants.
+      - Otherwise continue with the next batch.
+
+    Worst-case wall time = ceil(N_variants / 3) × single_ocr_time
+    instead of N_variants × single_ocr_time (sequential).
+    """
+    variants   = _strip_variants(strip_bgr)
+    best_text  = ""
+    best_conf  = 0.0
+    BATCH_SIZE = 3
+
+    for batch_start in range(0, len(variants), BATCH_SIZE):
+        batch = variants[batch_start : batch_start + BATCH_SIZE]
+
+        # Submit all variants in this batch concurrently
+        futures = [
+            (label, _variant_executor.submit(_ocr_once, img))
+            for img, label in batch
+        ]
+
+        batch_has_text = False
+        for label, fut in futures:
+            text, conf = fut.result()
+            log.info(f"OCR {label}: '{text}' conf={conf:.2f}")
+            if conf > best_conf:
+                best_conf = conf
+                best_text = text
+            if text:
+                batch_has_text = True
+
         if best_conf >= 0.50:
             break
-        if not text or conf == 0.0:
-            consecutive_empty += 1
-            if consecutive_empty >= 3:
-                break
-        else:
-            consecutive_empty = 0
+
+        # First batch entirely empty → image too blurry/dark, stop here
+        if batch_start == 0 and not batch_has_text:
+            break
 
     return best_text, best_conf
 
