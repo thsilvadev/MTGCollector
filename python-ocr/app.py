@@ -391,7 +391,14 @@ def run_ocr(strip_bgr):
         for label, fut in futures:
             text, conf = fut.result()
             log.info(f"OCR {label}: '{text}' conf={conf:.2f}")
-            if conf > best_conf:
+            # Skip garbage: single chars, pure numbers (mana costs like "4", "2W"),
+            # or very short strings — card names are never just a digit or symbol.
+            _stripped = text.strip()
+            _is_garbage = (
+                len(_stripped) <= 2
+                or _stripped.replace("/", "").replace("{", "").replace("}", "").isdigit()
+            )
+            if not _is_garbage and conf > best_conf:
                 best_conf = conf
                 best_text = text
             if text:
