@@ -158,21 +158,30 @@ function Card({
   //Delete from Collection
   const deleteFromCollection = () => {
     setModal({
-      type: 'delete-qty',
+      type: 'set-qty',
       cardName: name,
-      maxQty: count || 1,
+      currentQty: count || 1,
       onCancel: () => setModal(null),
-      onConfirm: (qty) => {
+      onConfirm: (newQty) => {
         setModal(null);
-        Axios.delete(`${window.name}/collection/card/${id}?count=${qty}`, config)
-          .then(() => {
-            console.log(`${name} deleted from collection`);
-            toggleRefresh();
-          })
-          .catch((err) => {
-            console.error(err);
-            toast.error(t('toast.failedRemove'));
-          });
+        if (newQty === count) return;
+        if (newQty === 0) {
+          Axios.delete(`${window.name}/collection/card/${id}?count=${count}`, config)
+            .then(() => { console.log(`${name} deleted from collection`); toggleRefresh(); })
+            .catch((err) => { console.error(err); toast.error(t('toast.failedRemove')); });
+        } else if (newQty < count) {
+          Axios.delete(`${window.name}/collection/card/${id}?count=${count - newQty}`, config)
+            .then(() => { toggleRefresh(); })
+            .catch((err) => { console.error(err); toast.error(t('toast.failedRemove')); });
+        } else {
+          Axios.post(`${window.name}/collection/`, {
+            card_id: id,
+            card_condition: 'Undescribed',
+            quantity: newQty - count,
+          }, config)
+            .then(() => { toggleRefresh(); })
+            .catch((err) => { console.error(err); toast.error(t('toast.failedRemove')); });
+        }
       },
     });
   };
