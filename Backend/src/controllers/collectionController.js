@@ -5,7 +5,11 @@ const knex    = require('../database/index');
 const scryfall = require('../utils/scryfall');
 
 const PRICE_TTL_MS      = 24 * 60 * 60 * 1000; // 24 hours for cards with a known price
-const NULL_PRICE_TTL_MS =       60 * 60 * 1000; //  1 hour  for cards cached as null (retry sooner)
+const NULL_PRICE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours for cards cached as null
+
+// Global lock — prevents concurrent collection requests from running parallel refreshes
+// for the same cards. Only one refresh runs at a time; others skip silently.
+let _refreshInFlight = false;
 
 /**
  * Refresh prices for any card_ids that are missing or older than PRICE_TTL_MS.
@@ -16,76 +20,82 @@ const NULL_PRICE_TTL_MS =       60 * 60 * 1000; //  1 hour  for cards cached as 
 async function refreshStalePrices(cardIds) {
   if (!cardIds.length) return;
 
-  const existing = await knex('card_prices')
-    .select('card_id', 'usd', 'updated_at')
-    .whereIn('card_id', cardIds);
+  if (_refreshInFlight) {
+    console.log('[Prices] Refresh already in progress — skipping concurrent call');
+    return;
+  }
+  _refreshInFlight = true;
 
-  const existingMap = new Map(existing.map(r => [r.card_id, r]));
-  const cutoff      = new Date(Date.now() - PRICE_TTL_MS);
-  const nullCutoff  = new Date(Date.now() - NULL_PRICE_TTL_MS);
+  try {
+    const existing = await knex('card_prices')
+      .select('card_id', 'usd', 'updated_at')
+      .whereIn('card_id', cardIds);
 
-  const staleIds = cardIds.filter(id => {
-    const row = existingMap.get(id);
-    if (!row) return true;                                         // never fetched
-    if (new Date(row.updated_at) < cutoff) return true;            // older than 24h
-    if (row.usd === null && new Date(row.updated_at) < nullCutoff) return true; // null + older than 1h
-    return false;
-  });
+    const existingMap = new Map(existing.map(r => [r.card_id, r]));
+    const cutoff      = new Date(Date.now() - PRICE_TTL_MS);
+    const nullCutoff  = new Date(Date.now() - NULL_PRICE_TTL_MS);
 
-  console.log(`[Prices] refreshStalePrices: ${cardIds.length} cards checked, ${staleIds.length} stale`);
-  if (!staleIds.length) return;
+    const staleIds = cardIds.filter(id => {
+      const row = existingMap.get(id);
+      if (!row) return true;
+      if (new Date(row.updated_at) < cutoff) return true;
+      if (row.usd === null && new Date(row.updated_at) < nullCutoff) return true;
+      return false;
+    });
 
-  const freshCards = await scryfall.batchGetCards(staleIds);
-  if (!freshCards.length) return;
+    console.log(`[Prices] refreshStalePrices: ${cardIds.length} cards checked, ${staleIds.length} stale`);
+    if (!staleIds.length) return;
 
-  const rows = freshCards.map(c => ({
-    card_id:    c.id,
-    usd:        c.prices?.usd ? parseFloat(c.prices.usd) : null,
-    updated_at: new Date(),
-  }));
+    const freshCards = await scryfall.batchGetCards(staleIds);
+    if (!freshCards.length) return;
 
-  const withPrice    = rows.filter(r => r.usd !== null).length;
-  const withoutPrice = rows.filter(r => r.usd === null).length;
-  console.log(`[Prices] Scryfall batch: ${freshCards.length} returned — ${withPrice} with price, ${withoutPrice} without`);
+    const rows = freshCards.map(c => ({
+      card_id:    c.id,
+      usd:        c.prices?.usd ? parseFloat(c.prices.usd) : null,
+      updated_at: new Date(),
+    }));
 
-  // For cards with no USD price (common for non-English printings),
-  // try to find a price from another printing of the same card via oracle_id.
-  // Deduplicate by oracle_id so we make at most one lookup per unique card name.
-  const pricelessCards = freshCards.filter(c => !c.prices?.usd && c.uuid);
-  if (pricelessCards.length) {
-    console.log(`[Prices] Starting fallback lookup for ${pricelessCards.length} priceless card(s)...`);
-    const seen = new Set();
-    for (const card of pricelessCards) {
-      if (seen.has(card.uuid)) continue;
-      seen.add(card.uuid);
-      try {
-        console.log(`[Prices] Looking up oracle ${card.uuid} ("${card.name}")`);
-        const fallback = await scryfall.findUsdPrice(card.uuid);
-        if (fallback !== null) {
-          console.log(`[Prices] ✓ Fallback $${fallback} for "${card.name}"`);
-          // Apply to all rows sharing this oracle_id that still have no price
-          for (const row of rows) {
-            if (row.usd === null) {
-              const fc = freshCards.find(c => c.id === row.card_id && c.uuid === card.uuid);
-              if (fc) row.usd = fallback;
+    const withPrice    = rows.filter(r => r.usd !== null).length;
+    const withoutPrice = rows.filter(r => r.usd === null).length;
+    console.log(`[Prices] Scryfall batch: ${freshCards.length} returned — ${withPrice} with price, ${withoutPrice} without`);
+
+    const pricelessCards = freshCards.filter(c => !c.prices?.usd && c.uuid);
+    if (pricelessCards.length) {
+      console.log(`[Prices] Starting fallback lookup for ${pricelessCards.length} priceless card(s)...`);
+      const seen = new Set();
+      for (const card of pricelessCards) {
+        if (seen.has(card.uuid)) continue;
+        seen.add(card.uuid);
+        try {
+          console.log(`[Prices] Looking up oracle ${card.uuid} ("${card.name}")`);
+          const fallback = await scryfall.findUsdPrice(card.uuid);
+          if (fallback !== null) {
+            console.log(`[Prices] ✓ Fallback $${fallback} for "${card.name}"`);
+            for (const row of rows) {
+              if (row.usd === null) {
+                const fc = freshCards.find(c => c.id === row.card_id && c.uuid === card.uuid);
+                if (fc) row.usd = fallback;
+              }
             }
+          } else {
+            console.log(`[Prices] ✗ No price found anywhere for "${card.name}" (oracle ${card.uuid})`);
           }
-        } else {
-          console.log(`[Prices] ✗ No price found anywhere for "${card.name}" (oracle ${card.uuid})`);
+        } catch (err) {
+          console.warn(`[Prices] findUsdPrice failed for oracle ${card.uuid}: ${err.message}`);
         }
-      } catch (err) {
-        console.warn(`[Prices] findUsdPrice failed for oracle ${card.uuid}: ${err.message}`);
       }
     }
-  }
 
-  // INSERT ... ON DUPLICATE KEY UPDATE for upsert
-  await knex.raw(
-    `INSERT INTO card_prices (card_id, usd, updated_at)
-     VALUES ${rows.map(() => '(?, ?, ?)').join(', ')}
-     ON DUPLICATE KEY UPDATE usd = VALUES(usd), updated_at = VALUES(updated_at)`,
-    rows.flatMap(r => [r.card_id, r.usd, r.updated_at]),
-  );
+    await knex.raw(
+      `INSERT INTO card_prices (card_id, usd, updated_at)
+       VALUES ${rows.map(() => '(?, ?, ?)').join(', ')}
+       ON DUPLICATE KEY UPDATE usd = VALUES(usd), updated_at = VALUES(updated_at)`,
+      rows.flatMap(r => [r.card_id, r.usd, r.updated_at]),
+    );
+    console.log(`[Prices] Upserted ${rows.length} price row(s)`);
+  } finally {
+    _refreshInFlight = false;
+  }
 }
 
 /**
@@ -171,12 +181,23 @@ module.exports = {
         const scryfallCards = await scryfall.batchGetCards(scryfallIds);
         const cardMap      = new Map(scryfallCards.map(c => [c.id, c]));
 
+        // Load cached prices for this page so PT-BR cards show the fallback price
+        const cachedPrices = await knex('card_prices')
+          .select('card_id', 'usd')
+          .whereIn('card_id', scryfallIds);
+        const priceMap = new Map(cachedPrices.map(r => [r.card_id, r.usd]));
+
         cards = pageRows
           .map(row => {
             const cardData = cardMap.get(row.card_id);
             if (!cardData) return null;
+            const cachedUsd = priceMap.get(row.card_id);
             return {
               ...cardData,
+              prices: {
+                ...cardData.prices,
+                usd: cardData.prices?.usd ?? (cachedUsd != null ? String(cachedUsd) : null),
+              },
               id_collection: row.id_collection,
               countById:     parseInt(row.countById, 10),
               card_condition: row.card_condition,
@@ -190,12 +211,23 @@ module.exports = {
         const allScryfallCards = await scryfall.batchGetCards(allScryfallIds);
         const cardMap          = new Map(allScryfallCards.map(c => [c.id, c]));
 
+        // Load cached prices for all cards so PT-BR cards show the fallback price
+        const cachedPrices = await knex('card_prices')
+          .select('card_id', 'usd')
+          .whereIn('card_id', allScryfallIds);
+        const priceMap = new Map(cachedPrices.map(r => [r.card_id, r.usd]));
+
         let merged = allDbRows
           .map(row => {
             const cardData = cardMap.get(row.card_id);
             if (!cardData) return null;
+            const cachedUsd = priceMap.get(row.card_id);
             return {
               ...cardData,
+              prices: {
+                ...cardData.prices,
+                usd: cardData.prices?.usd ?? (cachedUsd != null ? String(cachedUsd) : null),
+              },
               id_collection: row.id_collection,
               countById:     parseInt(row.countById, 10),
               card_condition: row.card_condition,
