@@ -36,6 +36,33 @@ async function refreshStalePrices(cardIds) {
     updated_at: new Date(),
   }));
 
+  // For cards with no USD price (common for non-English printings),
+  // try to find a price from another printing of the same card via oracle_id.
+  // Deduplicate by oracle_id so we make at most one lookup per unique card name.
+  const pricelessCards = freshCards.filter(c => !c.prices?.usd && c.uuid);
+  if (pricelessCards.length) {
+    const seen = new Set();
+    for (const card of pricelessCards) {
+      if (seen.has(card.uuid)) continue;
+      seen.add(card.uuid);
+      try {
+        const fallback = await scryfall.findUsdPrice(card.uuid);
+        if (fallback !== null) {
+          console.log(`[Prices] Fallback price $${fallback} for "${card.name}" (oracle ${card.uuid})`);
+          // Apply to all rows sharing this oracle_id that still have no price
+          for (const row of rows) {
+            if (row.usd === null) {
+              const fc = freshCards.find(c => c.id === row.card_id && c.uuid === card.uuid);
+              if (fc) row.usd = fallback;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`[Prices] findUsdPrice failed for oracle ${card.uuid}: ${err.message}`);
+      }
+    }
+  }
+
   // INSERT ... ON DUPLICATE KEY UPDATE for upsert
   await knex.raw(
     `INSERT INTO card_prices (card_id, usd, updated_at)

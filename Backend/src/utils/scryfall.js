@@ -163,4 +163,41 @@ async function getSets() {
   return res.data.data;
 }
 
-module.exports = { searchCards, batchGetCards, getSets, normalizeCard, resolveCardName, sfGet };
+/**
+ * Given a Scryfall oracle_id, find the best available USD price across all printings.
+ * Strategy:
+ *   1. Search English printings (lang:en) sorted newest-first — most likely to have USD pricing
+ *   2. If none have a price, search all languages
+ *   3. Returns a float or null if no price found anywhere
+ */
+async function findUsdPrice(oracleId) {
+  // 1. Try English printings first
+  try {
+    const res = await sfGet(`${SCRYFALL_BASE}/cards/search`, {
+      q:     `oracleid:${oracleId} lang:en`,
+      order: 'released',
+      dir:   'desc',
+    });
+    const found = res.data.data.find(c => c.prices?.usd != null);
+    if (found) return parseFloat(found.prices.usd);
+  } catch (err) {
+    if (err.response?.status !== 404) throw err;
+  }
+
+  // 2. Fallback: any language
+  try {
+    const res = await sfGet(`${SCRYFALL_BASE}/cards/search`, {
+      q:     `oracleid:${oracleId}`,
+      order: 'released',
+      dir:   'desc',
+    });
+    const found = res.data.data.find(c => c.prices?.usd != null);
+    if (found) return parseFloat(found.prices.usd);
+  } catch (err) {
+    if (err.response?.status !== 404) throw err;
+  }
+
+  return null;
+}
+
+module.exports = { searchCards, batchGetCards, getSets, normalizeCard, resolveCardName, sfGet, findUsdPrice };
