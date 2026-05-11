@@ -78,6 +78,12 @@ const S = {
     background: '#27ae60', border: 'none', fontSize: 24,
     cursor: 'pointer', color: '#fff', pointerEvents: 'auto',
   },
+  btnQty: {
+    width: 44, height: 44, borderRadius: '50%',
+    background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.4)',
+    color: '#fff', fontSize: 24, cursor: 'pointer', pointerEvents: 'auto',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+  },
   // ── UI layer ──────────────────────────────────────────────────────────────
   // position:fixed escapes the <video> hardware compositor layer.
   // Chrome on Linux renders video in a GPU overlay that ignores CSS z-index;
@@ -136,6 +142,7 @@ function OpenCamera({ close }) {
   const [polygon, setPolygon]         = useState(null);
   const [devices, setDevices]         = useState([]);
   const [deviceIndex, setDeviceIndex] = useState(0);
+  const [quantity, setQuantity]       = useState(1);
   const carouselRef      = useRef(null);
   const overlayCanvasRef = useRef(null);
 
@@ -456,6 +463,7 @@ function OpenCamera({ close }) {
         headers: { 'Content-Type': 'application/json', authorization: authHeader() },
         body:    JSON.stringify({
           card_id:      card.id,
+          quantity,
           ...(ocrFragment && scanOracleId
             ? { ocr_fragment: ocrFragment, oracle_id: scanOracleId }
             : {}),
@@ -464,6 +472,7 @@ function OpenCamera({ close }) {
     } catch (err) {
       console.error('Failed to add card:', err);
     }
+    setQuantity(1);
     setCandidates([]);
     setNextPage(null);
     setOcrFragment(null);
@@ -472,9 +481,10 @@ function OpenCamera({ close }) {
     setPolygon(null);
     drawPolygon(null);
     setStatus('scanning');
-  }, [authHeader, candidates, centeredIdx, drawPolygon, ocrFragment, scanOracleId]);
+  }, [authHeader, candidates, centeredIdx, drawPolygon, ocrFragment, quantity, scanOracleId]);
 
   const handleDismiss = useCallback(() => {
+    setQuantity(1);
     setCandidates([]);
     setNextPage(null);
     setOcrFragment(null);
@@ -624,6 +634,19 @@ function OpenCamera({ close }) {
                   <p style={S.cardMeta}> </p>
                 </div>
               )}
+            </div>
+
+            {/* Quantity selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button
+                onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                style={S.btnQty}
+              >−</button>
+              <span style={{ color: '#fff', fontSize: 22, minWidth: 32, textAlign: 'center' }}>{quantity}</span>
+              <button
+                onClick={() => setQuantity(q => Math.min(99, q + 1))}
+                style={S.btnQty}
+              >+</button>
             </div>
 
             <div style={S.btnRow}>

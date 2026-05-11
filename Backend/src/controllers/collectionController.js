@@ -203,11 +203,13 @@ module.exports = {
     const now           = new Date();
     const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
     const { card_id, card_condition, ocr_fragment, oracle_id } = req.body;
+    const quantity = Math.min(99, Math.max(1, parseInt(req.body.quantity, 10) || 1));
     const user_id = req.userId;
 
     try {
-      const result = await knex('collection').insert({ card_id, card_condition, user_id });
-      console.log(`Post successful of ${card_id} on Collection of user${user_id} by ${req.ip} at ${formattedDate}`);
+      const rows = Array.from({ length: quantity }, () => ({ card_id, card_condition, user_id }));
+      const result = await knex('collection').insert(rows);
+      console.log(`Post successful of ${card_id} x${quantity} on Collection of user${user_id} by ${req.ip} at ${formattedDate}`);
 
       // Update scan cache if the client supplied the OCR fragment that led to this card.
       // Fire-and-forget — don't block or fail the response if the cache write errors.
