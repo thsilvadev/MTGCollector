@@ -148,6 +148,7 @@ const translations = {
     'card.deleteTitle':         'Remove from Collection',
     'card.notObtained':         'not obtained',
     'card.inCollection':        'in Collection:',
+    'card.perUnit':              '/unit',
     'minicard.removeDeckTitle': 'Remove from Deck',
     'minicard.removeDeckMsg':   'Remove {name} from this deck?',
 
@@ -304,6 +305,7 @@ const translations = {
     'card.deleteTitle':         'Remover da Coleção',
     'card.notObtained':         'não obtida',
     'card.inCollection':        'na Coleção:',
+    'card.perUnit':              '/unid',
     'minicard.removeDeckTitle': 'Remover do Deck',
     'minicard.removeDeckMsg':   'Remover {name} deste deck?',
 
