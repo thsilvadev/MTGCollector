@@ -231,7 +231,7 @@ function Card({
 
   const renderer = () => {
     if (isMouseOver || istouchOver) {
-      const priceLabel = prices?.usd ? ` · $${prices.usd}` : '';
+      const priceLabel = prices?.usd ? ` · $${prices.usd}/unit` : '';
       if (collectionCard.length === 0) {
         return <span>{t('card.notObtained')}{priceLabel}</span>;
       } else {
