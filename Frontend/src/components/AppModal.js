@@ -120,6 +120,7 @@ export default function AppModal({
   title: titleText,
   message,
   maxQty = 1,
+  currentQty = 1,
   cardName,
   deckName = '',
   deckDesc = '',
@@ -127,7 +128,7 @@ export default function AppModal({
   onConfirm,
   onCancel,
 }) {
-  const [qty, setQty]   = useState(1);
+  const [qty, setQty]   = useState(type === 'set-qty' ? currentQty : 1);
   const [dName, setDName] = useState(deckName);
   const [dDesc, setDDesc] = useState(deckDesc);
   const { t } = useI18n();
@@ -183,6 +184,51 @@ export default function AppModal({
             <button style={cancelBtn} onClick={onCancel}>{t('modal.cancel')}</button>
             <button style={confirmBtn} onClick={() => onConfirm(qty)}>
               {qty === 1 ? t('modal.remove1') : t('modal.removeN', { n: qty })}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'set-qty') {
+    const decrement = () => setQty((q) => Math.max(0, q - 1));
+    const increment = () => setQty((q) => Math.min(99, q + 1));
+    const handleInput = (e) => {
+      const v = parseInt(e.target.value, 10);
+      if (!isNaN(v)) setQty(Math.min(99, Math.max(0, v)));
+    };
+    const isRemoveAll = qty === 0;
+
+    return (
+      <div style={overlay} onClick={onCancel}>
+        <div style={box} onClick={stopProp}>
+          <h3 style={title}>{t('modal.setQtyTitle', { name: cardName })}</h3>
+          <p style={{ ...msg, marginBottom: 16 }}>{t('modal.setQtyMsg')}</p>
+          <div style={qtyRow}>
+            <button style={qtyBtn} onClick={decrement} disabled={qty <= 0}>−</button>
+            <input
+              type="number"
+              value={qty}
+              min={0}
+              max={99}
+              onChange={handleInput}
+              style={{ ...inputStyle, marginBottom: 0, width: 64, textAlign: 'center' }}
+            />
+            <button style={qtyBtn} onClick={increment} disabled={qty >= 99}>+</button>
+          </div>
+          {isRemoveAll && (
+            <p style={{ color: '#e74c3c', fontSize: '0.85rem', margin: '-8px 0 12px' }}>
+              {t('modal.setQtyRemoveAll')}
+            </p>
+          )}
+          <div style={btnRow}>
+            <button style={cancelBtn} onClick={onCancel}>{t('modal.cancel')}</button>
+            <button
+              style={{ ...confirmBtn, background: isRemoveAll ? '#c0392b' : '#2980b9' }}
+              onClick={() => onConfirm(qty)}
+            >
+              {isRemoveAll ? t('modal.removeAll') : t('modal.save')}
             </button>
           </div>
         </div>

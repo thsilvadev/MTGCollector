@@ -3,7 +3,7 @@ import styles from "../styles/MiniCard.module.css";
 
 //Tools
 import Axios from "axios";
-import { React, useState, useRef, useCallback } from "react";
+import { React, useState } from "react";
 import { toast } from 'react-toastify';
 
 import { useAuthHeader } from "react-auth-kit";
@@ -72,79 +72,38 @@ const MiniCard = ({
   const [modal, setModal] = useState(null);
   const { t } = useI18n();
 
-  // +/- debounce state
-  const pendingDeltaRef = useRef(0);
-  const [pendingDisplay, setPendingDisplay] = useState(0);
-  const debounceRef = useRef(null);
-
-  const fireRequests = useCallback(async () => {
-    const delta = pendingDeltaRef.current;
-    if (delta === 0) return;
-    pendingDeltaRef.current = 0;
-    setPendingDisplay(0);
-    const cfg = { headers: { authorization: authHeader() } };
-    try {
-      if (delta > 0) {
-        for (let i = 0; i < delta; i++) {
-          await Axios.post(`${window.name}/collection/`, {
-            card_id: id,
-            card_condition: 'Undescribed',
-            id_collection: null,
-          }, cfg);
-        }
-      } else {
-        await Axios.delete(
-          `${window.name}/collection/card/${id}?count=${Math.abs(delta)}`,
-          cfg
-        );
-      }
-      toggle();
-    } catch (err) {
-      console.error('Quantity update failed:', err);
-      toast.error(t('toast.failedQty'));
-      // Revert pending display
-      pendingDeltaRef.current = delta;
-      setPendingDisplay(delta);
-    }
-  }, [authHeader, id, toggle]);
-
-  const handleAdd = (e) => {
-    e.stopPropagation();
-    pendingDeltaRef.current += 1;
-    setPendingDisplay((d) => d + 1);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(fireRequests, 2000);
-  };
-
-  const handleRemove = (e) => {
-    e.stopPropagation();
-    if (pendingDeltaRef.current <= -(count)) return;
-    pendingDeltaRef.current -= 1;
-    setPendingDisplay((d) => d - 1);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(fireRequests, 2000);
-  };
-
-  //Delete from Collection (opens modal)
+  //Delete from Collection (opens modal to set total quantity)
   const deleteFromCollection = (e) => {
     if (e) e.stopPropagation();
     setModal({
-      type: 'delete-qty',
+      type: 'set-qty',
       cardName: name,
-      maxQty: count,
+      currentQty: count,
       onCancel: () => setModal(null),
-      onConfirm: (qty) => {
+      onConfirm: (newQty) => {
         setModal(null);
+        if (newQty === count) return; // no change
         const cfg = { headers: { authorization: authHeader() } };
-        Axios.delete(`${window.name}/collection/card/${id}?count=${qty}`, cfg)
-          .then(() => {
-            console.log(`requested to delete ${qty}x ${name} from collection`);
-            toggle();
-          })
-          .catch((err) => {
-            console.error(err);
-            toast.error(t('toast.failedRemove'));
-          });
+        if (newQty === 0) {
+          // Remove all copies
+          Axios.delete(`${window.name}/collection/card/${id}?count=${count}`, cfg)
+            .then(() => toggle())
+            .catch((err) => { console.error(err); toast.error(t('toast.failedRemove')); });
+        } else if (newQty < count) {
+          // Remove the difference
+          Axios.delete(`${window.name}/collection/card/${id}?count=${count - newQty}`, cfg)
+            .then(() => toggle())
+            .catch((err) => { console.error(err); toast.error(t('toast.failedRemove')); });
+        } else {
+          // Add the difference
+          Axios.post(`${window.name}/collection/`, {
+            card_id: id,
+            card_condition: 'Undescribed',
+            quantity: newQty - count,
+          }, cfg)
+            .then(() => toggle())
+            .catch((err) => { console.error(err); toast.error(t('toast.failedRemove')); });
+        }
       },
     });
   };
@@ -624,8 +583,6 @@ const MiniCard = ({
 
   if (isModalOpen) {
     if (table === "collection") {
-      const displayCount = count + pendingDisplay;
-      const isPending = pendingDisplay !== 0;
       return (
         <div>
           {modal && <AppModal {...modal} />}
@@ -643,19 +600,7 @@ const MiniCard = ({
             onTouchMove={handleMouseMove}
           >
             <div className={styles.Count}>
-              {isMouseOver ? (
-                <div className={styles.qtyControls} onClick={(e) => e.stopPropagation()}>
-                  <button className={styles.qtyBtn} onClick={handleRemove}>−</button>
-                  <span style={{ color: isPending ? '#f39c12' : undefined }}>
-                    {displayCount}x
-                  </span>
-                  <button className={styles.qtyBtn} onClick={handleAdd}>+</button>
-                </div>
-              ) : (
-                <p style={{ color: isPending ? '#f39c12' : undefined }}>
-                  {displayCount}x
-                </p>
-              )}
+              <p>{count}x</p>
             </div>
             <div className={styles.Main}>
               <span>{cardName}</span>

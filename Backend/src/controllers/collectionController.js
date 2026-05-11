@@ -122,7 +122,7 @@ module.exports = {
 
       if (!hasFilters) {
         // ── Fast path: paginate in DB, fetch only the current page from Scryfall ─
-        total = allDbRows.length;
+        total = allDbRows.reduce((sum, r) => sum + parseInt(r.countById, 10), 0);
         const pageRows     = allDbRows.slice(page * 40, (page + 1) * 40);
         const scryfallIds  = pageRows.map(r => r.card_id);
         const scryfallCards = await scryfall.batchGetCards(scryfallIds);
@@ -179,7 +179,7 @@ module.exports = {
           merged = merged.filter(c => matchesColorFilter(c.colorIdentity, query.colorIdentity));
         }
 
-        total = merged.length;
+        total = merged.reduce((sum, c) => sum + c.countById, 0);
         cards = merged.slice(page * 40, (page + 1) * 40);
       }
 

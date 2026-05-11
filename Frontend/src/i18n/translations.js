@@ -117,6 +117,10 @@ const translations = {
     'modal.maxQty':      ' (max {max})',
     'modal.remove1':     '1 copy',
     'modal.removeN':     '{n} copies',
+    'modal.setQtyTitle':     '{name}',
+    'modal.setQtyMsg':       'How many copies do you have in your collection?',
+    'modal.setQtyRemoveAll': 'Setting to 0 will remove all copies from your collection.',
+    'modal.removeAll':       'Remove all',
 
     // TOASTS
     'toast.cardAdded':      'Card added to collection!',
@@ -269,6 +273,10 @@ const translations = {
     'modal.maxQty':      ' (máx. {max})',
     'modal.remove1':     '1 cópia',
     'modal.removeN':     '{n} cópias',
+    'modal.setQtyTitle':     '{name}',
+    'modal.setQtyMsg':       'Quantas cópias você tem na sua coleção?',
+    'modal.setQtyRemoveAll': 'Definir como 0 vai remover todas as cópias da sua coleção.',
+    'modal.removeAll':       'Remover todas',
 
     // TOASTS
     'toast.cardAdded':      'Carta adicionada à coleção!',
