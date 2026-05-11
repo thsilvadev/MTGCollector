@@ -187,7 +187,7 @@ function OpenCamera({ close }) {
       // Using 'ideal' (not 'exact') is a soft preference — desktop webcams still work.
       const videoConstraints = deviceId
         ? { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-        : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } };
+        : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 }, focusMode: 'continuous' };
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: videoConstraints,
@@ -217,6 +217,21 @@ function OpenCamera({ close }) {
         const idx = videoDevices.findIndex(d => d.deviceId === activeId);
         if (idx !== -1) setDeviceIndex(idx);
         console.log('[Scanner] Browser chose camera:', videoDevices[idx]?.label || activeId);
+      }
+
+      // Request continuous autofocus — Android Chrome doesn't enable it by default.
+      // iOS Safari enables it automatically, so this is a no-op there.
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        const capabilities = track.getCapabilities?.();
+        if (capabilities?.focusMode?.includes('continuous')) {
+          try {
+            await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+            console.log('[Scanner] Continuous autofocus enabled');
+          } catch (e) {
+            console.warn('[Scanner] Could not set continuous autofocus:', e);
+          }
+        }
       }
 
       setStatus('scanning');
