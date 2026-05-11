@@ -14,7 +14,12 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Pre-download EasyOCR models at build time
 RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False)"
 
-COPY app.py entrypoint.sh ./
+# Build the card name database and bake it into the image layer.
+# Docker caches this layer; it only re-runs when build_card_db.py changes.
+COPY build_card_db.py .
+RUN python build_card_db.py
+
+COPY app.py entrypoint.sh build_card_db.py ./
 RUN chmod +x entrypoint.sh
 
 EXPOSE 8001

@@ -9,3 +9,5 @@ Pillow==10.3.0
 torch==2.3.1+cpu
 torchvision==0.18.1+cpu
 easyocr==1.7.1
+rapidfuzz
+requests

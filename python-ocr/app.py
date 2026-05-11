@@ -1,16 +1,104 @@
 import asyncio
 import concurrent.futures
 import cv2
+import json
+import logging
+import os
+import time
+import unicodedata
 import numpy as np
 import easyocr
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
-import logging
+from rapidfuzz import process as rf_process, fuzz
+from build_card_db import build as _build_card_db
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("ocr")
 
 app = FastAPI()
+
+# ── Card name database ─────────────────────────────────────────────────────────
+_DB_PATH         = os.path.join(os.path.dirname(__file__), "cards_db.json")
+_DB_MAX_AGE_DAYS = 7
+_card_names:      list = []   # original-cased names
+_card_names_norm: list = []   # lowercase + unaccented, parallel to _card_names
+
+
+def _normalize(text: str) -> str:
+    """Strip diacritics and lowercase for locale-agnostic fuzzy matching."""
+    nfkd = unicodedata.normalize("NFKD", text)
+    return "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
+
+
+def _load_card_names(names: list) -> None:
+    global _card_names, _card_names_norm
+    _card_names      = names
+    _card_names_norm = [_normalize(n) for n in names]
+    log.info("[CardDB] Loaded %d card names", len(_card_names))
+
+
+def correct_name(raw: str):
+    """
+    Fuzzy-match raw OCR text against the local card DB.
+    Returns (corrected_name, score) or (raw, 0) if no confident match.
+
+    Uses fuzz.ratio (pure edit distance, no partial/substring matching) to
+    avoid short card names like "Expel" scoring high against OCR garbage.
+    Also guards against word-count mismatches (e.g. a 1-word OCR fragment
+    should not match a 4-word card name).
+    """
+    if not _card_names or len(raw) < 5:
+        return raw, 0
+
+    result = rf_process.extractOne(
+        _normalize(raw), _card_names_norm,
+        scorer=fuzz.ratio, score_cutoff=75,
+    )
+    if result is None:
+        return raw, 0
+
+    _, score, idx = result
+    corrected = _card_names[idx]
+
+    # Reject if word counts differ by more than 1 — a 2-word OCR read should
+    # not correct to a 5-word card name (and vice-versa).
+    raw_words   = len(raw.split())
+    match_words = len(corrected.split())
+    if abs(raw_words - match_words) > 1:
+        log.info("[CardDB] Fuzzy rejected (word mismatch %dw vs %dw): '%s' → '%s'",
+                 raw_words, match_words, raw, corrected)
+        return raw, 0
+
+    log.info("[CardDB] Fuzzy: '%s' \u2192 '%s' (score=%d)", raw, corrected, score)
+    return corrected, score
+
+
+@app.on_event("startup")
+async def _on_startup():
+    if os.path.exists(_DB_PATH):
+        with open(_DB_PATH, encoding="utf-8") as f:
+            _load_card_names(json.load(f))
+    else:
+        log.warning("[CardDB] cards_db.json not found — fuzzy matching disabled")
+    asyncio.create_task(_weekly_refresh_loop())
+
+
+async def _weekly_refresh_loop():
+    """Check once per day; rebuild the DB if it is older than 7 days."""
+    while True:
+        await asyncio.sleep(24 * 3600)
+        if not os.path.exists(_DB_PATH):
+            continue
+        age_days = (time.time() - os.path.getmtime(_DB_PATH)) / 86400
+        if age_days >= _DB_MAX_AGE_DAYS:
+            log.info("[CardDB] DB is %.1f days old \u2014 refreshing...", age_days)
+            try:
+                new_names = await asyncio.to_thread(_build_card_db)
+                _load_card_names(new_names)
+            except Exception as exc:
+                log.error("[CardDB] Refresh failed: %s", exc)
+
 
 # Initialised once — models stay in memory
 ocr_reader = easyocr.Reader(['en'], gpu=False)
@@ -390,6 +478,13 @@ async def process_frame(frame: UploadFile = File(...)):
         log.info(f"OCR below threshold: '{name}' conf={confidence:.2f}")
         # Still return the polygon so the frontend can show border feedback.
         return JSONResponse({"found": False, "polygon": polygon})
+
+    # Fuzzy-correct OCR text against the local card name DB when confidence is imperfect.
+    # High-confidence reads (>= 0.85) are trusted as-is to avoid false corrections.
+    if confidence < 0.85:
+        corrected, score = correct_name(name)
+        if score > 0:
+            name = corrected
 
     log.info(f"Result: '{name}' conf={confidence:.2f} polygon={polygon}")
     return JSONResponse({
