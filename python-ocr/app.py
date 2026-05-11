@@ -116,94 +116,111 @@ def detect_card(image_bgr):
       - aspect ratio (must look like a card)
       - convexity  (rejects bowtie / self-intersecting quads)
       - area bounds (must be 8%–75% of frame — not background noise, not full frame)
+
+    Two-pass strategy:
+      Pass 1 (low Canny thresholds) — works well on solid/dark backgrounds.
+      Pass 2 (bilateral filter + high Canny thresholds) — suppresses background
+              textures/patterns so the card's strong edges survive; only runs when
+              pass 1 finds nothing.
     """
     img_h, img_w = image_bgr.shape[:2]
     img_area = img_h * img_w
-
-    gray  = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    gray  = clahe.apply(gray)
-
-    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
-    edges   = cv2.Canny(blurred, 20, 80)
-
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    edges  = cv2.dilate(edges, kernel, iterations=2)
-    edges  = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel, iterations=1)
-
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if not contours:
-        log.info("No contours found at all")
-        return None
-
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)
-    top_areas = [int(cv2.contourArea(c)) for c in contours[:3]]
-    log.info(f"Top-3 contour areas: {top_areas} (frame {img_w}x{img_h})")
 
     MIN_AREA_RATIO = 0.08  # card must cover at least 8% of frame
     MAX_AREA_RATIO = 0.90  # reject only if nearly the entire frame (background border)
 
     def valid_quad(pts, contour_area):
         """Return True only for convex, near-rectangular quads with card-like proportions."""
-        # Bounds check — coordinates outside the image make no sense and would draw
-        # a polygon beyond the canvas edge on the client.
         if np.any(pts[:, 0] < 0) or np.any(pts[:, 0] > img_w) or \
            np.any(pts[:, 1] < 0) or np.any(pts[:, 1] > img_h):
             return False
-        # Convexity check — rejects bowtie shapes where lines cross.
         if not cv2.isContourConvex(pts.reshape(-1, 1, 2).astype(np.int32)):
             return False
-        # Corner angle check — MTG cards are rectangles; reject severe trapezoids.
         if not _corner_angles_ok(pts):
             return False
-        # Aspect ratio check — must look like a card, even under perspective.
         r = _quad_aspect_ratio(pts)
         if not (CARD_RATIO_MIN <= r <= CARD_RATIO_MAX):
             return False
-        # Area check using the *contour* area (polygon area can be inaccurate after simplification).
         if not (img_area * MIN_AREA_RATIO <= contour_area <= img_area * MAX_AREA_RATIO):
             return False
         return True
 
-    for contour in contours[:6]:
-        area = cv2.contourArea(contour)
-        if area < img_area * MIN_AREA_RATIO:
-            break
-        if area > img_area * MAX_AREA_RATIO:
-            log.info(f"Contour too large ({100*area/img_area:.1f}%) — skipping")
-            continue
+    def _find_card_in_contours(contours, pass_label):
+        """Try to extract a valid card quad from a sorted contour list."""
+        top_areas = [int(cv2.contourArea(c)) for c in contours[:3]]
+        log.info(f"Top-3 contour areas: {top_areas} (frame {img_w}x{img_h})")
 
-        pct  = 100 * area / img_area
-        peri = cv2.arcLength(contour, True)
+        for contour in contours[:10]:
+            area = cv2.contourArea(contour)
+            if area < img_area * MIN_AREA_RATIO:
+                break
+            if area > img_area * MAX_AREA_RATIO:
+                log.info(f"Contour too large ({100*area/img_area:.1f}%) — skipping")
+                continue
 
-        # Strategy 1: approxPolyDP on raw contour
-        for eps in [0.01, 0.02, 0.03, 0.04, 0.05, 0.06]:
-            approx = cv2.approxPolyDP(contour, eps * peri, True)
-            if len(approx) == 4:
-                pts = approx.reshape(4, 2).astype("float32")
-                if valid_quad(pts, area):
-                    log.info(f"Detected via approxPolyDP eps={eps}: {pct:.1f}% of frame")
-                    return pts.tolist()
+            pct  = 100 * area / img_area
+            peri = cv2.arcLength(contour, True)
 
-        # Strategy 2: approxPolyDP on convex hull (always convex — hull fixes crossing lines)
-        hull      = cv2.convexHull(contour)
-        hull_peri = cv2.arcLength(hull, True)
-        for eps in [0.02, 0.04, 0.06, 0.08, 0.10]:
-            approx = cv2.approxPolyDP(hull, eps * hull_peri, True)
-            if len(approx) == 4:
-                pts = approx.reshape(4, 2).astype("float32")
-                if valid_quad(pts, area):
-                    log.info(f"Detected via hull eps={eps}: {pct:.1f}% of frame")
-                    return pts.tolist()
+            # Strategy 1: approxPolyDP on raw contour
+            for eps in [0.01, 0.02, 0.03, 0.04, 0.05, 0.06]:
+                approx = cv2.approxPolyDP(contour, eps * peri, True)
+                if len(approx) == 4:
+                    pts = approx.reshape(4, 2).astype("float32")
+                    if valid_quad(pts, area):
+                        log.info(f"Detected via approxPolyDP eps={eps} ({pass_label}): {pct:.1f}% of frame")
+                        return pts.tolist()
 
-        # Strategy 3: minAreaRect on convex hull — always a true rectangle (90° corners),
-        # more stable than raw contour, hull removes inner noise points.
-        hull_box  = cv2.convexHull(contour)
-        rect      = cv2.minAreaRect(hull_box)
-        box       = cv2.boxPoints(rect).astype("float32")
-        if valid_quad(box, area):
-            log.info(f"Detected via minAreaRect(hull): {pct:.1f}% of frame")
-            return box.tolist()
+            # Strategy 2: approxPolyDP on convex hull
+            hull      = cv2.convexHull(contour)
+            hull_peri = cv2.arcLength(hull, True)
+            for eps in [0.02, 0.04, 0.06, 0.08, 0.10]:
+                approx = cv2.approxPolyDP(hull, eps * hull_peri, True)
+                if len(approx) == 4:
+                    pts = approx.reshape(4, 2).astype("float32")
+                    if valid_quad(pts, area):
+                        log.info(f"Detected via hull eps={eps} ({pass_label}): {pct:.1f}% of frame")
+                        return pts.tolist()
+
+            # Strategy 3: minAreaRect on convex hull
+            rect = cv2.minAreaRect(cv2.convexHull(contour))
+            box  = cv2.boxPoints(rect).astype("float32")
+            if valid_quad(box, area):
+                log.info(f"Detected via minAreaRect(hull) ({pass_label}): {pct:.1f}% of frame")
+                return box.tolist()
+
+        return None
+
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray  = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
+    gray  = clahe.apply(gray)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+
+    # ── Pass 1: low thresholds, good on solid backgrounds ──────────────────
+    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+    edges   = cv2.Canny(blurred, 20, 80)
+    edges   = cv2.dilate(edges, kernel, iterations=2)
+    edges   = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel, iterations=1)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        result = _find_card_in_contours(contours, "pass1")
+        if result is not None:
+            return result
+
+    # ── Pass 2: bilateral filter + high thresholds, suppresses busy backgrounds
+    # Bilateral preserves strong edges (card border) while blurring weak texture edges.
+    bilateral = cv2.bilateralFilter(gray, 9, 75, 75)
+    bilateral = clahe.apply(bilateral)
+    blurred2  = cv2.GaussianBlur(bilateral, (5, 5), 0)
+    edges2    = cv2.Canny(blurred2, 50, 150)
+    edges2    = cv2.dilate(edges2, kernel, iterations=2)
+    edges2    = cv2.morphologyEx(edges2, cv2.MORPH_CLOSE, kernel, iterations=1)
+    contours2, _ = cv2.findContours(edges2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours2:
+        contours2 = sorted(contours2, key=cv2.contourArea, reverse=True)
+        result = _find_card_in_contours(contours2, "pass2-bilateral")
+        if result is not None:
+            return result
 
     log.info("No card detected in frame")
     return None
@@ -250,9 +267,11 @@ def _strip_variants(strip_bgr):
 def run_ocr(strip_bgr):
     """
     Try multiple preprocessing variants and return the best (text, confidence).
-    Short-circuits as soon as confidence >= 0.65.
+    Short-circuits as soon as confidence >= 0.50.
+    Also aborts early if 3 consecutive variants return empty (image too blurry/dark).
     """
     best_text, best_conf = "", 0.0
+    consecutive_empty = 0
 
     for variant, label in _strip_variants(strip_bgr):
         text, conf = _ocr_once(variant)
@@ -262,6 +281,12 @@ def run_ocr(strip_bgr):
             best_text = text
         if best_conf >= 0.50:
             break
+        if not text or conf == 0.0:
+            consecutive_empty += 1
+            if consecutive_empty >= 3:
+                break
+        else:
+            consecutive_empty = 0
 
     return best_text, best_conf
 
