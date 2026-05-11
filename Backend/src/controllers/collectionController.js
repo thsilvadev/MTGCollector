@@ -4,27 +4,35 @@
 const knex    = require('../database/index');
 const scryfall = require('../utils/scryfall');
 
-const PRICE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const PRICE_TTL_MS      = 24 * 60 * 60 * 1000; // 24 hours for cards with a known price
+const NULL_PRICE_TTL_MS =       60 * 60 * 1000; //  1 hour  for cards cached as null (retry sooner)
 
 /**
  * Refresh prices for any card_ids that are missing or older than PRICE_TTL_MS.
+ * Cards cached with usd = null are retried every NULL_PRICE_TTL_MS (1h) so that
+ * the fallback lookup (via oracle_id) eventually fills in prices for non-English cards.
  * Upserts into card_prices using Scryfall's batch endpoint.
  */
 async function refreshStalePrices(cardIds) {
   if (!cardIds.length) return;
 
   const existing = await knex('card_prices')
-    .select('card_id', 'updated_at')
+    .select('card_id', 'usd', 'updated_at')
     .whereIn('card_id', cardIds);
 
-  const existingMap = new Map(existing.map(r => [r.card_id, r.updated_at]));
+  const existingMap = new Map(existing.map(r => [r.card_id, r]));
   const cutoff      = new Date(Date.now() - PRICE_TTL_MS);
+  const nullCutoff  = new Date(Date.now() - NULL_PRICE_TTL_MS);
 
   const staleIds = cardIds.filter(id => {
-    const updatedAt = existingMap.get(id);
-    return !updatedAt || new Date(updatedAt) < cutoff;
+    const row = existingMap.get(id);
+    if (!row) return true;                                         // never fetched
+    if (new Date(row.updated_at) < cutoff) return true;            // older than 24h
+    if (row.usd === null && new Date(row.updated_at) < nullCutoff) return true; // null + older than 1h
+    return false;
   });
 
+  console.log(`[Prices] refreshStalePrices: ${cardIds.length} cards checked, ${staleIds.length} stale`);
   if (!staleIds.length) return;
 
   const freshCards = await scryfall.batchGetCards(staleIds);
@@ -36,19 +44,25 @@ async function refreshStalePrices(cardIds) {
     updated_at: new Date(),
   }));
 
+  const withPrice    = rows.filter(r => r.usd !== null).length;
+  const withoutPrice = rows.filter(r => r.usd === null).length;
+  console.log(`[Prices] Scryfall batch: ${freshCards.length} returned — ${withPrice} with price, ${withoutPrice} without`);
+
   // For cards with no USD price (common for non-English printings),
   // try to find a price from another printing of the same card via oracle_id.
   // Deduplicate by oracle_id so we make at most one lookup per unique card name.
   const pricelessCards = freshCards.filter(c => !c.prices?.usd && c.uuid);
   if (pricelessCards.length) {
+    console.log(`[Prices] Starting fallback lookup for ${pricelessCards.length} priceless card(s)...`);
     const seen = new Set();
     for (const card of pricelessCards) {
       if (seen.has(card.uuid)) continue;
       seen.add(card.uuid);
       try {
+        console.log(`[Prices] Looking up oracle ${card.uuid} ("${card.name}")`);
         const fallback = await scryfall.findUsdPrice(card.uuid);
         if (fallback !== null) {
-          console.log(`[Prices] Fallback price $${fallback} for "${card.name}" (oracle ${card.uuid})`);
+          console.log(`[Prices] ✓ Fallback $${fallback} for "${card.name}"`);
           // Apply to all rows sharing this oracle_id that still have no price
           for (const row of rows) {
             if (row.usd === null) {
@@ -56,6 +70,8 @@ async function refreshStalePrices(cardIds) {
               if (fc) row.usd = fallback;
             }
           }
+        } else {
+          console.log(`[Prices] ✗ No price found anywhere for "${card.name}" (oracle ${card.uuid})`);
         }
       } catch (err) {
         console.warn(`[Prices] findUsdPrice failed for oracle ${card.uuid}: ${err.message}`);

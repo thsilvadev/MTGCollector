@@ -179,9 +179,14 @@ async function findUsdPrice(oracleId) {
       dir:   'desc',
     });
     const found = res.data.data.find(c => c.prices?.usd != null);
-    if (found) return parseFloat(found.prices.usd);
+    if (found) {
+      console.log(`[Scryfall] findUsdPrice: EN hit — "${found.name}" (${found.set}) $${found.prices.usd}`);
+      return parseFloat(found.prices.usd);
+    }
+    console.log(`[Scryfall] findUsdPrice: EN search returned ${res.data.data.length} card(s), none with USD price`);
   } catch (err) {
     if (err.response?.status !== 404) throw err;
+    console.log(`[Scryfall] findUsdPrice: EN search 404 for oracle ${oracleId}`);
   }
 
   // 2. Fallback: any language
@@ -192,9 +197,14 @@ async function findUsdPrice(oracleId) {
       dir:   'desc',
     });
     const found = res.data.data.find(c => c.prices?.usd != null);
-    if (found) return parseFloat(found.prices.usd);
+    if (found) {
+      console.log(`[Scryfall] findUsdPrice: any-lang hit — "${found.name}" (${found.set}, ${found.lang}) $${found.prices.usd}`);
+      return parseFloat(found.prices.usd);
+    }
+    console.log(`[Scryfall] findUsdPrice: any-lang search returned ${res.data.data.length} card(s), none with USD price`);
   } catch (err) {
     if (err.response?.status !== 404) throw err;
+    console.log(`[Scryfall] findUsdPrice: any-lang search 404 for oracle ${oracleId}`);
   }
 
   return null;
