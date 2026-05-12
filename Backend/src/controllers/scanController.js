@@ -203,4 +203,30 @@ async function detect(req, res) {
   }
 }
 
-module.exports = { upload: upload.single('frame'), scan, more, detect };
+/**
+ * POST /admin/rebuild-card-db
+ * Body: { secret: "<ADMIN_REBUILD_SECRET from .env>" }
+ * Proxies to the Python OCR service to trigger a full card DB rebuild.
+ * The python-ocr port is intentionally not exposed; this backend acts as the proxy.
+ */
+async function rebuildCardDb(req, res) {
+  const expected = process.env.ADMIN_REBUILD_SECRET;
+  if (!expected) {
+    console.error('[Admin] ADMIN_REBUILD_SECRET is not set in .env');
+    return res.status(500).json({ error: 'Server misconfiguration.' });
+  }
+  if (!req.body?.secret || req.body.secret !== expected) {
+    console.warn('[Admin] rebuild-card-db: wrong or missing secret from', req.ip);
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
+  try {
+    const pyRes = await axios.post(`${PYTHON_URL}/admin/rebuild-db`, null, { timeout: 5000 });
+    console.log('[Admin] Rebuild triggered:', pyRes.data);
+    return res.json({ status: 'rebuild started' });
+  } catch (err) {
+    console.error('[Admin] Failed to trigger rebuild:', err.message);
+    return res.status(502).json({ error: 'Could not reach OCR service.' });
+  }
+}
+
+module.exports = { upload: upload.single('frame'), scan, more, detect, rebuildCardDb };

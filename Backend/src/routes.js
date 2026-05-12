@@ -87,6 +87,7 @@ routes.post('/login', usersController.loginUser) //Login user
 routes.post('/scan', authMiddleware, scanController.upload, scanController.scan);
 routes.post('/detect', authMiddleware, scanController.upload, scanController.detect);
 routes.get('/scan/more', authMiddleware, scanController.more);
+routes.post('/admin/rebuild-card-db', scanController.rebuildCardDb);
 
 
 

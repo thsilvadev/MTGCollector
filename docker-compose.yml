@@ -35,9 +35,10 @@ services:
       DB_USER:        root
       PASSWORD:       ${MYSQL_ROOT_PASSWORD}
       DATABASE:       ${MYSQL_DATABASE:-mtgchest}
-      AUTH_TOKEN_TAG:   ${JWT_SECRET}
-      NOREPLY_PASSWORD: ${NOREPLY_PASSWORD:-}
-      PYTHON_OCR_URL:   http://python-ocr:8001
+      AUTH_TOKEN_TAG:         ${JWT_SECRET}
+      NOREPLY_PASSWORD:       ${NOREPLY_PASSWORD:-}
+      PYTHON_OCR_URL:         http://python-ocr:8001
+      ADMIN_REBUILD_SECRET:   ${ADMIN_REBUILD_SECRET}
     volumes:
       - backend_data:/app/data   # persists set icons index across deploys
     depends_on:
