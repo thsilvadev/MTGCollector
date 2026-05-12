@@ -20,9 +20,11 @@ app = FastAPI()
 
 # ── Card name database ─────────────────────────────────────────────────────────
 _DB_PATH         = os.path.join(os.path.dirname(__file__), "cards_db.json")
+_INDEX_PATH      = os.path.join(os.path.dirname(__file__), "cards_index.json")
 _DB_MAX_AGE_DAYS = 7
 _card_names:      list = []   # original-cased names
 _card_names_norm: list = []   # lowercase + unaccented, parallel to _card_names
+_cards_index:     dict = {}   # normalised name → slim card object (local DB)
 
 
 def _normalize(text: str) -> str:
@@ -36,6 +38,12 @@ def _load_card_names(names: list) -> None:
     _card_names      = names
     _card_names_norm = [_normalize(n) for n in names]
     log.info("[CardDB] Loaded %d card names", len(_card_names))
+
+
+def _load_cards_index(index: dict) -> None:
+    global _cards_index
+    _cards_index = index
+    log.info("[CardDB] Loaded %d card index entries", len(_cards_index))
 
 
 def correct_name(raw: str):
@@ -81,7 +89,31 @@ async def _on_startup():
             _load_card_names(json.load(f))
     else:
         log.warning("[CardDB] cards_db.json not found — fuzzy matching disabled")
+    if os.path.exists(_INDEX_PATH):
+        with open(_INDEX_PATH, encoding="utf-8") as f:
+            _load_cards_index(json.load(f))
+    else:
+        log.warning("[CardDB] cards_index.json not found — local card lookup disabled")
     asyncio.create_task(_weekly_refresh_loop())
+
+
+async def _reload_index_from_disk():
+    """Hot-reload cards_index.json from disk after a rebuild."""
+    if os.path.exists(_INDEX_PATH):
+        with open(_INDEX_PATH, encoding="utf-8") as f:
+            _load_cards_index(json.load(f))
+
+
+async def _run_rebuild():
+    """Execute the full DB rebuild and hot-reload both data structures."""
+    log.info("[CardDB] Starting rebuild...")
+    try:
+        new_names = await asyncio.to_thread(_build_card_db)
+        _load_card_names(new_names)
+        await _reload_index_from_disk()
+        log.info("[CardDB] Rebuild complete")
+    except Exception as exc:
+        log.error("[CardDB] Rebuild failed: %s", exc)
 
 
 async def _weekly_refresh_loop():
@@ -93,11 +125,7 @@ async def _weekly_refresh_loop():
         age_days = (time.time() - os.path.getmtime(_DB_PATH)) / 86400
         if age_days >= _DB_MAX_AGE_DAYS:
             log.info("[CardDB] DB is %.1f days old \u2014 refreshing...", age_days)
-            try:
-                new_names = await asyncio.to_thread(_build_card_db)
-                _load_card_names(new_names)
-            except Exception as exc:
-                log.error("[CardDB] Refresh failed: %s", exc)
+            await _run_rebuild()
 
 
 # Initialised once — models stay in memory
@@ -452,6 +480,17 @@ def extract_name_strip(warped_bgr):
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
+@app.post("/admin/rebuild-db")
+async def admin_rebuild_db():
+    """
+    Manually trigger a full card DB rebuild (EN + PT paginated fetch).
+    Returns immediately; rebuild runs as a background task (~5-10 min).
+    Useful after a new MTG set releases without waiting for the weekly cycle.
+    """
+    asyncio.create_task(_run_rebuild())
+    return JSONResponse({"status": "rebuild started"})
+
+
 @app.post("/process")
 async def process_frame(frame: UploadFile = File(...)):
     """
@@ -506,12 +545,19 @@ async def process_frame(frame: UploadFile = File(...)):
             log.info(f"Corrected '{name}' → '{corrected}' (score={score:.0f})")
             name = corrected
 
+    # Local card index lookup — returns the slim card object if present.
+    # Allows scanController.js to skip all Scryfall HTTP calls for known cards.
+    card_entry = _cards_index.get(_normalize(name))
+    if card_entry:
+        log.info(f"[CardDB] Index hit: '{name}' id={card_entry.get('id')}")
+
     log.info(f"Result: '{name}' conf={confidence:.2f} polygon={polygon}")
     return JSONResponse({
         "found":      True,
         "name":       name,
         "confidence": round(confidence, 3),
         "polygon":    polygon,
+        "card":       card_entry,
     })
 
 

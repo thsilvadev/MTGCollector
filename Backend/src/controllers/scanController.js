@@ -98,6 +98,30 @@ async function scan(req, res) {
       return res.json({ ...cached, polygon: py.polygon });
     }
 
+    // ── Local card DB hit — zero Scryfall HTTP calls ──────────────────────────
+    // py.card is the slim card object from cards_index.json (built by build_card_db.py).
+    // nextPage gives the frontend a live Scryfall URL so "Load more printings" still works.
+    if (py.card) {
+      console.log(`[Scan] Local DB hit: "${cleanName}" (id=${py.card.id})`);
+      const allPrintsUrl = `${SCRYFALL}/cards/search?` + new URLSearchParams({
+        q:                    `!"${py.card.name}"`,
+        include_multilingual: 'true',
+        unique:               'prints',
+        order:                'released',
+        dir:                  'desc',
+      }).toString();
+      const payload = {
+        found:       true,
+        candidates:  [py.card],
+        nextPage:    allPrintsUrl,
+        ocrFragment: cleanName,
+        confidence:  py.confidence,
+      };
+      cacheSet(cacheKey, payload);
+      return res.json({ ...payload, polygon: py.polygon });
+    }
+
+    // ── Scryfall fallback — card not in local index (new/missing card) ─────────
     let sfRes;
     try {
       console.log(`[Scan] Scryfall exact search: "${cleanName}"`);
