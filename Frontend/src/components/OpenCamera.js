@@ -7,7 +7,7 @@ import { useAuthHeader } from 'react-auth-kit';
 // This works naturally with handheld tremor: the hand moves the card AND the
 // camera together, so the centroid stays roughly fixed even while the frame shifts.
 const DETECT_INTERVAL_MS          = 250;  // ms between /detect polls
-const POLYGON_STABLE_FRAMES       = 2;    // consecutive detections within drift limit → trigger /scan
+const POLYGON_STABLE_FRAMES       = 1;    // consecutive detections within drift limit → trigger /scan
 const POLYGON_STABLE_MAX_DRIFT_PX = 30;  // max centroid drift in 480px-wide space (~9% card width)
 const SCAN_COOLDOWN_MS            = 1500; // minimum ms between /scan calls
 

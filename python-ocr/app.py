@@ -376,6 +376,7 @@ def run_ocr(strip_bgr):
     variants   = _strip_variants(strip_bgr)
     best_text  = ""
     best_conf  = 0.0
+    best_score = 0.0  # weighted score: confidence × word-count bonus
     BATCH_SIZE = 3
 
     for batch_start in range(0, len(variants), BATCH_SIZE):
@@ -398,9 +399,17 @@ def run_ocr(strip_bgr):
                 len(_stripped) <= 2
                 or _stripped.replace("/", "").replace("{", "").replace("}", "").isdigit()
             )
-            if not _is_garbage and conf > best_conf:
-                best_conf = conf
-                best_text = text
+            if not _is_garbage:
+                # Give a 15% bonus per additional word so "Caminho de Lotus" (3 words,
+                # conf=0.80 → score=1.04) beats "Lotus" (1 word, conf=1.00 → score=1.00).
+                # Low-confidence garbled multi-word reads are unaffected because the base
+                # conf is already tiny (e.g. conf=0.03 → score=0.04 regardless of words).
+                _n_words = len(_stripped.split())
+                _score   = conf * (1.0 + 0.15 * max(0, _n_words - 1))
+                if _score > best_score:
+                    best_score = _score
+                    best_conf  = conf
+                    best_text  = text
             if text:
                 batch_has_text = True
 
@@ -436,7 +445,8 @@ def extract_name_strip(warped_bgr):
         h, w = warped_bgr.shape[:2]
 
     strip_h = max(50, int(h * 0.12))
-    strip   = warped_bgr[0:strip_h, :]
+    strip_w = int(w * 0.72)  # exclude right ~28%: that's the mana-cost area
+    strip   = warped_bgr[0:strip_h, :strip_w]
     return cv2.resize(strip, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
 
 
@@ -486,11 +496,14 @@ async def process_frame(frame: UploadFile = File(...)):
         # Still return the polygon so the frontend can show border feedback.
         return JSONResponse({"found": False, "polygon": polygon})
 
-    # Fuzzy-correct OCR text against the local card name DB when confidence is imperfect.
-    # High-confidence reads (>= 0.85) are trusted as-is to avoid false corrections.
-    if confidence < 0.85:
+    # Fuzzy-correct OCR text against the local card name DB.
+    # Run for anything below 0.97 — catches single-char OCR errors (e.g. "Dolvo" → "Polvo")
+    # even at high confidence (0.90–0.96). The word-count guard + score cutoff (75) in
+    # correct_name() protect against false corrections.
+    if confidence < 0.97:
         corrected, score = correct_name(name)
         if score > 0:
+            log.info(f"Corrected '{name}' → '{corrected}' (score={score:.0f})")
             name = corrected
 
     log.info(f"Result: '{name}' conf={confidence:.2f} polygon={polygon}")
@@ -518,6 +531,15 @@ async def detect_frame(frame: UploadFile = File(...)):
     img_area = image_bgr.shape[0] * image_bgr.shape[1]
     polygon = detect_card(image_bgr)
     if polygon is None:
+        return JSONResponse({"detected": False})
+
+    # Reject cards that are too close — polygon covers most of the frame.
+    # Returning detected=false here prevents the frontend from accumulating
+    # stable frames and firing /process, which would only waste the OCR cycle
+    # and burn the full SCAN_COOLDOWN.
+    pts = np.array(polygon, dtype="float32")
+    poly_area = float(cv2.contourArea(pts))
+    if poly_area / img_area > MAX_CARD_AREA_RATIO:
         return JSONResponse({"detected": False})
 
     return JSONResponse({"detected": True, "polygon": polygon})
