@@ -69,7 +69,10 @@ services:
     restart: unless-stopped
     environment:
       OMP_NUM_THREADS: "4"
-    mem_limit: 3g
+    mem_limit: 3g    
+    volumes:
+      - paddleocr_models:/root/.paddleocr   # persists downloaded models across rebuilds
+      - card_db_data:/app/carddb            # persists cards_db.json + cards_index.json across rebuilds
     networks:
       - app_network
 
@@ -77,7 +80,9 @@ volumes:
   mysql_data:
   caddy_data:
   caddy_config:
-  backend_data:   # persists set icon index + debug images across container rebuilds
+  backend_data:      # persists set icon index + debug images across container rebuilds
+  paddleocr_models:  # persists PaddleOCR model files across container rebuilds
+  card_db_data:      # persists cards_db.json + cards_index.json across container rebuilds
 
 networks:
   app_network:

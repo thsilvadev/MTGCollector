@@ -24,8 +24,9 @@ import requests
 log = logging.getLogger("ocr")
 
 SCRYFALL_SEARCH_URL = "https://api.scryfall.com/cards/search"
-OUTPUT_NAMES = os.path.join(os.path.dirname(__file__), "cards_db.json")
-OUTPUT_INDEX = os.path.join(os.path.dirname(__file__), "cards_index.json")
+CARDDB_DIR   = os.environ.get("CARDDB_DIR", os.path.join(os.path.dirname(__file__), "carddb"))
+OUTPUT_NAMES = os.path.join(CARDDB_DIR, "cards_db.json")
+OUTPUT_INDEX = os.path.join(CARDDB_DIR, "cards_index.json")
 
 # Scryfall asks for ≥ 50–100 ms between requests and a descriptive User-Agent.
 _REQUEST_DELAY = 0.15
@@ -157,6 +158,7 @@ def build() -> list:
 
     all_names = sorted(names)
 
+    os.makedirs(CARDDB_DIR, exist_ok=True)
     with open(OUTPUT_NAMES, "w", encoding="utf-8") as f:
         json.dump(all_names, f, ensure_ascii=False)
 

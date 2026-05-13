@@ -7,7 +7,7 @@ import os
 import time
 import unicodedata
 import numpy as np
-import easyocr
+from paddleocr import PaddleOCR
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from rapidfuzz import process as rf_process, fuzz
@@ -19,8 +19,9 @@ log = logging.getLogger("ocr")
 app = FastAPI()
 
 # ── Card name database ─────────────────────────────────────────────────────────
-_DB_PATH         = os.path.join(os.path.dirname(__file__), "cards_db.json")
-_INDEX_PATH      = os.path.join(os.path.dirname(__file__), "cards_index.json")
+_CARDDB_DIR = os.environ.get("CARDDB_DIR", os.path.join(os.path.dirname(__file__), "carddb"))
+_DB_PATH         = os.path.join(_CARDDB_DIR, "cards_db.json")
+_INDEX_PATH      = os.path.join(_CARDDB_DIR, "cards_index.json")
 _DB_MAX_AGE_DAYS = 7
 _card_names:      list = []   # original-cased names
 _card_names_norm: list = []   # lowercase + unaccented, parallel to _card_names
@@ -128,8 +129,9 @@ async def _weekly_refresh_loop():
             await _run_rebuild()
 
 
-# Initialised once — models stay in memory
-ocr_reader = easyocr.Reader(['en'], gpu=False)
+# Initialised once — models stay in memory.
+# show_log=False silences PaddleOCR's verbose per-inference output.
+ocr_reader = PaddleOCR(use_angle_cls=True, lang='en', use_gpu=False, show_log=False)
 
 # Thread pool for CPU-bound OCR — keeps uvicorn's event loop free for other requests
 _ocr_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
@@ -349,12 +351,20 @@ def detect_card(image_bgr):
 # ── OCR helpers ────────────────────────────────────────────────────────────────
 
 def _ocr_once(img):
-    """Run EasyOCR and return (text, confidence) for the highest-confidence detection."""
-    result = ocr_reader.readtext(img, width_ths=0.9, paragraph=False)
-    if not result:
+    """Run PaddleOCR and return (text, confidence) for the highest-confidence detection.
+
+    PaddleOCR returns a list-of-pages: result[0] is the line list for our image.
+    Each line: [bbox, [text, confidence]]
+    """
+    result = ocr_reader.ocr(img, cls=True)
+    # result[0] can be None when the image has no detectable text
+    if not result or result[0] is None:
         return "", 0.0
-    best = max(result, key=lambda r: r[2])
-    return best[1].strip(), float(best[2])
+    lines = result[0]
+    if not lines:
+        return "", 0.0
+    best = max(lines, key=lambda r: r[1][1])
+    return best[1][0].strip(), float(best[1][1])
 
 
 def _strip_variants(strip_bgr):
