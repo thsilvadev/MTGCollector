@@ -29,10 +29,21 @@ RUN uv pip install --system --no-cache \
 # Build the card name database and bake it into the image layer.
 # Set BUILD_CARD_DB=false to skip (e.g. during development / fast rebuilds).
 # Default is true so production builds always have a fresh DB.
+#
+# --mount=type=cache persists /cache/carddb across docker build retries so
+# the PT checkpoint survives a build timeout — the next attempt resumes PT
+# from the last saved page instead of starting from scratch.
+# EN is fetched via the Scryfall bulk-data API (single ~100 MB download) and
+# is fast enough to re-run on every retry without a cache.
 ARG BUILD_CARD_DB=true
 COPY build_card_db.py .
-RUN if [ "$BUILD_CARD_DB" = "true" ]; then \
-        CARDDB_DIR=/app/carddb_seed python build_card_db.py; \
+RUN --mount=type=cache,target=/cache/carddb \
+    if [ "$BUILD_CARD_DB" = "true" ]; then \
+        CARDDB_DIR=/cache/carddb python build_card_db.py \
+        && mkdir -p /app/carddb_seed \
+        && cp -r /cache/carddb/. /app/carddb_seed/ \
+        && rm -f /app/carddb_seed/pt_checkpoint.json \
+                 /app/carddb_seed/pt_checkpoint.json.tmp; \
     else echo "[CardDB] Skipping DB build (BUILD_CARD_DB=false)"; fi
 
 COPY app.py entrypoint.sh build_card_db.py ./

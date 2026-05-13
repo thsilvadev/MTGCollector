@@ -4,6 +4,7 @@ import cv2
 import json
 import logging
 import os
+import threading
 import time
 import unicodedata
 import numpy as np
@@ -109,7 +110,7 @@ async def _run_rebuild():
     """Execute the full DB rebuild and hot-reload both data structures."""
     log.info("[CardDB] Starting rebuild...")
     try:
-        new_names = await asyncio.to_thread(_build_card_db)
+        new_names = await asyncio.to_thread(_build_card_db, True)
         _load_card_names(new_names)
         await _reload_index_from_disk()
         log.info("[CardDB] Rebuild complete")
@@ -139,6 +140,11 @@ _ocr_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 # Separate pool for parallel OCR variant batches (runs inside _ocr_executor workers).
 # max_workers=4 lets 3 variants run truly simultaneously per /process request.
 _variant_executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+
+# PaddlePaddle (compiled against OpenBlas) is NOT thread-safe — concurrent calls to
+# ocr_reader.ocr() from multiple threads cause a SIGSEGV segfault.
+# This lock serialises all OCR inference calls across all executor threads.
+_ocr_lock = threading.Lock()
 
 # MTG card aspect ratio: 63.5 mm × 88.9 mm → 0.714 portrait / 1.397 landscape.
 # Generous bounds for camera angle perspective distortion.
@@ -356,7 +362,8 @@ def _ocr_once(img):
     PaddleOCR returns a list-of-pages: result[0] is the line list for our image.
     Each line: [bbox, [text, confidence]]
     """
-    result = ocr_reader.ocr(img, cls=True)
+    with _ocr_lock:
+        result = ocr_reader.ocr(img, cls=True)
     # result[0] can be None when the image has no detectable text
     if not result or result[0] is None:
         return "", 0.0

@@ -68,7 +68,7 @@ services:
     build: ./python-ocr
     restart: unless-stopped
     environment:
-      OMP_NUM_THREADS: "4"
+      OMP_NUM_THREADS: "1"
     mem_limit: 3g    
     volumes:
       - paddleocr_models:/root/.paddleocr   # persists downloaded models across rebuilds
