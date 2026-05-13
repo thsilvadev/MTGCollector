@@ -12,18 +12,12 @@ else
     echo "[python-ocr] PaddleOCR models already cached."
 fi
 
-# Seed the card DB volume from the baked image data (first start after build).
-# Subsequent starts reuse the already-populated volume — no Scryfall calls.
-if [ ! -f /app/carddb/cards_db.json ]; then
-    if [ -f /app/carddb_seed/cards_db.json ]; then
-        echo "[python-ocr] Seeding card DB from image into volume (one-time copy)..."
-        mkdir -p /app/carddb
-        cp -r /app/carddb_seed/. /app/carddb/
-    else
-        echo "[python-ocr] No baked DB found — building from Scryfall (may take a few minutes)..."
-        python /app/build_card_db.py
-    fi
-fi
+# Build (or resume) the card DB into the persisted volume (/app/carddb).
+# - Skips immediately if cards_db.json already exists (nothing to do).
+# - Resumes PT pagination from pt_checkpoint.json if a previous run was interrupted.
+# - EN uses the Scryfall bulk-data API (~100 MB, ~30 s) — no checkpoint needed.
+echo "[python-ocr] Initialising card DB..."
+python /app/build_card_db.py
 
 echo "[python-ocr] Starting server..."
 exec uvicorn app:app --host 0.0.0.0 --port 8001
