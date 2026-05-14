@@ -260,7 +260,7 @@ module.exports = {
           merged.sort((a, b) => {
             if (field === 'name')  return (a.name || '').localeCompare(b.name || '');
             if (field === 'cmc')   return (a.manaValue || 0) - (b.manaValue || 0);
-            if (field === 'usd')   return (parseFloat(a.prices?.usd) || 0) - (parseFloat(b.prices?.usd) || 0);
+            if (field === 'usd')   return (parseFloat(b.prices?.usd) || 0) - (parseFloat(a.prices?.usd) || 0);
             return 0;
           });
         }
