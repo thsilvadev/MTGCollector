@@ -28,6 +28,12 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
   //care for SQL Injection possibility
   const [selectedName, setSelectedName] = useState("&name=");
 
+  // Order-by (must be declared before queryParams)
+  const [selectedOrderBy, setSelectedOrderBy] = useState("");
+  const handleOrderByChange = (event) => {
+    setSelectedOrderBy(event.target.value);
+  };
+
   //Statelifting queryParams
   let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}${selectedOrderBy ? `&orderBy=${selectedOrderBy}` : ''}`;
 
@@ -254,12 +260,6 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
 
   const isAdvanced = advancedSearch ? "flex" : "none";
 
-  // Order-by
-  const [selectedOrderBy, setSelectedOrderBy] = useState("");
-  const handleOrderByChange = (event) => {
-    setSelectedOrderBy(event.target.value);
-  };
-
   //Getting Sets
 
   // In the useEffect, we check if localSets is an empty array [] instead of null. If it's empty, we make the Axios request to fetch the data, and then we store it in localStorage as a JSON string using JSON.stringify(response.data).
@@ -438,9 +438,9 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
             </div>
           </div>
         </div>
-        <div className="col mt-4 justify-content-center d-flex flex-wrap">
+        <div className="col mt-4 d-flex justify-content-center">
           <form role="search" onSubmit={e => e.preventDefault()}>
-            <div className="row align-items-center" style={{ gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <input
                 className={styles.Input}
                 onChange={debouncedHandleNameChange}
@@ -452,7 +452,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
             </div>
           </form>
         </div>
-        <div className="col mt-4 justify-content-center d-flex flex-wrap">
+        <div className="col mt-4 d-flex justify-content-center">
           <select
             value={selectedOrderBy}
             className={styles.FilterBox}
@@ -477,10 +477,10 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
     return (
       <div className={styles.CollectionSearch}>
         <div className="d-flex justify-content-center">
-          <div className="row align-items-center">
-            <div className="col-sm">
+          <div className="row align-items-center justify-content-center">
+            <div className="col-12 d-flex justify-content-center">
               <form role="search" onSubmit={e => e.preventDefault()}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <input
                     className={styles.Input}
                     onChange={debouncedHandleNameChange}
@@ -492,7 +492,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
                 </div>
               </form>
             </div>
-            <div className="col-sm">
+            <div className="col-12 d-flex justify-content-center mt-2">
               <div className="row flex-nowrap">
                 <div className="col ps-0 pe-0">
                   <input
@@ -555,7 +555,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
                 </div>
               </div>
             </div>
-            <div className="col-sm">
+            <div className="col-12 d-flex justify-content-center mt-2">
               <label className={styles.toggleSwitch}>
                 <input
                   type="checkbox"
@@ -571,8 +571,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
         </div>
 
         <div className={`d-${isAdvanced} justify-content-center mb-2`}>
-          <div className="row justify-content-around">
-            <div className="col-12 col-sm-12 col-lg-4">
+          <div className="row justify-content-center" style={{ maxWidth: 360, margin: '0 auto', gap: 0 }}>
+            <div className="col-12" style={{ marginBottom: 16 }}>
               <select
                 value={selectedOrderBy}
                 className={styles.FilterBox}
@@ -585,7 +585,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
               </select>
             </div>
 
-            <div className="col-12 col-sm-12 col-lg-4">
+            <div className="col-12">
               <select
                 value={selectedType}
                 className={styles.FilterBox}
@@ -604,7 +604,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
               </select>
             </div>
 
-            <div className="col-12 col-sm-12 col-lg-4">
+            <div className="col-12">
               <select
                 value={selectedSet}
                 className={styles.FilterBox}
@@ -626,7 +626,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
               </select>
             </div>
 
-            <div className="col-12 col-sm-12 col-lg-4">
+            <div className="col-12">
               <select
                 value={selectedRarity}
                 className={styles.FilterBox}
