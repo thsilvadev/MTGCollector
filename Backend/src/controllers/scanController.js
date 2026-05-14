@@ -40,7 +40,7 @@ async function more(req, res) {
     return res.status(400).json({ error: 'Invalid URL.' });
   }
   try {
-    const { data } = await axios.get(url, { headers: SF_HEADERS });
+    const { data } = await sfGet(url);
     return res.json({
       candidates: data.data     || [],
       nextPage:   data.has_more ? data.next_page : null,

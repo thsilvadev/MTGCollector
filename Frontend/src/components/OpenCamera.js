@@ -145,6 +145,7 @@ function OpenCamera({ close }) {
   const [quantity, setQuantity]       = useState(1);
   const carouselRef      = useRef(null);
   const overlayCanvasRef = useRef(null);
+  const autoLoadRef      = useRef(false); // set true after scan so first nextPage auto-loads
 
   const authHeader = useAuthHeader();
 
@@ -365,6 +366,7 @@ function OpenCamera({ close }) {
       setCardDetected(false);
       setPolygon(data.polygon || null);
       drawPolygon(data.polygon || null);
+      autoLoadRef.current = !!data.nextPage; // auto-load first batch of prints
       setStatus('result');
     } catch (err) {
       if (err.name === 'AbortError') return; // fetch cancelled on unmount — silent exit
@@ -514,6 +516,16 @@ function OpenCamera({ close }) {
       setLoadingMore(false);
     }
   }, [nextPage, loadingMore, authHeader]);
+
+  // Auto-load the first Scryfall page of all prints right after a scan result.
+  // Fires once per scan (autoLoadRef resets to false immediately so it can't loop).
+  // Subsequent pages only load on manual 'Load more' click.
+  useEffect(() => {
+    if (status === 'result' && nextPage && autoLoadRef.current) {
+      autoLoadRef.current = false;
+      handleLoadMore();
+    }
+  }, [status, nextPage, handleLoadMore]);
 
   // Detect which carousel item is centered
   const handleCarouselScroll = useCallback(() => {
