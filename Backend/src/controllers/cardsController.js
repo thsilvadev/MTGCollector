@@ -63,6 +63,7 @@ module.exports = {
 
       const { data } = await scryfall.searchCards(q, scryfallPage, {
         includeMultilingual: foreignFallback,
+        order: query.orderBy || undefined,
       });
 
       const now = new Date();

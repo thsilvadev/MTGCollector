@@ -20,8 +20,26 @@
     margin: 100px 0 50px 0;
 }
 
-/* Select */
+/* Infinite scroll loading indicator */
 
+.scrollLoader {
+  flex: 0 0 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 2rem;
+  letter-spacing: 4px;
+  padding: 0 16px;
+  animation: loaderPulse 1s infinite;
+  user-select: none;
+}
+
+@keyframes loaderPulse {
+  0%   { opacity: 0.3; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.3; }
+}
 .deckContainer { 
     animation: bg-color-change .1s forwards;
     background-color: rgb(61, 61, 61);

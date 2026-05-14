@@ -10,11 +10,9 @@ import Card from "../components/Card";
 
 import SearchContainer from "../components/SearchContainer";
 
-import PrevNext from "../components/PrevNext";
-
 import Axios from "axios";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 
 import { Scrollbars } from "react-custom-scrollbars-2";
 
@@ -23,6 +21,7 @@ import { useAuthHeader } from "react-auth-kit";
 import MiniCard from "../components/MiniCard";
 import { useLocation } from "react-router-dom";
 import { useI18n } from "../i18n/LanguageContext";
+import { toast } from "react-toastify";
 
 //Component
 
@@ -41,10 +40,6 @@ function Collection() {
   //Page value for Collection cards
   const [page, setPage] = useState(0);
 
-  const handlePage = (pageData) => {
-    setPage(pageData);
-  };
-
   //get Params for Search Container.
   const [superParams, setSuperParams] = useState("");
   const handleSuperParams = (paramsData) => {
@@ -57,6 +52,9 @@ function Collection() {
 
   //Total USD value of the entire collection
   const [networth, setNetworth] = useState(null);
+
+  //Loading state for search
+  const [isLoading, setIsLoading] = useState(false);
 
   //Handle Droppable
   const [isDroppable, setIsDroppable] = useState(true);
@@ -107,19 +105,48 @@ function Collection() {
     },
   };
 
+  // ── Infinite scroll ref ────────────────────────────────────────────────────
+  const scrollbarsRef = useRef(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Effect A: when params/refresher change — reset to page 0 and fetch fresh
   useEffect(() => {
-    Axios.get(`${window.name}/collection/${page}?${superParams}`, config)
+    setIsLoading(true);
+    setPage(0);
+    Axios.get(`${window.name}/collection/0?${superParams}`, config)
       .then((response) => {
         setTotalCards(response.data.total);
         setCards(response.data.cards);
         if (response.data.networth !== undefined) {
           setNetworth(response.data.networth);
         }
-        //used to block dragging as many cards as user wants before req is complete.
         setIsDroppable(true);
+        setIsLoading(false);
       })
-      .then(console.log(refresherToggler));
-  }, [page, superParams, refresherToggler]);
+      .catch(() => setIsLoading(false));
+  }, [superParams, refresherToggler]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Effect B: when page > 0 — append more cards
+  useEffect(() => {
+    if (page === 0) return;
+    setIsLoadingMore(true);
+    Axios.get(`${window.name}/collection/${page}?${superParams}`, config)
+      .then((response) => {
+        setCards((prev) => [...prev, ...response.data.cards]);
+        setIsDroppable(true);
+        setIsLoadingMore(false);
+      })
+      .catch(() => setIsLoadingMore(false));
+  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Right-edge proximity handler for horizontal infinite scroll
+  const handleScrollFrame = (values) => {
+    const { scrollLeft: sl, scrollWidth, clientWidth } = values;
+    const nearEnd = scrollWidth - clientWidth - sl < 300;
+    if (nearEnd && !isLoadingMore && !isLoading && cards.length > 0 && cards.length % 40 === 0) {
+      setPage((p) => p + 1);
+    }
+  };
 
   //HORIZONTAL SCROLL
 
@@ -198,10 +225,34 @@ function Collection() {
   const postOnDeck = async (collectionId) => {
     let chosenDeck = selectedDeck;
     console.log({ isDroppable });
-    //used to use droppable prop in lower <div> but it's USELESS. To check wether isDroppable and if not, don't post, this is the way:
     if (!isDroppable) {
       return;
     }
+
+    // ── Deck-rules validation (same logic as Card.js isDraggable) ────────────
+    const collIdStr = collectionId.toString();
+    const onCollectionCard = cards.find((c) => c.id_collection.toString() === collIdStr);
+    const onDeckCard       = deckCards.find((c) => c.id_card.toString() === collIdStr);
+    const onCollectionCounter = onCollectionCard ? onCollectionCard.countById : 0;
+    const onDeckCounter       = onDeckCard       ? onDeckCard.countById       : 0;
+
+    if (onCollectionCounter - onDeckCounter <= 0) {
+      toast.error("You don't own enough copies of this card to add to the deck!");
+      return;
+    }
+
+    const cardName  = onCollectionCard ? onCollectionCard.name : null;
+    const superType = onCollectionCard ? onCollectionCard.supertypes : null;
+    let nameCounter = 0;
+    deckCards.forEach((card) => {
+      if (card.name === cardName) nameCounter += card.countById;
+    });
+
+    if ((onDeckCounter >= 4 || nameCounter >= 4) && superType !== "Basic") {
+      toast.error("You already have 4 copies of this card in the deck!");
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
     try {
       setIsDroppable(false);
       await Axios.post(
@@ -474,10 +525,15 @@ function Collection() {
         <SearchContainer
           baseOfSearch="collection"
           onParamsChange={handleSuperParams}
+          isLoading={isLoading}
         />
 
         <div className={styles.cardsContainer}>
-          <Scrollbars style={{ width: "90%", height: "100%" }}>
+          <Scrollbars
+            ref={scrollbarsRef}
+            style={{ width: "90%", height: "100%" }}
+            onScrollFrame={handleScrollFrame}
+          >
             <div
               className={`d-flex flex-nowrap ${styles.cardsRow}`}
               onWheel={handleHorizontalScroll}
@@ -500,16 +556,16 @@ function Collection() {
                   getDeckCards={deckCards}
                   getCollectionCards={cards}
                   prices={card.prices}
+                  onAddToDeck={(collId) => postOnDeck(collId)}
                 />
               ))}
+              {isLoadingMore && (
+                <div className={styles.scrollLoader}>
+                  <span>···</span>
+                </div>
+              )}
             </div>
           </Scrollbars>
-          <PrevNext
-            onPageChange={handlePage}
-            page={page}
-            elementsArray={cards}
-            where="collection"
-          />
         </div>
       </div>
       <div

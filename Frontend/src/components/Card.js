@@ -35,6 +35,7 @@ function Card({
   getDeckCards,
   getCollectionCards,
   prices,
+  onAddToDeck,
 }) {
   //Scryfall ID management
 
@@ -492,6 +493,13 @@ function Card({
           onTouchEnd={handleTouchLeave}
           onTouchMove={HandleOffset}
         />
+        {table === "collection" && getChosenDeck && getChosenDeck !== 0 && onAddToDeck && isDraggableToggler && (
+          <button
+            className={styles.DeckAddBtn}
+            onClick={e => { e.stopPropagation(); onAddToDeck(id_collection); }}
+            title="Add to deck"
+          >＋</button>
+        )}
         <div className={scaledCardClass} style={scaledStyle}>
           <img
             className={`${isBattleOrPlane}`}

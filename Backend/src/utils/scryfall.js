@@ -123,7 +123,7 @@ async function resolveCardName(name) {
 }
 
 async function searchCards(q, page = 1, opts = {}) {
-  const params = { q, page, order: 'name' };
+  const params = { q, page, order: opts.order || 'name' };
   if (opts.includeMultilingual) params.include_multilingual = true;
   try {
     const res = await sfGet(`${SCRYFALL_BASE}/cards/search`, params);

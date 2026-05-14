@@ -34,6 +34,9 @@ function Home() {
   //get page number
   const [page, setPage] = useState(0);
 
+  //loading indicator for search
+  const [isLoading, setIsLoading] = useState(false);
+
   //get Params
   const [superParams, setSuperParams] = useState("");
   const handleSuperParams = (paramsData) => {
@@ -53,26 +56,29 @@ function Home() {
     // Optionally reset page to 0 if you want to start fetching from the first page again
     setPage(0);
     // Always reset cards when superParams changes
+    setIsLoading(true);
     Axios.get(`${window.name}/cards/0?${superParams}`).then(
       (response) => {
         // Reset the cards with the new data
         setCards(response.data);
-        
+        setIsLoading(false);
       }
-    );
+    ).catch(() => setIsLoading(false));
   }, [superParams]); // Depend only on superParams
 
   useEffect(() => {
     // Fetch more cards when page changes
     console.log("Page state before fetch:", page);
     if (page > 0){
+      setIsLoading(true);
       Axios.get(`${window.name}/cards/${page}?${superParams}`).then(
         (response) => {
           console.log("Page state after fetch:", page);
           // Append the new data to the existing cards
           setCards((prevCards) => [...prevCards, ...response.data]);
+          setIsLoading(false);
         }
-      );
+      ).catch(() => setIsLoading(false));
     }
     
   }, [page]); // Depend only on page
@@ -262,6 +268,7 @@ function Home() {
         <SearchContainer
           baseOfSearch="AllCards"
           onParamsChange={handleSuperParams}
+          isLoading={isLoading}
         />
         <h5 className="mb-5">{guideChangesWithModal}</h5>
       </div>

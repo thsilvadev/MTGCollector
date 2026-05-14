@@ -169,7 +169,7 @@ module.exports = {
       const hasEffectiveColorFilter =
         query.colorIdentity && query.colorIdentity !== 'B, G, R, U, W';
       const hasFilters =
-        query.name || query.types || query.setCode || query.rarity || hasEffectiveColorFilter;
+        query.name || query.types || query.setCode || query.rarity || hasEffectiveColorFilter || query.orderBy;
 
       let total, cards;
 
@@ -252,6 +252,17 @@ module.exports = {
         }
         if (hasEffectiveColorFilter) {
           merged = merged.filter(c => matchesColorFilter(c.colorIdentity, query.colorIdentity));
+        }
+
+        // Apply optional sort
+        if (query.orderBy) {
+          const field = query.orderBy;
+          merged.sort((a, b) => {
+            if (field === 'name')  return (a.name || '').localeCompare(b.name || '');
+            if (field === 'cmc')   return (a.manaValue || 0) - (b.manaValue || 0);
+            if (field === 'usd')   return (parseFloat(a.prices?.usd) || 0) - (parseFloat(b.prices?.usd) || 0);
+            return 0;
+          });
         }
 
         total = merged.reduce((sum, c) => sum + c.countById, 0);

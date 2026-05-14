@@ -15,7 +15,7 @@ import white from "../images/white.png";
 import Camera from "./Camera";
 import { useI18n } from '../i18n/LanguageContext';
 
-const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
+const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
   const [selectedType, setSelectedType] = useState("");
   const { t } = useI18n();
 
@@ -29,7 +29,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
   const [selectedName, setSelectedName] = useState("&name=");
 
   //Statelifting queryParams
-  let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}`;
+  let queryParams = `${selectedType}${selectedSet}${selectedRarity}${selectedColor}${selectedName}${selectedOrderBy ? `&orderBy=${selectedOrderBy}` : ''}`;
 
   // Use useEffect to call modalHandler when sideBar changes
   useEffect(() => {
@@ -254,6 +254,12 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
 
   const isAdvanced = advancedSearch ? "flex" : "none";
 
+  // Order-by
+  const [selectedOrderBy, setSelectedOrderBy] = useState("");
+  const handleOrderByChange = (event) => {
+    setSelectedOrderBy(event.target.value);
+  };
+
   //Getting Sets
 
   // In the useEffect, we check if localSets is an empty array [] instead of null. If it's empty, we make the Axios request to fetch the data, and then we store it in localStorage as a JSON string using JSON.stringify(response.data).
@@ -433,8 +439,8 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
           </div>
         </div>
         <div className="col mt-4 justify-content-center d-flex flex-wrap">
-          <form role="search">
-            <div className="row">
+          <form role="search" onSubmit={e => e.preventDefault()}>
+            <div className="row align-items-center" style={{ gap: 8 }}>
               <input
                 className={styles.Input}
                 onChange={debouncedHandleNameChange}
@@ -442,8 +448,23 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
                 placeholder={t('search.placeholder')}
                 aria-label="Search"
               />
+              {isLoading && <span className={styles.LoadingDots}></span>}
             </div>
           </form>
+        </div>
+        <div className="col mt-4 justify-content-center d-flex flex-wrap">
+          <select
+            value={selectedOrderBy}
+            className={styles.FilterBox}
+            onChange={handleOrderByChange}
+          >
+            <option value="">{t('search.orderBy')}</option>
+            <option value="name">{t('search.orderName')}</option>
+            <option value="cmc">{t('search.orderCmc')}</option>
+            <option value="power">{t('search.orderPower')}</option>
+            <option value="toughness">{t('search.orderToughness')}</option>
+            <option value="usd">{t('search.orderUsd')}</option>
+          </select>
         </div>
         <div className="col mt-4 justify-content-center d-flex flex-wrap">
           <Camera fetchByDetection={handleWebcamName} />
@@ -458,14 +479,17 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
         <div className="d-flex justify-content-center">
           <div className="row align-items-center">
             <div className="col-sm">
-              <form role="search">
-                <input
-                  className={styles.Input}
-                  onChange={debouncedHandleNameChange}
-                  type="search"
-                  placeholder={t('search.placeholder')}
-                  aria-label="Search"
-                />
+              <form role="search" onSubmit={e => e.preventDefault()}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    className={styles.Input}
+                    onChange={debouncedHandleNameChange}
+                    type="search"
+                    placeholder={t('search.placeholder')}
+                    aria-label="Search"
+                  />
+                  {isLoading && <span className={styles.LoadingDots}></span>}
+                </div>
               </form>
             </div>
             <div className="col-sm">
@@ -532,13 +556,35 @@ const SearchContainer = ({ baseOfSearch, onParamsChange }) => {
               </div>
             </div>
             <div className="col-sm">
-              <button onClick={advancedToggler}>{t('search.advanced')}</button>
+              <label className={styles.toggleSwitch}>
+                <input
+                  type="checkbox"
+                  className={styles.toggleInput}
+                  checked={advancedSearch}
+                  onChange={advancedToggler}
+                />
+                <span className={styles.toggleSlider}></span>
+                <span className={styles.toggleLabel}>{t('search.advanced')}</span>
+              </label>
             </div>
           </div>
         </div>
 
         <div className={`d-${isAdvanced} justify-content-center mb-2`}>
           <div className="row justify-content-around">
+            <div className="col-12 col-sm-12 col-lg-4">
+              <select
+                value={selectedOrderBy}
+                className={styles.FilterBox}
+                onChange={handleOrderByChange}
+              >
+                <option value="">{t('search.orderBy')}</option>
+                <option value="name">{t('search.orderName')}</option>
+                <option value="cmc">{t('search.orderCmc')}</option>
+                <option value="usd">{t('search.orderUsd')}</option>
+              </select>
+            </div>
+
             <div className="col-12 col-sm-12 col-lg-4">
               <select
                 value={selectedType}
