@@ -33,20 +33,7 @@ function sfGet(url, params, extraConfig = {}) {
           await new Promise(r => setTimeout(r, 30000));
           throw err; // don't retry 429 — we need to back off
         }
-        const retryable = !err.response && (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED');
-        if (retryable && attempt < MAX_ATTEMPTS) {
-          const delay = attempt * 2000; // 2s, 4s
-          console.warn(`[Scryfall] ${err.code} on attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${delay}ms`);
-          await new Promise(r => setTimeout(r, delay));
-        } else {
-          throw err;
-        }
-      }
-    }
-  });
-}
-
-function sfPost(url, body) {
+        const retryable = !err.response && (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED' || err.code === 'ECONNABORTED');(url, body) {
   _sfQueue = _sfQueue.then(async () => {
     const wait = SF_MIN_INTERVAL_MS - (Date.now() - _sfLastCall);
     if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -66,20 +53,7 @@ function sfPost(url, body) {
           await new Promise(r => setTimeout(r, 30000));
           throw err;
         }
-        const retryable = !err.response && (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED');
-        if (retryable && attempt < MAX_ATTEMPTS) {
-          const delay = attempt * 2000;
-          console.warn(`[Scryfall] ${err.code} on attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${delay}ms`);
-          await new Promise(r => setTimeout(r, delay));
-        } else {
-          throw err;
-        }
-      }
-    }
-  });
-}
-
-const SUPERTYPES = new Set(['Basic', 'Legendary', 'Snow', 'World', 'Ongoing']);
+        const retryable = !err.response && (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED' || err.code === 'ECONNABORTED'); = new Set(['Basic', 'Legendary', 'Snow', 'World', 'Ongoing']);
 
 /**
  * Normalize a Scryfall card object into the field shape the app expects.
@@ -141,8 +115,18 @@ async function searchCards(q, page = 1, opts = {}) {
   }
 }
 
+// ── batchGetCards in-memory cache (TTL 5 min) ────────────────────────────────
+const _batchCache    = new Map();
+const BATCH_CACHE_TTL = 5 * 60 * 1000;
+
 async function batchGetCards(scryfallIds) {
   if (!scryfallIds || !scryfallIds.length) return [];
+
+  const cacheKey = [...scryfallIds].sort().join(',');
+  const hit = _batchCache.get(cacheKey);
+  if (hit && Date.now() - hit.ts < BATCH_CACHE_TTL) {
+    return hit.data;
+  }
 
   const results = [];
   for (let i = 0; i < scryfallIds.length; i += 75) {
@@ -153,8 +137,11 @@ async function batchGetCards(scryfallIds) {
       results.push(...res.data.data.map(normalizeCard));
     } catch (err) {
       console.error(`[Scryfall] batchGetCards chunk ${i}–${i + chunk.length} failed: ${err.code ?? err.message}`);
-      // Partial failure: skip chunk, continue with remaining chunks
     }
+  }
+
+  if (results.length) {
+    _batchCache.set(cacheKey, { data: results, ts: Date.now() });
   }
   return results;
 }

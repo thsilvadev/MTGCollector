@@ -42,9 +42,12 @@ function Collection() {
 
   //get Params for Search Container.
   const [superParams, setSuperParams] = useState("");
+  const _superParamsTimer = useRef(null);
   const handleSuperParams = (paramsData) => {
-    setSuperParams(paramsData);
-    console.log(superParams);
+    clearTimeout(_superParamsTimer.current);
+    _superParamsTimer.current = setTimeout(() => {
+      setSuperParams(paramsData);
+    }, 300);
   };
 
   //Total cards in collection
@@ -465,35 +468,23 @@ function Collection() {
         (deck) => deck.id_deck.toString() === selectedDeck
       );
 
-      try {
-        console.log("Updating deck color to:", deckColorDefined);
-        if (deckColorDefined !== selectedDeckObject.color) {
-          await Axios.put(
-            `${window.name}/decks/${selectedDeck}`,
-            {
-              color: deckColorDefined,
-            },
-            config
-          );
-          console.log("Update Succeeded: color", deckColorDefined);
-        }
+      const colorChanged = deckColorDefined !== selectedDeckObject?.color;
+      const countChanged = DeckSize         !== selectedDeckObject?.card_count;
 
-        console.log("Updating deck card_count to:", DeckSize);
-        if (DeckSize !== selectedDeckObject.card_count) {
+      if (colorChanged || countChanged) {
+        try {
           await Axios.put(
             `${window.name}/decks/${selectedDeck}`,
-            {
-              card_count: DeckSize,
-            },
+            { color: deckColorDefined, card_count: DeckSize },
             config
           );
-          console.log("Update Succeeded: card_count", DeckSize);
+          console.log("Update Succeeded:", deckColorDefined, DeckSize);
+        } catch (error) {
+          console.error("Update Failed:", error);
         }
-      } catch (error) {
-        console.error("Update Failed:", error);
       }
     }
-  }, 200);
+  }, 400);
 
   // Add a useEffect hook to trigger updateDeck when deckColorDefined or DeckSize change
   useEffect(() => {

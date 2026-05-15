@@ -138,17 +138,22 @@ module.exports = {
     const user_id = req.userId
 
     try {
+      const updates = {};
+      if (name        !== undefined) updates.name        = name;
+      if (color       !== undefined) updates.color       = color;
+      if (description !== undefined) updates.description = description;
+      if (card_count  !== undefined) updates.card_count  = card_count;
+
+      if (!Object.keys(updates).length) {
+        return res.json({ message: 'Nothing to update' });
+      }
+
       const result = await knex
       .select("decks.id_deck")
       .from("decks")
       .where("decks.user_id", user_id)
       .where("decks.id_deck", id_deck)
-      .update({
-        name,
-        color,
-       description,
-       card_count,
-      });
+      .update(updates);
 
       console.log(
         `Put successful of ${color} and ${card_count} on Deck ${id_deck} of user ${user_id} by ${req.ip} at ${formattedDate}`
