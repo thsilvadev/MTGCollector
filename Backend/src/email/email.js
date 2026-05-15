@@ -203,7 +203,8 @@ module.exports = {
   ,
 
   async resetPassword(req, res) {
-    const { email } = req.body;
+    const { email: rawEmail } = req.body;
+    const email = rawEmail ? rawEmail.toLowerCase() : rawEmail;
 
     if (!email) {
       return res.sendStatus(401)

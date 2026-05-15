@@ -21,7 +21,8 @@ module.exports = {
         let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
     
         const body = req.body;
-        const { email, password } = body;
+        const { email: rawPostEmail, password } = body;
+        const email = rawPostEmail ? rawPostEmail.toLowerCase() : rawPostEmail;
         try {
             const existingUser = await knex('users').where('email', email).first();
     
@@ -34,7 +35,7 @@ module.exports = {
     
                 // Insert the user's data into the database with the hashed password
                 const result = await knex("users").insert({
-                    email,
+                    email: email.toLowerCase(), // Store email in lowercase for consistency
                     password: hashedPassword, // Store the hashed password in the database
                 });
     
@@ -60,7 +61,8 @@ module.exports = {
     async resendConfirmation(req, res) {
         const now = new Date();
         let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-        const { email } = req.body;
+        const { email: rawResendEmail } = req.body;
+        const email = rawResendEmail ? rawResendEmail.toLowerCase() : rawResendEmail;
 
         if (!email) {
             return res.status(400).json({ error: 'Email is required.' });
@@ -109,7 +111,8 @@ module.exports = {
 
         //This is a body request. Data comes in json and not in params.
         const body = req.body;
-        const { email, password } = body;
+        const { email: rawEmail, password } = body;
+        const email = rawEmail ? rawEmail.toLowerCase() : rawEmail;
 
         try {
             const user = await knex("users").where({ email }).first();
