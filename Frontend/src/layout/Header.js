@@ -78,7 +78,7 @@ function Header() {
             width="40"
             alt="Logo"
           />
-          {t('nav.welcome')} {user.email}!
+          {t('nav.welcome')} {user.game_tag || user.email}!
           <button className={styles.signOut} onClick={logOut}>{t('nav.logOff')}</button>
         </span>
       );

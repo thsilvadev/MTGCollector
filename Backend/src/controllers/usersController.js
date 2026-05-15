@@ -16,13 +16,31 @@ const resendCooldowns = new Map();
 const RESEND_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
 
 module.exports = {
+    // Generate a unique game_tag like "Thiago#042817"
+    async _generateGameTag(name) {
+        const base = name.trim();
+        for (let attempt = 0; attempt < 20; attempt++) {
+            const digits = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+            const tag = `${base}#${digits}`;
+            const existing = await knex('users').where('game_tag', tag).first();
+            if (!existing) return tag;
+        }
+        // Fallback: use timestamp-based suffix (virtually never collides)
+        return `${base}#${Date.now().toString().slice(-6)}`;
+    },
+
     async postUser(req, res) {
         const now = new Date();
         let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
     
         const body = req.body;
-        const { email: rawPostEmail, password } = body;
+        const { email: rawPostEmail, password, name } = body;
         const email = rawPostEmail ? rawPostEmail.toLowerCase() : rawPostEmail;
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({ error: 'Name is required.' });
+        }
+
         try {
             const existingUser = await knex('users').where('email', email).first();
     
@@ -32,14 +50,19 @@ module.exports = {
             } else {
                 // Hash the user's password using bcrypt
                 const hashedPassword = await bcryptjs.hash(password, saltRounds);
+
+                // Generate unique game_tag
+                const game_tag = await module.exports._generateGameTag(name.trim());
     
                 // Insert the user's data into the database with the hashed password
                 const result = await knex("users").insert({
-                    email: email.toLowerCase(), // Store email in lowercase for consistency
-                    password: hashedPassword, // Store the hashed password in the database
+                    email: email.toLowerCase(),
+                    password: hashedPassword,
+                    name: name.trim(),
+                    game_tag,
                 });
     
-                console.log(`user ${email} registered by ${req.ip} at ${formattedDate}. Result object: ${result}`);
+                console.log(`user ${email} (${game_tag}) registered by ${req.ip} at ${formattedDate}. Result object: ${result}`);
     
                 const confirmingEmail = await nodeMailing.confirmEmail(email);
                 if (confirmingEmail === "Confirmation email successfully sent!") {
@@ -144,11 +167,19 @@ module.exports = {
             bcryptjs.compare(password, user.password, (err, result) => {
                 if (result) {
                     // Create Json Web Token for authentication
-                    const token = jwt.sign({ id: user.id_user, email: user.email }, process.env.AUTH_TOKEN_TAG)
+                    const token = jwt.sign(
+                        { id: user.id_user, email: user.email, game_tag: user.game_tag },
+                        process.env.AUTH_TOKEN_TAG
+                    );
 
                     // Password matches, user logged in
                     console.log(`User with email ${email} logged in. IP: ${req.ip}, Time: ${formattedDate}`);
-                    return res.json({ message: `User with email ${email} logged in.`, id: user.id_user, token });
+                    return res.json({
+                        message: `User with email ${email} logged in.`,
+                        id: user.id_user,
+                        token,
+                        game_tag: user.game_tag,
+                    });
                 } else {
                     // Password doesn't match
                     console.log(`Wrong password for user with email ${email}. IP: ${req.ip}, Time: ${formattedDate}`);

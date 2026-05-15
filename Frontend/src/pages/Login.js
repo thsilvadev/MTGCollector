@@ -53,7 +53,7 @@ function Login() {
             token: response.data.token,
             expiresIn: 3600,
             tokenType: "Bearer",
-            authState: { email: values.email },
+            authState: { email: values.email, game_tag: response.data.game_tag },
           })
           navigate('/collection');
         }
@@ -69,6 +69,7 @@ function Login() {
     Axios.post(`${window.name}/register`, {
         email: values.email,
         password: values.password,
+        name: values.name,
     }).then((response) => {
         // Check if the response contains an error property
         if (response.data.error) {
@@ -96,6 +97,7 @@ function Login() {
   });
 
   const validationRegister = yup.object({
+    name: yup.string().trim().min(2, t('login.nameMin')).max(30, t('login.nameMax')).required(t('login.nameRequired')),
     email: yup.string().email(t('login.notEmail')).required(t('login.emailRequired')),
     password: yup
       .string()
@@ -157,6 +159,18 @@ function Login() {
         validationSchema={validationRegister}
       >
         <Form className={styles.loginForm}>
+          <div className={styles.loginFormGroup}>
+            <Field
+              name="name"
+              className={styles.formField}
+              placeholder={t('login.namePlaceholder')}
+            />
+            <ErrorMessage
+              component="span"
+              name="name"
+              className={styles.formError}
+            />
+          </div>
           <div className={styles.loginFormGroup}>
             <Field
               name="email"

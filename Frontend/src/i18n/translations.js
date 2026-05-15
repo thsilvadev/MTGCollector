@@ -52,6 +52,7 @@ const translations = {
     'login.emailPlaceholder':       'Email',
     'login.passwordPlaceholder':    'Password',
     'login.confirmPlaceholder':     'Confirm Password',
+    'login.namePlaceholder':        'Your name (for your game tag)',
     'login.yourEmailPlaceholder':   'Your registered email',
     'login.notEmail':               'Not an email',
     'login.emailRequired':          'Email Required',
@@ -59,6 +60,9 @@ const translations = {
     'login.passwordRequired':       'Password Required',
     'login.passwordsMustMatch':     'Passwords must match',
     'login.confirmPasswordReq':     'Confirm password',
+    'login.nameRequired':           'Name is required',
+    'login.nameMin':                'Name must be at least 2 characters',
+    'login.nameMax':                'Name must be at most 30 characters',
 
     // FORGOT PASSWORD
     'forgot.title':  'Please, enter your email:',
@@ -216,6 +220,7 @@ const translations = {
     'login.emailPlaceholder':       'E-mail',
     'login.passwordPlaceholder':    'Senha',
     'login.confirmPlaceholder':     'Confirmar Senha',
+    'login.namePlaceholder':        'Seu nome (para sua game tag)',
     'login.yourEmailPlaceholder':   'Seu e-mail cadastrado',
     'login.notEmail':               'E-mail inválido',
     'login.emailRequired':          'E-mail obrigatório',
@@ -223,6 +228,9 @@ const translations = {
     'login.passwordRequired':       'Senha obrigatória',
     'login.passwordsMustMatch':     'As senhas devem coincidir',
     'login.confirmPasswordReq':     'Confirme a senha',
+    'login.nameRequired':           'Nome é obrigatório',
+    'login.nameMin':                'Nome deve ter no mínimo 2 caracteres',
+    'login.nameMax':                'Nome deve ter no máximo 30 caracteres',
 
     // FORGOT PASSWORD
     'forgot.title':  'Por favor, insira seu e-mail:',
