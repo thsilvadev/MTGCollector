@@ -2,6 +2,16 @@
     margin-left: 5px;
 }
 
+.GameTag {
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.15s;
+}
+
+.GameTag:hover {
+    opacity: 0.75;
+}
+
 .Login {
     display: flex;
     align-items: center;

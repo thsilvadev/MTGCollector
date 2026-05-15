@@ -17,6 +17,7 @@ import DarkMode from "../components/DarkMode";
 import { useTheme } from "../hooks/useTheme";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useI18n } from "../i18n/LanguageContext";
+import { toast } from 'react-toastify';
 
 function Header() {
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -54,6 +55,12 @@ function Header() {
     navigate("/");
   };
 
+  const copyGameTag = (tag) => {
+    navigator.clipboard.writeText(tag).then(() => {
+      toast.success(t('nav.gameTagCopied'));
+    });
+  };
+
   const isLoggedIn = () => {
     const user = auth();
   
@@ -78,7 +85,12 @@ function Header() {
             width="40"
             alt="Logo"
           />
-          {t('nav.welcome')} {user.game_tag || user.email}!
+          {t('nav.welcome')}{' '}
+          <span
+            className={styles.GameTag}
+            onClick={() => copyGameTag(user.game_tag || user.email)}
+            title={t('nav.copyGameTag')}
+          >{user.game_tag || user.email}</span>!
           <button className={styles.signOut} onClick={logOut}>{t('nav.logOff')}</button>
         </span>
       );

@@ -10,6 +10,8 @@ const translations = {
     'nav.comingSoon':      'coming soon',
     'nav.registerOrLogin': 'Register or Login',
     'nav.welcome':         'Welcome,',
+    'nav.gameTagCopied':   'Game tag copied!',
+    'nav.copyGameTag':     'Click to copy your game tag',
     'nav.logOff':          'Log off',
 
     // HOME
@@ -178,6 +180,8 @@ const translations = {
     'nav.comingSoon':      'em breve',
     'nav.registerOrLogin': 'Registrar ou Entrar',
     'nav.welcome':         'Bem-vindo(a),',
+    'nav.gameTagCopied':   'Game tag copiada!',
+    'nav.copyGameTag':     'Clique para copiar sua game tag',
     'nav.logOff':          'Sair',
 
     // HOME
