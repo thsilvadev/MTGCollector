@@ -6,6 +6,7 @@
     display: flex;
     align-items: center;
     white-space: nowrap;
+    color: var(--textColor) !important;
 }
 
 .LoginImg {
