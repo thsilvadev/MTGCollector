@@ -109,7 +109,7 @@ export default function AppModal({
       <div className={styles.overlay} onClick={onCancel}>
         <div className={styles.box} onClick={stopProp}>
           <h3 className={styles.title}>{t('modal.setQtyTitle', { name: cardName })}</h3>
-          <p className={styles.msg} style={{ marginBottom: 16 }}>{t('modal.setQtyMsg')}</p>
+          <p className={styles.msg} style={{ marginBottom: 16 }}>{message || t('modal.setQtyMsg')}</p>
           <div className={styles.qtyRow}>
             <button className={styles.qtyBtn} onClick={decrement} disabled={qty <= 0}>−</button>
             <input

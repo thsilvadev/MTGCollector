@@ -140,6 +140,7 @@ const MiniCard = ({
       cardName: name,
       currentQty: count,
       maxQty,
+      message: t('modal.setDeckQtyMsg'),
       onCancel: () => setModal(null),
       onConfirm: (newQty) => {
         setModal(null);

@@ -125,6 +125,7 @@ const translations = {
     'modal.removeN':     '{n} copies',
     'modal.setQtyTitle':     '{name}',
     'modal.setQtyMsg':       'How many copies do you have in your collection?',
+    'modal.setDeckQtyMsg':   'How many copies of this card do you want in the deck?',
     'modal.setQtyRemoveAll': 'Setting to 0 will remove all copies from your collection.',
     'modal.removeAll':       'Remove all',
 
@@ -288,6 +289,7 @@ const translations = {
     'modal.removeN':     '{n} cópias',
     'modal.setQtyTitle':     '{name}',
     'modal.setQtyMsg':       'Quantas cópias você tem na sua coleção?',
+    'modal.setDeckQtyMsg':   'Quantas cópias dessa carta você quer no deck?',
     'modal.setQtyRemoveAll': 'Definir como 0 vai remover todas as cópias da sua coleção.',
     'modal.removeAll':       'Remover todas',
 
