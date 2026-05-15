@@ -87,7 +87,8 @@ function Collection() {
   useEffect(() => {
     comingFromDecks();
   }, []);
-
+  // Deck-only refresh toggler — deck ops use this so the collection scroll is never reset
+  const [deckToggler, setDeckToggler] = useState(false);
   //Select Deck coming from Decks page
   const comingFromDecks = () => {
     if (selected !== undefined) {
@@ -111,6 +112,7 @@ function Collection() {
   // ── Infinite scroll ref ────────────────────────────────────────────────────
   const scrollbarsRef = useRef(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const isLoadingMoreRef = useRef(false); // synchronous guard — prevents multi-fire before re-render
 
   // Effect A: when params/refresher change — reset to page 0 and fetch fresh
   useEffect(() => {
@@ -138,15 +140,20 @@ function Collection() {
         setCards((prev) => [...prev, ...response.data.cards]);
         setIsDroppable(true);
         setIsLoadingMore(false);
+        isLoadingMoreRef.current = false;
       })
-      .catch(() => setIsLoadingMore(false));
+      .catch(() => {
+        setIsLoadingMore(false);
+        isLoadingMoreRef.current = false;
+      });
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Right-edge proximity handler for horizontal infinite scroll
   const handleScrollFrame = (values) => {
     const { scrollLeft: sl, scrollWidth, clientWidth } = values;
     const nearEnd = scrollWidth - clientWidth - sl < 300;
-    if (nearEnd && !isLoadingMore && !isLoading && cards.length > 0 && cards.length % 40 === 0) {
+    if (nearEnd && !isLoadingMoreRef.current && !isLoading && cards.length > 0 && cards.length % 40 === 0) {
+      isLoadingMoreRef.current = true;
       setPage((p) => p + 1);
     }
   };
@@ -267,7 +274,7 @@ function Collection() {
         config
       )
         .then(console.log(`id postado: ${collectionId}`))
-        .then(() => handleRefresherToggler());
+        .then(() => setDeckToggler((t) => !t));
     } catch (error) {
       console.error("Failed to add card to deck:", error);
     }
@@ -281,9 +288,24 @@ function Collection() {
     try {
       Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`, config)
         .then(console.log(`requested to delete card from deck`))
-        .then(() => handleRefresherToggler());
+        .then(() => setDeckToggler((t) => !t));
     } catch (error) {
       console.error("Failed to remove card from deck:", error);
+    }
+  };
+
+  // Set exact qty of a card in the deck (from MiniCard modal)
+  const setDeckCardQty = async (cardScryfallId, newQty) => {
+    try {
+      await Axios.put(`${window.name}/eachDeck/setqty`, {
+        card_id: cardScryfallId,
+        deck: selectedDeck,
+        qty: newQty,
+      }, config);
+      setDeckToggler((t) => !t);
+    } catch (error) {
+      console.error("Failed to set deck card quantity:", error);
+      toast.error("Failed to update quantity.");
     }
   };
 
@@ -322,14 +344,14 @@ function Collection() {
       Axios.get(`${window.name}/eachDeck/${selectedDeck}`, config)
         .then((response) => {
           setDeckCards(response.data);
+        setIsDroppable(true);
         })
-        .then(console.log(`selected deck: ${selectedDeck}`))
-        .then(console.log(`refresherToggler: ${refresherToggler}`));
+        .then(console.log(`selected deck: ${selectedDeck}`));
     } else {
       setDeckCards([]);
       console.log("no deck selected");
     }
-  }, [selectedDeck, refresherToggler]);
+  }, [selectedDeck, deckToggler]);
 
   //How many cards there are in selected deck?
 
@@ -624,10 +646,13 @@ function Collection() {
                         id_constructed={deckCard.id_constructed}
                         count={deckCard.countById}
                         isModalOpen={true}
-                        toggle={handleRefresherToggler}
+                        toggle={() => setDeckToggler((t) => !t)}
                         scryfallId={deckCard.scryfallId}
                         types={deckCard.types}
                         keywords={deckCard.keywords}
+                        supertypes={deckCard.supertypes}
+                        inCollection={deckCard.inCollection}
+                        onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty)}
                       />
                     ))}
                 </div>
@@ -646,10 +671,13 @@ function Collection() {
                   id_constructed={deckCard.id_constructed}
                   count={deckCard.countById}
                   isModalOpen={true}
-                  toggle={handleRefresherToggler}
+                  toggle={() => setDeckToggler((t) => !t)}
                   scryfallId={deckCard.scryfallId}
                   types={deckCard.types}
                   keywords={deckCard.keywords}
+                  supertypes={deckCard.supertypes}
+                  inCollection={deckCard.inCollection}
+                  onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty)}
                 />
               ))
               .sort((a, b) => b - a)}

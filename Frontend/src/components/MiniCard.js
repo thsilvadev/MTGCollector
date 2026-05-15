@@ -56,6 +56,9 @@ const MiniCard = ({
   scryfallId,
   types,
   keywords,
+  supertypes,
+  inCollection,
+  onSetDeckQty,
 }) => {
   //Delete
 
@@ -123,6 +126,33 @@ const MiniCard = ({
           console.log(`requested to delete ${name} from deck`)
         );
         toggle();
+      },
+    });
+  };
+
+  //Edit quantity in Deck
+  const editDeckQty = (e) => {
+    if (e) e.stopPropagation();
+    const isBasicLand = supertypes === 'Basic';
+    const maxQty = isBasicLand ? (inCollection || 99) : Math.min(4, inCollection || 4);
+    setModal({
+      type: 'set-qty',
+      cardName: name,
+      currentQty: count,
+      maxQty,
+      onCancel: () => setModal(null),
+      onConfirm: (newQty) => {
+        setModal(null);
+        if (newQty === count) return;
+        if (newQty === 0) {
+          // Remove all — fall back to deleteFromDeck behaviour
+          const cfg = { headers: { authorization: authHeader() } };
+          Axios.delete(`${window.name}/eachDeck/${id_constructed}`, cfg)
+            .then(() => toggle());
+        } else if (onSetDeckQty) {
+          onSetDeckQty(newQty);
+          toggle();
+        }
       },
     });
   };
@@ -638,7 +668,7 @@ const MiniCard = ({
           <div
             className={styles.MinierCard}
             onLoad={changeCardClass}
-            onClick={deleteFromDeck}
+            onClick={editDeckQty}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onMouseMove={handleMouseMove}

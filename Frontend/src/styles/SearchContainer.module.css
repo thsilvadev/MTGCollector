@@ -13,11 +13,12 @@
 }
 
 .CollectionSearch {
-  padding: 20px 0 0 0;
+  padding: 20px 0 12px 0;
   color: rgb(255, 255, 255);
   width: 96%;
   margin: auto;
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  margin-bottom: 12px;
 }
 
 .Input {
@@ -68,6 +69,10 @@ label img {
   border: 4px #000000 solid;
   border-radius: 100%;
   box-sizing: border-box;
+}
+
+:global([data-theme="dark"]) :checked + label img {
+  border-color: #ffffff;
 }
 
 /* Orange borders for double check*/

@@ -21,7 +21,7 @@ export default function AppModal({
   type = 'confirm',
   title: titleText,
   message,
-  maxQty = 1,
+  maxQty = null,
   currentQty = 1,
   cardName,
   deckName = '',
@@ -55,11 +55,12 @@ export default function AppModal({
   }
 
   if (type === 'delete-qty') {
+    const effectiveMax = maxQty ?? 1;
     const decrement = () => setQty((q) => Math.max(1, q - 1));
-    const increment = () => setQty((q) => Math.min(maxQty, q + 1));
+    const increment = () => setQty((q) => Math.min(effectiveMax, q + 1));
     const handleInput = (e) => {
       const v = parseInt(e.target.value, 10);
-      if (!isNaN(v)) setQty(Math.min(maxQty, Math.max(1, v)));
+      if (!isNaN(v)) setQty(Math.min(effectiveMax, Math.max(1, v)));
     };
 
     return (
@@ -67,7 +68,7 @@ export default function AppModal({
         <div className={styles.box} onClick={stopProp}>
           <h3 className={styles.title}>{t('modal.removeTitle', { name: cardName })}</h3>
           <p className={styles.msg} style={{ marginBottom: 16 }}>
-            {t('modal.howMany')}{maxQty > 1 ? ` ${t('modal.maxQty', { max: maxQty })}` : ''}
+            {t('modal.howMany')}{effectiveMax > 1 ? ` ${t('modal.maxQty', { max: effectiveMax })}` : ''}
           </p>
           <div className={styles.qtyRow}>
             <button className={styles.qtyBtn} onClick={decrement} disabled={qty <= 1}>−</button>
@@ -75,7 +76,7 @@ export default function AppModal({
               type="number"
               value={qty}
               min={1}
-              max={maxQty}
+              max={effectiveMax}
               onChange={handleInput}
               className={styles.input}
               style={{ marginBottom: 0, width: 64, textAlign: 'center' }}
@@ -95,11 +96,12 @@ export default function AppModal({
   }
 
   if (type === 'set-qty') {
+    const effectiveMax = maxQty ?? 99;
     const decrement = () => setQty((q) => Math.max(0, q - 1));
-    const increment = () => setQty((q) => Math.min(99, q + 1));
+    const increment = () => setQty((q) => Math.min(effectiveMax, q + 1));
     const handleInput = (e) => {
       const v = parseInt(e.target.value, 10);
-      if (!isNaN(v)) setQty(Math.min(99, Math.max(0, v)));
+      if (!isNaN(v)) setQty(Math.min(effectiveMax, Math.max(0, v)));
     };
     const isRemoveAll = qty === 0;
 
@@ -114,12 +116,12 @@ export default function AppModal({
               type="number"
               value={qty}
               min={0}
-              max={99}
+              max={effectiveMax}
               onChange={handleInput}
               className={styles.input}
               style={{ marginBottom: 0, width: 64, textAlign: 'center' }}
             />
-            <button className={styles.qtyBtn} onClick={increment} disabled={qty >= 99}>+</button>
+            <button className={styles.qtyBtn} onClick={increment} disabled={qty >= effectiveMax}>+</button>
           </div>
           {isRemoveAll && (
             <p style={{ color: '#e74c3c', fontSize: '0.85rem', margin: '-8px 0 12px' }}>

@@ -71,6 +71,16 @@ module.exports = {
       const scryfallCards = await scryfall.batchGetCards(scryfallIds);
       const cardMap       = new Map(scryfallCards.map(c => [c.id, c]));
 
+      // ── Step 2b: Count how many copies user owns per card ────────────────────
+      const collectionCounts = await knex('collection')
+        .select('card_id', knex.raw('COUNT(*) as inCollection'))
+        .where({ user_id })
+        .whereIn('card_id', scryfallIds)
+        .groupBy('card_id');
+      const collectionCountMap = new Map(
+        collectionCounts.map(c => [c.card_id, parseInt(c.inCollection, 10)])
+      );
+
       // ── Step 3: Merge DB rows with Scryfall data ─────────────────────────────
       const result = deckRows
         .map(row => {
@@ -83,6 +93,7 @@ module.exports = {
             id_constructed: row.id_constructed,
             id_deck:       row.id_deck,
             countById:     parseInt(row.countById, 10),
+            inCollection:  collectionCountMap.get(row.card_id) || 0,
           };
         })
         .filter(Boolean);
@@ -148,6 +159,56 @@ module.exports = {
 
 
     
+  },
+
+  // Set exact quantity of a card in a deck (add or remove copies as needed)
+  async setQty(req, res) {
+    const now = new Date();
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+    const { card_id, deck, qty } = req.body;
+    const user_id = req.userId;
+    const newQty = parseInt(qty, 10);
+
+    if (isNaN(newQty) || newQty < 0 || newQty > 99) {
+      return res.status(400).json({ error: 'Invalid quantity' });
+    }
+
+    try {
+      // All collection entries for this Scryfall card owned by user
+      const collectionEntries = await knex('collection').where({ card_id, user_id });
+      const totalOwned = collectionEntries.length;
+      const collectionIds = collectionEntries.map(c => c.id_collection);
+
+      if (newQty > totalOwned) {
+        return res.status(400).json({ error: 'Not enough copies in collection' });
+      }
+
+      // Current deck entries for this card in this deck
+      const currentDeckRows = await knex('deck')
+        .where({ deck, user_id })
+        .whereIn('id_card', collectionIds);
+      const currentQty = currentDeckRows.length;
+
+      if (newQty === currentQty) return res.json({ message: 'No change' });
+
+      if (newQty > currentQty) {
+        const toAdd = newQty - currentQty;
+        const inserts = Array.from({ length: toAdd }, () => ({
+          id_card: collectionIds[0], deck, user_id,
+        }));
+        await knex('deck').insert(inserts);
+      } else {
+        const toRemove = currentQty - newQty;
+        const idsToDelete = currentDeckRows.slice(0, toRemove).map(r => r.id_constructed);
+        await knex('deck').whereIn('id_constructed', idsToDelete).where({ user_id }).del();
+      }
+
+      console.log(`setQty: ${card_id} in deck ${deck} → ${newQty} for user ${user_id} at ${formattedDate}`);
+      return res.json({ success: true, qty: newQty });
+    } catch (error) {
+      console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
+      return res.status(500).json({ error: 'Failed to set deck card quantity.' });
+    }
   },
 
   async deleteById(req, res) {

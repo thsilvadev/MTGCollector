@@ -59,9 +59,8 @@ routes.delete('/decks/:id_deck', authMiddleware, decksController.deleteById);//D
 
 ///////ROUTES AND REQUISITIONS FOR THE EACHDECK TABLE
 routes.get('/eachDeck/:id', authMiddleware, eachDeckController.getDeck); // GET eachDeck
-//routes.get('/eachDeck', eachDeckController.getAll); // GET eachDeck
 routes.post('/eachDeck', authMiddleware, eachDeckController.postOnDeck); // POST eachDeck
-//routes.put('/eachDeck/:id', eachDeckController.update); //PUT eachDeck
+routes.put('/eachDeck/setqty', authMiddleware, eachDeckController.setQty); // PUT set exact deck card qty
 routes.delete('/eachDeck/:id_constructed', authMiddleware, eachDeckController.deleteById); //DELETE eachDeck
 
 ///////ROUTES AND REQUISITIONS FOR THE WISHLIST TABLE

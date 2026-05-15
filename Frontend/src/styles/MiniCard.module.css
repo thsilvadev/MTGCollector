@@ -24,9 +24,8 @@
     font-family: "BelerenBold";
     justify-items: center;
     vertical-align: middle;
+    cursor: pointer;
 }
-
-
 
 .Count {
     text-align: start;
