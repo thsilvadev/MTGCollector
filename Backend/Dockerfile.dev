@@ -1,0 +1,24 @@
+FROM node:20-alpine
+
+RUN apk add --no-cache librsvg wget
+
+WORKDIR /app
+
+COPY package*.json ./
+# Install ALL deps including devDependencies (nodemon)
+RUN npm install
+
+# Download Tesseract language data
+RUN wget -q -O eng.traineddata \
+      https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata && \
+    wget -q -O por.traineddata \
+      https://github.com/tesseract-ocr/tessdata_fast/raw/main/por.traineddata
+
+COPY knexfile.js ./
+COPY src/ ./src/
+COPY database/ ./database/
+
+EXPOSE 3000
+
+# CMD is overridden by docker-compose.dev.yml
+CMD ["sh", "-c", "node database/migrate.js && npm start"]

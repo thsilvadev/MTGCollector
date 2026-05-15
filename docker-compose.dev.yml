@@ -1,0 +1,42 @@
+# Development overrides — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# What this adds on top of docker-compose.yml:
+#   • Backend:  mounts ./Backend/src live, runs nodemon (hot-reload)
+#   • Frontend: replaces the nginx build with craco dev server (hot-reload, port 3001)
+
+services:
+
+  backend:
+    # Install ALL deps (including devDependencies like nodemon) for dev
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./Backend/src:/app/src          # live-reload source
+      - ./Backend/knexfile.js:/app/knexfile.js
+      # keep node_modules from the container, don't overwrite with host
+      - backend_nm:/app/node_modules
+    command: sh -c "node database/migrate.js && npm start"
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - REACT_APP_API_URL=http://localhost:3001/api
+      - CHOKIDAR_USEPOLLING=true   # file-watch inside Docker on Linux
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./Frontend/src:/app/src         # live-reload source
+      - ./Frontend/public:/app/public
+      # keep node_modules from the container
+      - frontend_nm:/app/node_modules
+    command: npm start
+
+volumes:
+  backend_nm:
+  frontend_nm:
