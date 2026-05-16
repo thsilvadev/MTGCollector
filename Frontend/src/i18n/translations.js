@@ -202,6 +202,7 @@ const translations = {
 
     // PROFILE
     'nav.myProfile':                 'My Profile',
+    'nav.battles':                   'Battles',
     'profile.badges':                'Badges',
     'profile.decks':                 'Decks',
     'profile.testimonials':          'Testimonials',
@@ -231,6 +232,9 @@ const translations = {
     'battle.sent':                   'Battle declaration sent!',
     'battle.cancel':                 'Cancel',
     'battle.errorScore':             'Scores must be non-negative numbers.',
+
+    // BATTLES PAGE
+    'battles.empty':                 'No battles yet.',
   },
 
   pt: {
@@ -436,6 +440,7 @@ const translations = {
 
     // PROFILE
     'nav.myProfile':                 'Meu Perfil',
+    'nav.battles':                   'Batalhas',
     'profile.badges':                'Conquistas',
     'profile.decks':                 'Decks',
     'profile.testimonials':          'Depoimentos',
@@ -465,6 +470,9 @@ const translations = {
     'battle.sent':                   'Declaração de batalha enviada!',
     'battle.cancel':                 'Cancelar',
     'battle.errorScore':             'Os placares devem ser números não-negativos.',
+
+    // BATTLES PAGE
+    'battles.empty':                 'Nenhuma batalha ainda.',
   },
 };
 
