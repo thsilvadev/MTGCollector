@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthHeader } from 'react-auth-kit';
 import Axios from 'axios';
@@ -67,32 +67,24 @@ function Friends() {
   const [collapsed, setCollapsed] = useState({ invites: false, friends: false });
 
   const addInputRef = useRef(null);
-
-  const config = useCallback(
-    () => ({ headers: { Authorization: authHeader() } }),
-    [authHeader]
-  );
+  const authHeaderRef = useRef(authHeader);
+  authHeaderRef.current = authHeader;
 
   // ── Fetch data ────────────────────────────────────────────────────────────
 
-  const fetchAll = useCallback(async () => {
-    try {
-      const [friendsRes, requestsRes] = await Promise.all([
-        Axios.get(`${window.name}/friends`, config()),
-        Axios.get(`${window.name}/friends/requests`, config()),
-      ]);
-      setFriends(friendsRes.data);
-      setInvites(requestsRes.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [config]);
-
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    const cfg = { headers: { Authorization: authHeaderRef.current() } };
+    Promise.all([
+      Axios.get(`${window.name}/friends`, cfg),
+      Axios.get(`${window.name}/friends/requests`, cfg),
+    ])
+      .then(([friendsRes, requestsRes]) => {
+        setFriends(friendsRes.data);
+        setInvites(requestsRes.data);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── ESC closes add mode ───────────────────────────────────────────────────
 
@@ -118,7 +110,7 @@ function Friends() {
     if (!tag) return;
     closeAddMode();
     try {
-      await Axios.post(`${window.name}/friends/request`, { game_tag: tag }, config());
+      await Axios.post(`${window.name}/friends/request`, { game_tag: tag }, { headers: { Authorization: authHeaderRef.current() } });
       toast.success(t('friends.inviteSent'));
     } catch (err) {
       const msg = err?.response?.data?.error || '';
@@ -132,7 +124,7 @@ function Friends() {
 
   async function handleAccept(invite) {
     try {
-      await Axios.put(`${window.name}/friends/request/${invite.id_request}/accept`, {}, config());
+      await Axios.put(`${window.name}/friends/request/${invite.id_request}/accept`, {}, { headers: { Authorization: authHeaderRef.current() } });
       setInvites((prev) => prev.filter((i) => i.id_request !== invite.id_request));
       setFriends((prev) => [
         ...prev,
@@ -146,7 +138,7 @@ function Friends() {
 
   async function handleDecline(invite) {
     try {
-      await Axios.put(`${window.name}/friends/request/${invite.id_request}/decline`, {}, config());
+      await Axios.put(`${window.name}/friends/request/${invite.id_request}/decline`, {}, { headers: { Authorization: authHeaderRef.current() } });
       setInvites((prev) => prev.filter((i) => i.id_request !== invite.id_request));
       toast.info(t('friends.declined'));
     } catch (err) {
@@ -156,7 +148,7 @@ function Friends() {
 
   async function handleRemove(friend) {
     try {
-      await Axios.delete(`${window.name}/friends/${friend.id_user}`, config());
+      await Axios.delete(`${window.name}/friends/${friend.id_user}`, { headers: { Authorization: authHeaderRef.current() } });
       setFriends((prev) => prev.filter((f) => f.id_user !== friend.id_user));
       toast.info(t('friends.removed'));
     } catch (err) {

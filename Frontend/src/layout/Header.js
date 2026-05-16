@@ -34,7 +34,7 @@ function Header() {
     console.log(isCollapsed);
   };
 
-  // Fetch badge count when user is logged in
+  // Fetch badge count once on mount when user is logged in
   useEffect(() => {
     const user = auth();
     if (!user || !user.email) return;
@@ -43,7 +43,7 @@ function Header() {
     })
       .then((res) => setBadgeCount(res.data.total || 0))
       .catch(() => {});
-  }, [auth, authHeader]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { darkIcon, darkLogin } = useMemo(() => {
     console.log({theme})
