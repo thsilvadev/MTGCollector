@@ -1,0 +1,449 @@
+/* ========================================================
+   Friends.module.css
+   ======================================================== */
+
+/* ---- Layout ---- */
+
+.PageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 72px);
+  margin-top: 72px;
+  background: var(--bodyBackground);
+  color: var(--textColor);
+}
+
+@media (min-width: 768px) {
+  .PageWrapper {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+/* ---- Sidebar ---- */
+
+.Sidebar {
+  width: 100%;
+  border-bottom: 1px solid var(--borderColor, #dee2e6);
+  background: var(--bodyBackground);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .Sidebar {
+    width: 320px;
+    min-width: 320px;
+    border-bottom: none;
+    border-right: 1px solid var(--borderColor, #dee2e6);
+    min-height: calc(100vh - 72px);
+    padding: 24px 16px;
+  }
+}
+
+/* ---- Sidebar Header ---- */
+
+.SidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.SidebarTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.AddBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--textColor);
+  background: transparent;
+  color: var(--textColor);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.AddBtn:hover {
+  background: var(--textColor);
+  color: var(--bodyBackground);
+}
+
+/* ---- Add Mode Row ---- */
+
+.AddModeRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.AddModeInput {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor, #dee2e6);
+  background: var(--bodyBackground);
+  color: var(--textColor);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.AddModeInput:focus {
+  border-color: #6c757d;
+}
+
+.SendBtn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #4db6ac;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.SendBtn:hover {
+  background: #3d9e93;
+}
+
+/* ---- Search ---- */
+
+.SearchInput {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor, #dee2e6);
+  background: var(--bodyBackground);
+  color: var(--textColor);
+  font-size: 0.9rem;
+  outline: none;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+.SearchInput:focus {
+  border-color: #6c757d;
+}
+
+/* ---- Section Headers ---- */
+
+.SectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--textColor);
+  opacity: 0.6;
+  margin: 16px 0 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  width: 100%;
+  cursor: default;
+  user-select: none;
+}
+
+/* Only make section headers clickable/chevron on mobile */
+@media (max-width: 767px) {
+  .SectionHeader {
+    cursor: pointer;
+  }
+
+  .SectionHeader:hover {
+    opacity: 0.85;
+  }
+}
+
+.SectionHeaderBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f06292;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+}
+
+.Chevron {
+  margin-left: auto;
+  display: none;
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+@media (max-width: 767px) {
+  .Chevron {
+    display: inline-block;
+  }
+}
+
+.ChevronOpen {
+  transform: rotate(0deg);
+}
+
+.ChevronClosed {
+  transform: rotate(-90deg);
+}
+
+/* ---- Collapsible sections (mobile only) ---- */
+
+.SectionBody {
+  overflow: hidden;
+}
+
+/* Desktop: always visible — the JS collapsed flag is ignored visually */
+@media (min-width: 768px) {
+  .SectionBody {
+    display: block !important;
+  }
+}
+
+/* ---- Avatar ---- */
+
+.AvatarWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.Avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.OnlineDot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4caf50;
+  border: 2px solid var(--bodyBackground);
+}
+
+/* ---- Friend Item ---- */
+
+.FriendItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.FriendItem:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+@media (max-width: 767px) {
+  .FriendItem {
+    border-bottom: 1px solid var(--borderColor, #dee2e6);
+    border-radius: 0;
+    padding: 10px 0;
+  }
+
+  .FriendItem:last-child {
+    border-bottom: none;
+  }
+}
+
+.FriendInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.FriendName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.FriendStatus {
+  font-size: 0.78rem;
+  opacity: 0.55;
+  margin-top: 1px;
+}
+
+.FriendActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ---- Invite Item ---- */
+
+.InviteItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-radius: 8px;
+}
+
+@media (max-width: 767px) {
+  .InviteItem {
+    border-bottom: 1px solid var(--borderColor, #dee2e6);
+    border-radius: 0;
+    padding: 10px 0;
+  }
+
+  .InviteItem:last-child {
+    border-bottom: none;
+  }
+}
+
+.InviteMutual {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  margin-top: 1px;
+}
+
+/* ---- Action Buttons ---- */
+
+.ActionBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  background: transparent;
+  color: var(--textColor);
+  flex-shrink: 0;
+}
+
+.ActionBtnAccept {
+  border-color: #4db6ac;
+  color: #4db6ac;
+}
+
+.ActionBtnAccept:hover {
+  background: #4db6ac;
+  color: #fff;
+}
+
+.ActionBtnDecline {
+  border-color: #f06292;
+  color: #f06292;
+}
+
+.ActionBtnDecline:hover {
+  background: #f06292;
+  color: #fff;
+}
+
+.ActionBtnRemove {
+  border-color: transparent;
+  color: var(--textColor);
+  opacity: 0.35;
+}
+
+.ActionBtnRemove:hover {
+  opacity: 1;
+  border-color: #f06292;
+  color: #f06292;
+}
+
+/* ---- Empty State ---- */
+
+.EmptyText {
+  font-size: 0.85rem;
+  opacity: 0.45;
+  padding: 6px 4px;
+  font-style: italic;
+}
+
+/* ---- Main Area ---- */
+
+.MainArea {
+  flex: 1;
+  padding: 24px;
+  background: var(--bodyBackground);
+}
+
+.MainAreaHeader {
+  margin-bottom: 24px;
+}
+
+.MainAreaTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.MainAreaSubtitle {
+  font-size: 0.9rem;
+  opacity: 0.55;
+  margin: 0;
+}
+
+/* ---- Feed Placeholder ---- */
+
+.FeedPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  border: 2px dashed var(--borderColor, #dee2e6);
+  border-radius: 12px;
+  opacity: 0.5;
+  text-align: center;
+}
+
+.FeedPlaceholderIcon {
+  font-size: 2.5rem;
+}
+
+.FeedPlaceholderText {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Mobile feed area */
+.MobileFeedArea {
+  padding: 16px;
+  background: var(--bodyBackground);
+}
+
+@media (min-width: 768px) {
+  .MobileFeedArea {
+    display: none;
+  }
+}

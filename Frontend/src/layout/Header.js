@@ -8,9 +8,10 @@ import loginDark from "../images/login-dark.png";
 import loginWhite from "../images/login-white.png";
 
 //tools
-import React, { useMemo, useState } from "react";
-import { useAuthUser, useSignOut } from "react-auth-kit";
+import React, { useMemo, useState, useEffect } from "react";
+import { useAuthUser, useSignOut, useAuthHeader } from "react-auth-kit";
 import { useNavigate } from "react-router-dom";
+import Axios from 'axios';
 
 //components
 import DarkMode from "../components/DarkMode";
@@ -21,14 +22,28 @@ import { toast } from 'react-toastify';
 
 function Header() {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [badgeCount, setBadgeCount] = useState(0);
 
   const { theme, handleSetTheme } = useTheme();
   const { t } = useI18n();
+  const auth = useAuthUser();
+  const authHeader = useAuthHeader();
 
   const handleToggle = () => {
     setIsCollapsed((prevState) => !prevState);
     console.log(isCollapsed);
   };
+
+  // Fetch badge count when user is logged in
+  useEffect(() => {
+    const user = auth();
+    if (!user || !user.email) return;
+    Axios.get(`${window.name}/friends/badge`, {
+      headers: { Authorization: authHeader() },
+    })
+      .then((res) => setBadgeCount(res.data.total || 0))
+      .catch(() => {});
+  }, [auth, authHeader]);
 
   const { darkIcon, darkLogin } = useMemo(() => {
     console.log({theme})
@@ -44,9 +59,6 @@ function Header() {
   
   let darkNavbar = theme === "dark" ? "navbar-dark bg-dark" : "navbar-light bg-light";
 
-
-  const auth = useAuthUser();
-  console.log("auth:", auth());
 
   const signOut = useSignOut();
   const navigate = useNavigate();
@@ -117,6 +129,16 @@ function Header() {
             <li className="nav-item">
               <a className="nav-link" href="/decks">{t('nav.decks')}</a>
             </li>
+            {auth() && auth().email && (
+              <li className="nav-item">
+                <a className="nav-link" href="/amigos">
+                  {t('nav.friends')}
+                  {badgeCount > 0 && (
+                    <span className={styles.Badge}>{badgeCount}</span>
+                  )}
+                </a>
+              </li>
+            )}
             <li className="nav-item">
               <a className="nav-link" href="/about">{t('nav.about')}</a>
             </li>

@@ -13,6 +13,7 @@ const eachDeckController = require('./controllers/eachDeckController');
 const setsController = require('./controllers/setsController')
 const usersController = require('./controllers/usersController');
 const scanController = require('./controllers/scanController');
+const friendsController = require('./controllers/friendsController');
 //const wishlistController = require('./controllers/wishlistController');
 
 /////////// EMAIL ////////////
@@ -96,6 +97,14 @@ routes.put('/confirmation/:emailToken', email.checkUserConfirm);
 routes.post('/reset', email.resetPassword);
 routes.put('/new-password/:resetToken', email.newPassword);
 
+///////ROUTES AND REQUISITIONS FOR FRIENDS
+routes.get('/friends/requests', authMiddleware, friendsController.getRequests);   // GET pending requests (specific before generic)
+routes.get('/friends/badge', authMiddleware, friendsController.getBadgeCount);     // GET badge count
+routes.get('/friends', authMiddleware, friendsController.getFriends);              // GET friends list
+routes.post('/friends/request', authMiddleware, friendsController.sendRequest);    // POST send request
+routes.put('/friends/request/:id/accept', authMiddleware, friendsController.acceptRequest);   // PUT accept
+routes.put('/friends/request/:id/decline', authMiddleware, friendsController.declineRequest); // PUT decline
+routes.delete('/friends/:friendId', authMiddleware, friendsController.removeFriend);           // DELETE unfriend
 
 
 module.exports = routes;

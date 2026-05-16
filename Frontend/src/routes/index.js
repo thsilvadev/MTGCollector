@@ -12,6 +12,8 @@ import Login from "../pages/Login";
 import Confirmation from "../pages/Confirmation";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetConfirmation from "../pages/ResetConfirmation";
+import Friends from "../pages/Friends";
+import FriendProfile from "../pages/FriendProfile";
 
 
 
@@ -52,6 +54,23 @@ function AppRoutes() {
       
       <Route path="/confirmation/:emailToken" element={<Confirmation />} />
       <Route path="/reset-confirmation/:resetToken" element={<ResetConfirmation />} />
+
+      <Route
+        path="/amigos"
+        element={
+          <RequireAuth loginPath="/login">
+            <Friends />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/amigos/:id"
+        element={
+          <RequireAuth loginPath="/login">
+            <FriendProfile />
+          </RequireAuth>
+        }
+      />
     </Routes>
   );
 }
