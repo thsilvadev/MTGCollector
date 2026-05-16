@@ -291,110 +291,244 @@
 .ModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   z-index: 1000;
   display: flex;
-  align-items: center;
+  align-items: flex-end;        /* sheet from bottom on mobile */
   justify-content: center;
-  padding: 16px;
+  padding: 0;
+}
+
+@media (min-width: 480px) {
+  .ModalOverlay {
+    align-items: center;
+    padding: 16px;
+  }
 }
 
 .ModalBox {
   background: var(--bodyBackground);
   border: 1px solid var(--borderColor);
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 16px 16px 0 0;  /* bottom sheet on mobile */
+  padding: 0;
   width: 100%;
-  max-width: 400px;
+  max-width: 100%;
+  overflow: hidden;
+  box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 480px) {
+  .ModalBox {
+    border-radius: 16px;
+    max-width: 420px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* drag handle hint on mobile */
+.ModalBox::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--borderColor);
+  margin: 10px auto 0;
+}
+
+@media (min-width: 480px) {
+  .ModalBox::before { display: none; }
+}
+
+/* ─── Modal Header ──────────────────────────────────────────────────────────── */
+.ModalHeader {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 20px 0;
+}
+
+.ModalTitleIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .ModalTitle {
   font-size: 1rem;
   font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--textColor);
+  line-height: 1.2;
+}
+
+.ModalSubtitle {
+  font-size: 0.8rem;
+  opacity: 0.6;
   margin: 0;
+  line-height: 1.3;
+}
+
+.ModalCloseBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--textColor);
+  opacity: 0.5;
+  padding: 2px 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.ModalCloseBtn:hover { opacity: 1; }
+
+/* ─── Modal Form ────────────────────────────────────────────────────────────── */
+.ModalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px 24px;
 }
 
 .ModalField {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .ModalLabel {
-  font-size: 0.78rem;
-  font-weight: 600;
-  opacity: 0.65;
-}
-
-.ModalInput {
-  border: 1.5px solid var(--borderColor);
-  border-radius: 8px;
-  background: var(--bodyBackground);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--textColor);
-  padding: 7px 10px;
-  font-size: 0.875rem;
+  opacity: 0.55;
+}
+
+/* shared base for all inputs + select */
+.ModalInput,
+.ModalSelect {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--borderColor);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bodyBackground) 85%, var(--borderColor));
+  color: var(--textColor);
+  padding: 9px 11px;
+  font-size: 0.9rem;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
-.ModalInput:focus {
-  border-color: #3b82f6;
+.ModalSelect {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  padding-right: 30px;
+  cursor: pointer;
 }
 
-.ModalRow {
+.ModalInput:focus,
+.ModalSelect:focus {
+  border-color: #e53935;
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.15);
+}
+
+.ModalInputSkeleton {
+  padding: 9px 11px;
+  border: 1.5px solid var(--borderColor);
+  border-radius: 9px;
+  opacity: 0.4;
+  font-size: 0.9rem;
+}
+
+/* ─── Score row ──────────────────────────────────────────────────────────────── */
+.ModalScoreRow {
   display: flex;
+  align-items: flex-end;
   gap: 10px;
 }
 
-.ModalRow .ModalField {
+.ModalScoreField {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
 }
 
+.ModalScoreInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--borderColor);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bodyBackground) 85%, var(--borderColor));
+  color: var(--textColor);
+  padding: 9px 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  /* hide browser spinner */
+  -moz-appearance: textfield;
+}
+.ModalScoreInput::-webkit-inner-spin-button,
+.ModalScoreInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+.ModalScoreInput:focus {
+  border-color: #e53935;
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.15);
+}
+
+.ModalScoreDash {
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  opacity: 0.4;
+  padding-bottom: 9px;   /* vertically aligns with input baseline */
+  line-height: 1;
+}
+
+/* ─── Modal Actions ──────────────────────────────────────────────────────────── */
 .ModalActions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  padding-top: 2px;
 }
 
 .ModalCancelBtn {
   background: none;
   border: 1.5px solid var(--borderColor);
-  border-radius: 6px;
-  padding: 7px 14px;
-  font-size: 0.8rem;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   color: var(--textColor);
   transition: opacity 0.15s;
 }
-
-.ModalCancelBtn:hover {
-  opacity: 0.7;
-}
+.ModalCancelBtn:hover { opacity: 0.7; }
 
 .ModalSendBtn {
-  padding: 7px 16px;
+  padding: 9px 20px;
   background: #e53935;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, opacity 0.15s;
+  letter-spacing: 0.02em;
 }
-
-.ModalSendBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.ModalSendBtn:not(:disabled):hover {
-  background: #b71c1c;
-}
+.ModalSendBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.ModalSendBtn:not(:disabled):hover { background: #c62828; }
 
 /* ─── Loading ─────────────────────────────────────────────────────────────── */
 .LoadingWrapper {

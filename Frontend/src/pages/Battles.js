@@ -46,7 +46,7 @@ function BattleRow({ battle, myGameTag, lang }) {
   const {
     score_challenger, score_deck_owner,
     challenger_game_tag, deck_owner_game_tag,
-    deck_name, battle_date, status,
+    challenger_deck_name, deck_name, battle_date, status,
   } = battle;
 
   const iAmChallenger = myGameTag && challenger_game_tag === myGameTag;
@@ -57,6 +57,9 @@ function BattleRow({ battle, myGameTag, lang }) {
         <span className={iAmChallenger ? styles.Me : styles.Them}>
           #{challenger_game_tag}
         </span>
+        {challenger_deck_name && (
+          <span className={styles.DeckName}>({challenger_deck_name})</span>
+        )}
         <span className={styles.Score}>
           {score_challenger} – {score_deck_owner}
         </span>

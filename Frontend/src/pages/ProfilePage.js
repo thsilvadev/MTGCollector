@@ -29,31 +29,97 @@ function getInitials(name = '') {
 
 // ─── Battle Modal ─────────────────────────────────────────────────────────────
 
-function BattleModal({ deck, onClose, onSend, t }) {
+function BattleModal({ opponentDeck, authHeaderRef, onClose, onSend, t }) {
+  const [myDecks,    setMyDecks]    = useState([]);
+  const [myDeckId,   setMyDeckId]   = useState('');
+  const [decksLoading, setDecksLoading] = useState(true);
   const [battleDate, setBattleDate] = useState('');
-  const [scoreYou, setScoreYou]     = useState('');
-  const [scoreThem, setScoreThem]   = useState('');
-  const [loading, setLoading]       = useState(false);
+  const [scoreYou,   setScoreYou]   = useState('');
+  const [scoreThem,  setScoreThem]  = useState('');
+  const [loading,    setLoading]    = useState(false);
+
+  // Fetch the challenger's own decks once
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const { data } = await Axios.get(
+          `${window.name}/profile/me/decks`,
+          { headers: { Authorization: authHeaderRef.current() } }
+        );
+        if (!cancelled) {
+          setMyDecks(data);
+          if (data.length > 0) setMyDeckId(String(data[0].id_deck));
+        }
+      } catch {
+        // silent — user will see empty select
+      } finally {
+        if (!cancelled) setDecksLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e) {
     e.preventDefault();
     const sy = Number(scoreYou);
     const st = Number(scoreThem);
+    if (!myDeckId) { toast.error(t('battle.errorDeck')); return; }
     if (isNaN(sy) || isNaN(st) || sy < 0 || st < 0) {
       toast.error(t('battle.errorScore'));
       return;
     }
     setLoading(true);
-    await onSend({ deck_id: deck.id_deck, battle_date: battleDate, score_challenger: sy, score_deck_owner: st });
+    await onSend({
+      deck_id:          opponentDeck.id_deck,
+      my_deck_id:       Number(myDeckId),
+      battle_date:      battleDate,
+      score_challenger: sy,
+      score_deck_owner: st,
+    });
     setLoading(false);
   }
 
   return (
     <div className={styles.ModalOverlay} onClick={onClose}>
       <div className={styles.ModalBox} onClick={(e) => e.stopPropagation()}>
-        <p className={styles.ModalTitle}>{t('battle.declare')} — {deck.name}</p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+        {/* Header */}
+        <div className={styles.ModalHeader}>
+          <span className={styles.ModalTitleIcon}>⚔️</span>
+          <div>
+            <p className={styles.ModalTitle}>{t('battle.declare')}</p>
+            <p className={styles.ModalSubtitle}>{t('battle.vsLabel')} <strong>{opponentDeck.name}</strong></p>
+          </div>
+          <button className={styles.ModalCloseBtn} type="button" onClick={onClose} aria-label="close">✕</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className={styles.ModalForm}>
+
+          {/* My deck */}
+          <div className={styles.ModalField}>
+            <label className={styles.ModalLabel}>{t('battle.myDeck')}</label>
+            {decksLoading ? (
+              <div className={styles.ModalInputSkeleton}>…</div>
+            ) : (
+              <select
+                className={styles.ModalSelect}
+                value={myDeckId}
+                onChange={(e) => setMyDeckId(e.target.value)}
+                required
+              >
+                {myDecks.length === 0 && (
+                  <option value="">{t('battle.noDecks')}</option>
+                )}
+                {myDecks.map((d) => (
+                  <option key={d.id_deck} value={String(d.id_deck)}>{d.name}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Date */}
           <div className={styles.ModalField}>
             <label className={styles.ModalLabel}>{t('battle.date')}</label>
             <input
@@ -65,36 +131,47 @@ function BattleModal({ deck, onClose, onSend, t }) {
             />
           </div>
 
-          <div className={styles.ModalRow}>
-            <div className={styles.ModalField}>
+          {/* Scores */}
+          <div className={styles.ModalScoreRow}>
+            <div className={styles.ModalScoreField}>
               <label className={styles.ModalLabel}>{t('battle.scoreYou')}</label>
               <input
                 type="number"
                 min="0"
-                className={styles.ModalInput}
+                max="99"
+                className={styles.ModalScoreInput}
                 value={scoreYou}
                 onChange={(e) => setScoreYou(e.target.value)}
+                placeholder="0"
                 required
               />
             </div>
-            <div className={styles.ModalField}>
+            <span className={styles.ModalScoreDash}>–</span>
+            <div className={styles.ModalScoreField}>
               <label className={styles.ModalLabel}>{t('battle.scoreThem')}</label>
               <input
                 type="number"
                 min="0"
-                className={styles.ModalInput}
+                max="99"
+                className={styles.ModalScoreInput}
                 value={scoreThem}
                 onChange={(e) => setScoreThem(e.target.value)}
+                placeholder="0"
                 required
               />
             </div>
           </div>
 
+          {/* Actions */}
           <div className={styles.ModalActions}>
             <button type="button" className={styles.ModalCancelBtn} onClick={onClose}>
               {t('battle.cancel')}
             </button>
-            <button type="submit" className={styles.ModalSendBtn} disabled={loading}>
+            <button
+              type="submit"
+              className={styles.ModalSendBtn}
+              disabled={loading || decksLoading || !myDeckId}
+            >
               {loading ? '…' : t('battle.send')}
             </button>
           </div>
@@ -230,11 +307,11 @@ export default function ProfilePage({ isSelf = false }) {
 
   // ─── Declare battle ────────────────────────────────────────────────────────
 
-  async function handleDeclareBattle({ deck_id, battle_date, score_challenger, score_deck_owner }) {
+  async function handleDeclareBattle({ deck_id, my_deck_id, battle_date, score_challenger, score_deck_owner }) {
     try {
       await Axios.post(
         `${window.name}/battles`,
-        { deck_id, battle_date, score_challenger, score_deck_owner },
+        { deck_id, my_deck_id, battle_date, score_challenger, score_deck_owner },
         { headers: { Authorization: authHeaderRef.current() } }
       );
       toast.success(t('battle.sent'));
@@ -410,7 +487,8 @@ export default function ProfilePage({ isSelf = false }) {
       {/* ── Battle Modal ── */}
       {battleDeck && (
         <BattleModal
-          deck={battleDeck}
+          opponentDeck={battleDeck}
+          authHeaderRef={authHeaderRef}
           onClose={() => setBattleDeck(null)}
           onSend={handleDeclareBattle}
           t={t}

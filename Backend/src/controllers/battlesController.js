@@ -5,7 +5,7 @@ module.exports = {
   // POST /battles  — challenger declares a battle against a deck owner
   async declareBattle(req, res) {
     const challengerId = req.userId;
-    const { deck_id, battle_date, score_challenger, score_deck_owner } = req.body;
+    const { deck_id, my_deck_id, battle_date, score_challenger, score_deck_owner } = req.body;
     const now = new Date().toISOString();
 
     if (!deck_id)      return res.status(400).json({ error: 'deck_id is required.' });
@@ -25,14 +25,22 @@ module.exports = {
         return res.status(400).json({ error: 'Cannot declare a battle against your own deck.' });
       }
 
+      // Validate challenger deck if provided
+      let challengerDeckId = my_deck_id ? Number(my_deck_id) : null;
+      if (challengerDeckId) {
+        const myDeck = await knex('decks').where({ id_deck: challengerDeckId, user_id: challengerId }).first();
+        if (!myDeck) challengerDeckId = null;
+      }
+
       const [id_battle] = await knex('battles').insert({
-        challenger_id:    challengerId,
-        deck_owner_id:    deck.user_id,
-        deck_id:          deck_id,
-        battle_date:      new Date(battle_date),
-        score_challenger: Number(score_challenger),
-        score_deck_owner: Number(score_deck_owner),
-        status:           'pending',
+        challenger_id:      challengerId,
+        deck_owner_id:      deck.user_id,
+        deck_id:            deck_id,
+        challenger_deck_id: challengerDeckId,
+        battle_date:        new Date(battle_date),
+        score_challenger:   Number(score_challenger),
+        score_deck_owner:   Number(score_deck_owner),
+        status:             'pending',
       });
 
       console.log(`\x1b[33m${now}\x1b[0m [battles] POST /battles — challenger ${challengerId} vs deck ${deck_id} (owner ${deck.user_id})`);
@@ -96,9 +104,10 @@ module.exports = {
     const userId = req.userId;
     try {
       const rows = await knex('battles as b')
-        .join('decks as d',       'b.deck_id',        'd.id_deck')
-        .join('users as challenger', 'b.challenger_id', 'challenger.id_user')
-        .join('users as owner',      'b.deck_owner_id', 'owner.id_user')
+        .join('decks as d',            'b.deck_id',            'd.id_deck')
+        .leftJoin('decks as cd',       'b.challenger_deck_id', 'cd.id_deck')
+        .join('users as challenger',   'b.challenger_id',      'challenger.id_user')
+        .join('users as owner',        'b.deck_owner_id',      'owner.id_user')
         .select(
           'b.id_battle',
           'b.battle_date',
@@ -109,6 +118,8 @@ module.exports = {
           'd.id_deck',
           'd.name as deck_name',
           'd.color as deck_color',
+          'cd.id_deck as challenger_deck_id',
+          'cd.name as challenger_deck_name',
           'challenger.id_user as challenger_id',
           'challenger.game_tag as challenger_game_tag',
           'challenger.name as challenger_name',

@@ -231,10 +231,14 @@ const translations = {
     'battle.send':                   'Send',
     'battle.sent':                   'Battle declaration sent!',
     'battle.cancel':                 'Cancel',
+    'battle.myDeck':                 'Your deck',
+    'battle.noDecks':                'No decks — create one first.',
+    'battle.vsLabel':                'vs.',
+    'battle.errorDeck':              'Please select a deck.',
     'battle.errorScore':             'Scores must be non-negative numbers.',
 
     // BATTLES PAGE
-    'battles.empty':                 'No battles yet.',
+    'battles.empty':                 'No battles yet.'
   },
 
   pt: {
@@ -469,10 +473,14 @@ const translations = {
     'battle.send':                   'Enviar',
     'battle.sent':                   'Declaração de batalha enviada!',
     'battle.cancel':                 'Cancelar',
+    'battle.myDeck':                 'Seu deck',
+    'battle.noDecks':                'Nenhum deck — crie um primeiro.',
+    'battle.vsLabel':                'vs.',
+    'battle.errorDeck':              'Selecione um deck.',
     'battle.errorScore':             'Os placares devem ser números não-negativos.',
 
     // BATTLES PAGE
-    'battles.empty':                 'Nenhuma batalha ainda.',
+    'battles.empty':                 'Nenhuma batalha ainda.'
   },
 };
 
