@@ -14,6 +14,8 @@ const setsController = require('./controllers/setsController')
 const usersController = require('./controllers/usersController');
 const scanController = require('./controllers/scanController');
 const friendsController = require('./controllers/friendsController');
+const profileController = require('./controllers/profileController');
+const battlesController = require('./controllers/battlesController');
 //const wishlistController = require('./controllers/wishlistController');
 
 /////////// EMAIL ////////////
@@ -105,6 +107,18 @@ routes.post('/friends/request', authMiddleware, friendsController.sendRequest); 
 routes.put('/friends/request/:id/accept', authMiddleware, friendsController.acceptRequest);   // PUT accept
 routes.put('/friends/request/:id/decline', authMiddleware, friendsController.declineRequest); // PUT decline
 routes.delete('/friends/:friendId', authMiddleware, friendsController.removeFriend);           // DELETE unfriend
+
+///////ROUTES AND REQUISITIONS FOR PROFILE
+routes.get('/profile/:userId',                         authMiddleware, profileController.getProfile);
+routes.get('/profile/:userId/decks',                   authMiddleware, profileController.getProfileDecks);
+routes.get('/profile/:userId/testimonials',            authMiddleware, profileController.getTestimonials);
+routes.post('/profile/:userId/testimonials',           authMiddleware, profileController.addTestimonial);
+
+///////ROUTES AND REQUISITIONS FOR BATTLES
+routes.get('/battles',                    authMiddleware, battlesController.getMyBattles);
+routes.post('/battles',                   authMiddleware, battlesController.declareBattle);
+routes.put('/battles/:id/accept',         authMiddleware, battlesController.acceptBattle);
+routes.put('/battles/:id/decline',        authMiddleware, battlesController.declineBattle);
 
 
 module.exports = routes;

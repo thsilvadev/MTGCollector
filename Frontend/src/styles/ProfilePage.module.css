@@ -1,0 +1,413 @@
+/* ─── Page Layout ────────────────────────────────────────────────────────── */
+.PageWrapper {
+  min-height: 100vh;
+  background: var(--bodyBackground);
+  color: var(--textColor);
+}
+
+/* ─── Hero ────────────────────────────────────────────────────────────────── */
+.Hero {
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid var(--borderColor);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.HeroRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.Avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #fff;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.HeroInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.HeroName {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.HeroGameTag {
+  font-family: monospace;
+  font-size: 0.82rem;
+  opacity: 0.6;
+}
+
+/* ─── Badges ─────────────────────────────────────────────────────────────── */
+.BadgesRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.Badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--bodyBackground);
+  border: 1.5px solid var(--borderColor);
+  cursor: default;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+
+.Badge.locked {
+  opacity: 0.35;
+}
+
+.Badge.unlocked {
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.BadgeIcon {
+  font-size: 1rem;
+}
+
+/* ─── Content Grid ────────────────────────────────────────────────────────── */
+.Content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .Content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+}
+
+/* ─── Section ─────────────────────────────────────────────────────────────── */
+.Section {
+  background: var(--bodyBackground);
+  border: 1px solid var(--borderColor);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.SectionHeader {
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--borderColor);
+  opacity: 0.7;
+}
+
+.SectionBody {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Empty State ─────────────────────────────────────────────────────────── */
+.Empty {
+  padding: 20px 0;
+  text-align: center;
+  opacity: 0.5;
+  font-size: 0.875rem;
+}
+
+/* ─── Deck Items ─────────────────────────────────────────────────────────── */
+.DeckItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borderColor);
+}
+
+.DeckItem:last-child {
+  border-bottom: none;
+}
+
+.DeckName {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.DeckMeta {
+  font-size: 0.75rem;
+  opacity: 0.55;
+  display: flex;
+  gap: 8px;
+}
+
+.BattleBtn {
+  background: none;
+  border: 1.5px solid var(--borderColor);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--textColor);
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.BattleBtn:hover {
+  border-color: #e53935;
+  color: #e53935;
+}
+
+/* ─── Not-friend notice ───────────────────────────────────────────────────── */
+.NotFriend {
+  padding: 16px;
+  text-align: center;
+  font-size: 0.875rem;
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* ─── Testimonial Items ───────────────────────────────────────────────────── */
+.TestimonialItem {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borderColor);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.TestimonialItem:last-child {
+  border-bottom: none;
+}
+
+.TestimonialMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  opacity: 0.6;
+}
+
+.TestimonialText {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.SeeAllBtn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 0;
+  align-self: flex-start;
+  transition: opacity 0.15s;
+}
+
+.SeeAllBtn:hover {
+  opacity: 0.7;
+}
+
+/* ─── Write Testimonial ───────────────────────────────────────────────────── */
+.TestimonialForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.TestimonialTextarea {
+  width: 100%;
+  border: 1.5px solid var(--borderColor);
+  border-radius: 8px;
+  background: var(--bodyBackground);
+  color: var(--textColor);
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 72px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.TestimonialTextarea:focus {
+  border-color: #3b82f6;
+}
+
+.PublishBtn {
+  align-self: flex-end;
+  padding: 6px 16px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.PublishBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.PublishBtn:not(:disabled):hover {
+  background: #2563eb;
+}
+
+/* ─── Battle Modal ────────────────────────────────────────────────────────── */
+.ModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.ModalBox {
+  background: var(--bodyBackground);
+  border: 1px solid var(--borderColor);
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ModalTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ModalField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ModalLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.65;
+}
+
+.ModalInput {
+  border: 1.5px solid var(--borderColor);
+  border-radius: 8px;
+  background: var(--bodyBackground);
+  color: var(--textColor);
+  padding: 7px 10px;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.ModalInput:focus {
+  border-color: #3b82f6;
+}
+
+.ModalRow {
+  display: flex;
+  gap: 10px;
+}
+
+.ModalRow .ModalField {
+  flex: 1;
+}
+
+.ModalActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ModalCancelBtn {
+  background: none;
+  border: 1.5px solid var(--borderColor);
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--textColor);
+  transition: opacity 0.15s;
+}
+
+.ModalCancelBtn:hover {
+  opacity: 0.7;
+}
+
+.ModalSendBtn {
+  padding: 7px 16px;
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ModalSendBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ModalSendBtn:not(:disabled):hover {
+  background: #b71c1c;
+}
+
+/* ─── Loading ─────────────────────────────────────────────────────────────── */
+.LoadingWrapper {
+  padding: 60px 24px;
+  text-align: center;
+  opacity: 0.5;
+}
+
+/* ─── See-All Modal ───────────────────────────────────────────────────────── */
+.AllTestimonialsBody {
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

@@ -14,6 +14,7 @@ import ForgotPassword from "../pages/ForgotPassword";
 import ResetConfirmation from "../pages/ResetConfirmation";
 import Friends from "../pages/Friends";
 import FriendProfile from "../pages/FriendProfile";
+import MyProfile from "../pages/MyProfile";
 
 
 
@@ -68,6 +69,14 @@ function AppRoutes() {
         element={
           <RequireAuth loginPath="/login">
             <FriendProfile />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/meu-perfil"
+        element={
+          <RequireAuth loginPath="/login">
+            <MyProfile />
           </RequireAuth>
         }
       />

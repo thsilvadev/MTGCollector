@@ -139,6 +139,11 @@ function Header() {
                 </a>
               </li>
             )}
+            {auth() && auth().email && (
+              <li className="nav-item">
+                <a className="nav-link" href="/meu-perfil">{t('nav.myProfile')}</a>
+              </li>
+            )}
             <li className="nav-item">
               <a className="nav-link" href="/about">{t('nav.about')}</a>
             </li>

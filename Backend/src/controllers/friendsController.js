@@ -113,19 +113,26 @@ module.exports = {
     }
   },
 
-  // GET /friends/badge — count of pending notifications (requests + future: battle declarations)
+  // GET /friends/badge — count of pending notifications (requests + battle declarations)
   async getBadgeCount(req, res) {
     const userId = req.userId;
     try {
-      const [{ count }] = await knex('friend_requests')
-        .count('id_request as count')
-        .where('receiver_id', userId);
+      const [[{ friendRequests }], [{ battleDeclarations }]] = await Promise.all([
+        knex('friend_requests')
+          .count('id_request as friendRequests')
+          .where('receiver_id', userId),
+        knex('battles')
+          .count('id_battle as battleDeclarations')
+          .where('deck_owner_id', userId)
+          .where('status', 'pending'),
+      ]);
 
-      const friendRequests = Number(count);
+      const fr = Number(friendRequests);
+      const bd = Number(battleDeclarations);
       return res.status(200).json({
-        friendRequests,
-        battleDeclarations: 0,
-        total: friendRequests,
+        friendRequests: fr,
+        battleDeclarations: bd,
+        total: fr + bd,
       });
     } catch (error) {
       console.error(error);
