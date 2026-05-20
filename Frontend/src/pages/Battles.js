@@ -42,14 +42,17 @@ function StatusBadge({ status, lang }) {
 
 // ─── Battle row ───────────────────────────────────────────────────────────────
 
-function BattleRow({ battle, myGameTag, lang }) {
+function BattleRow({ battle, myGameTag, lang, onAccept, onDecline }) {
   const {
+    id_battle,
     score_challenger, score_deck_owner,
     challenger_game_tag, deck_owner_game_tag,
     challenger_deck_name, deck_name, battle_date, status,
   } = battle;
 
   const iAmChallenger = myGameTag && challenger_game_tag === myGameTag;
+  const iAmDeckOwner  = myGameTag && deck_owner_game_tag === myGameTag;
+  const canAct        = iAmDeckOwner && status === 'pending';
 
   return (
     <div className={styles.Row}>
@@ -73,6 +76,22 @@ function BattleRow({ battle, myGameTag, lang }) {
         <span className={styles.DateStr}>{formatBattleDate(battle_date, lang)}</span>
         <StatusBadge status={status} lang={lang} />
       </div>
+      {canAct && (
+        <div className={styles.RowActions}>
+          <button
+            className={styles.AcceptBtn}
+            onClick={() => onAccept(id_battle)}
+          >
+            {lang === 'pt' ? 'Aceitar' : 'Accept'}
+          </button>
+          <button
+            className={styles.DeclineBtn}
+            onClick={() => onDecline(id_battle)}
+          >
+            {lang === 'pt' ? 'Recusar' : 'Decline'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -89,6 +108,8 @@ export default function Battles() {
 
   const [battles,  setBattles]  = useState([]);
   const [loading,  setLoading]  = useState(true);
+
+  const myGameTag = auth && typeof auth === 'function' ? auth()?.game_tag : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -109,7 +130,35 @@ export default function Battles() {
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const myGameTag = auth && typeof auth === 'function' ? auth()?.game_tag : null;
+  async function handleAccept(id_battle) {
+    try {
+      await Axios.put(
+        `${window.name}/battles/${id_battle}/accept`,
+        {},
+        { headers: { Authorization: authHeaderRef.current() } }
+      );
+      setBattles((prev) =>
+        prev.map((b) => b.id_battle === id_battle ? { ...b, status: 'accepted' } : b)
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleDecline(id_battle) {
+    try {
+      await Axios.put(
+        `${window.name}/battles/${id_battle}/decline`,
+        {},
+        { headers: { Authorization: authHeaderRef.current() } }
+      );
+      setBattles((prev) =>
+        prev.map((b) => b.id_battle === id_battle ? { ...b, status: 'declined' } : b)
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   return (
     <div className={styles.PageWrapper}>
@@ -129,6 +178,8 @@ export default function Battles() {
               battle={b}
               myGameTag={myGameTag}
               lang={lang}
+              onAccept={handleAccept}
+              onDecline={handleDecline}
             />
           ))}
         </div>
