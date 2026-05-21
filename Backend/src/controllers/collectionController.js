@@ -278,6 +278,10 @@ module.exports = {
       return res.json({ total, cards, networth });
 
     } catch (error) {
+      if (error.code === 'SCRYFALL_DOWN') {
+        console.error(`IP: ${req.ip}, Time: ${formattedDate}. Scryfall unreachable.`);
+        return res.status(503).json({ error: 'Scryfall is temporarily unavailable.', scryfallDown: true });
+      }
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
       return res.status(500).json({ error: 'Failed to load collection.' });
     }

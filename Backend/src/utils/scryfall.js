@@ -16,7 +16,14 @@ const SF_MIN_INTERVAL_MS = 550;
 let _sfLastCall = 0;
 let _sfQueue    = Promise.resolve();
 
-const RETRYABLE_CODES = new Set(['ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'ECONNABORTED']);
+const RETRYABLE_CODES = new Set(['ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'ECONNABORTED', 'ERR_BAD_RESPONSE']);
+
+function isRetryable(err) {
+  if (err.response) {
+    return err.response.status >= 500; // 5xx from Scryfall
+  }
+  return RETRYABLE_CODES.has(err.code); // network error
+}
 
 function sfGet(url, params, extraConfig = {}) {
   _sfQueue = _sfQueue.then(async () => {
@@ -35,12 +42,14 @@ function sfGet(url, params, extraConfig = {}) {
           await new Promise(r => setTimeout(r, 30000));
           throw err; // don't retry 429 — we need to back off
         }
-        const retryable = !err.response && RETRYABLE_CODES.has(err.code);
-        if (retryable && attempt < MAX_ATTEMPTS) {
+        if (isRetryable(err) && attempt < MAX_ATTEMPTS) {
+          const status = err.response ? ` HTTP ${err.response.status}` : ` ${err.code}`;
           const delay = attempt * 2000;
-          console.warn(`[Scryfall] ${err.code} on attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${delay}ms`);
+          console.warn(`[Scryfall] GET${status} on attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${delay}ms (${url})`);
           await new Promise(r => setTimeout(r, delay));
         } else {
+          const status = err.response ? ` HTTP ${err.response.status}` : ` ${err.code}`;
+          console.error(`[Scryfall] GET${status} — giving up after ${attempt} attempt(s) (${url})`);
           throw err;
         }
       }
@@ -68,12 +77,14 @@ function sfPost(url, body) {
           await new Promise(r => setTimeout(r, 30000));
           throw err;
         }
-        const retryable = !err.response && RETRYABLE_CODES.has(err.code);
-        if (retryable && attempt < MAX_ATTEMPTS) {
+        if (isRetryable(err) && attempt < MAX_ATTEMPTS) {
+          const status = err.response ? ` HTTP ${err.response.status}` : ` ${err.code}`;
           const delay = attempt * 2000;
-          console.warn(`[Scryfall] ${err.code} on attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${delay}ms`);
+          console.warn(`[Scryfall] POST${status} on attempt ${attempt}/${MAX_ATTEMPTS} — retrying in ${delay}ms (${url})`);
           await new Promise(r => setTimeout(r, delay));
         } else {
+          const status = err.response ? ` HTTP ${err.response.status}` : ` ${err.code}`;
+          console.error(`[Scryfall] POST${status} — giving up after ${attempt} attempt(s) (${url})`);
           throw err;
         }
       }
@@ -157,6 +168,9 @@ async function batchGetCards(scryfallIds) {
   }
 
   const results = [];
+  let chunksFailed = 0;
+  const totalChunks = Math.ceil(scryfallIds.length / 75);
+
   for (let i = 0; i < scryfallIds.length; i += 75) {
     const chunk       = scryfallIds.slice(i, i + 75);
     const identifiers = chunk.map(id => ({ id }));
@@ -164,8 +178,16 @@ async function batchGetCards(scryfallIds) {
       const res = await sfPost(`${SCRYFALL_BASE}/cards/collection`, { identifiers });
       results.push(...res.data.data.map(normalizeCard));
     } catch (err) {
+      chunksFailed++;
       console.error(`[Scryfall] batchGetCards chunk ${i}–${i + chunk.length} failed: ${err.code ?? err.message}`);
     }
+  }
+
+  // If every chunk failed, Scryfall is fully unreachable — propagate so callers can handle.
+  if (chunksFailed === totalChunks && results.length === 0) {
+    const err = new Error('Scryfall is currently unreachable');
+    err.code = 'SCRYFALL_DOWN';
+    throw err;
   }
 
   if (results.length) {

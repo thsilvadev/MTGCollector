@@ -128,7 +128,14 @@ function Collection() {
         setIsDroppable(true);
         setIsLoading(false);
       })
-      .catch(() => setIsLoading(false));
+      .catch((err) => {
+        setIsLoading(false);
+        if (err?.response?.status === 503) {
+          toast.error(t('error.scryfallDown'));
+        } else {
+          toast.error(t('error.collectionLoad'));
+        }
+      });
   }, [superParams, refresherToggler]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Effect B: when page > 0 — append more cards
@@ -142,9 +149,14 @@ function Collection() {
         setIsLoadingMore(false);
         isLoadingMoreRef.current = false;
       })
-      .catch(() => {
+      .catch((err) => {
         setIsLoadingMore(false);
         isLoadingMoreRef.current = false;
+        if (err?.response?.status === 503) {
+          toast.error(t('error.scryfallDown'));
+        } else {
+          toast.error(t('error.collectionLoad'));
+        }
       });
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 

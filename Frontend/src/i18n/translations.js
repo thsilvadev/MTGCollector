@@ -238,7 +238,11 @@ const translations = {
     'battle.errorScore':             'Scores must be non-negative numbers.',
 
     // BATTLES PAGE
-    'battles.empty':                 'No battles yet.'
+    'battles.empty':                 'No battles yet.',
+
+    // ERRORS
+    'error.scryfallDown':            'Card data is temporarily unavailable (Scryfall is down). Try again in a few minutes.',
+    'error.collectionLoad':          'Failed to load your collection. Please try again.'
   },
 
   pt: {
@@ -480,7 +484,11 @@ const translations = {
     'battle.errorScore':             'Os placares devem ser números não-negativos.',
 
     // BATTLES PAGE
-    'battles.empty':                 'Nenhuma batalha ainda.'
+    'battles.empty':                 'Nenhuma batalha ainda.',
+
+    // ERRORS
+    'error.scryfallDown':            'Dados de cartas indisponíveis temporariamente (Scryfall fora do ar). Tente novamente em alguns minutos.',
+    'error.collectionLoad':          'Falha ao carregar sua coleção. Por favor, tente novamente.'
   },
 };
 
