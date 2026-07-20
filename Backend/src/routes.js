@@ -64,6 +64,7 @@ routes.delete('/decks/:id_deck', authMiddleware, decksController.deleteById);//D
 routes.get('/eachDeck/:id', authMiddleware, eachDeckController.getDeck); // GET eachDeck
 routes.post('/eachDeck', authMiddleware, eachDeckController.postOnDeck); // POST eachDeck
 routes.put('/eachDeck/setqty', authMiddleware, eachDeckController.setQty); // PUT set exact deck card qty
+routes.put('/eachDeck/move', authMiddleware, eachDeckController.moveCard); // PUT move card between main deck and sideboard
 routes.delete('/eachDeck/:id_constructed', authMiddleware, eachDeckController.deleteById); //DELETE eachDeck
 
 ///////ROUTES AND REQUISITIONS FOR THE WISHLIST TABLE

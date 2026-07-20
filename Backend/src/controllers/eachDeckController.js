@@ -1,36 +1,28 @@
 const knex     = require('../database/index');
 const scryfall = require('../utils/scryfall');
 
-//METHODS
+// ── VALIDATION HELPER ────────────────────────────────────────────────────────
+// Returns an error string if the card cannot be added, null if valid.
+// collectionIds : all id_collection values the user owns for this Scryfall card
+// deckRows      : all raw rows in `deck` table for this deck (main + sideboard)
+// totalOwned    : how many copies the user owns
+// isSideboard   : true when adding to sideboard
+function validateAdd(collectionIds, deckRows, totalOwned, isSideboard) {
+  // How many copies are already placed across the full 75 (main + sideboard)?
+  const totalPlaced = deckRows.filter(r => collectionIds.includes(r.id_card)).length;
 
-function isDraggable(collectionId, deckCards, collectionCards) {
-  const collectionIdString = collectionId.toString();
+  if (totalPlaced >= totalOwned) {
+    return 'Not enough copies in collection';
+  }
 
-  const onDeckCard = deckCards.find((card) => card.id_card.toString() === collectionIdString);
-  const onCollectionCard = collectionCards.find((card) => card.id_collection.toString() === collectionIdString);
-
-  const onDeckCounter = onDeckCard ? onDeckCard.countById : 0;
-  const onCollectionCounter = onCollectionCard ? onCollectionCard.countById : 0;
-  const cardName = onCollectionCard ? onCollectionCard.name : undefined;
-
-  let nameCounter = 0;
-  if (cardName) {
-    for (const card of deckCards) {
-      if (card.name === cardName) {
-        nameCounter += card.countById;
-      }
+  if (isSideboard) {
+    const sideboardTotal = deckRows.filter(r => r.sideboard).length;
+    if (sideboardTotal >= 15) {
+      return 'Sideboard is full (max 15 cards)';
     }
   }
 
-  const onCollectionSuperType = onCollectionCard ? onCollectionCard.supertypes : undefined;
-
-  if (onCollectionCounter - onDeckCounter <= 0) {
-    return false;
-  } else if ((onDeckCounter >= 4 || nameCounter >= 4) && onCollectionSuperType !== "Basic") {
-    return false;
-  }
-
-  return true;
+  return null;
 }
 
 //HANDLERS
@@ -39,16 +31,18 @@ module.exports = {
   async getDeck(req, res) {
     const now           = new Date();
     const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-    const { id }    = req.params; // decks.id_deck
+    const { id }    = req.params;
     const user_id   = req.userId;
 
     try {
       // ── Step 1: Get the deck's cards from the DB ─────────────────────────────
-      // Each row is one card-slot in the deck (aggregated across duplicate copies).
+      // Group by card_id + deck + sideboard so the same card can appear as
+      // separate rows for main deck and sideboard.
       const deckRows = await knex('deck')
         .select(
           'collection.card_id',
           'deck.deck as id_deck',
+          'deck.sideboard',
           knex.raw('MIN(collection.id_collection) as id_collection'),
           knex.raw('MIN(deck.id_card)             as id_card'),
           knex.raw('MIN(deck.id_constructed)      as id_constructed'),
@@ -58,16 +52,16 @@ module.exports = {
         .join('decks',      'decks.id_deck',            '=', 'deck.deck')
         .where('deck.user_id', user_id)
         .where('decks.id_deck', id)
-        .groupBy('collection.card_id', 'deck.deck')
+        .groupBy('collection.card_id', 'deck.deck', 'deck.sideboard')
         .orderBy(knex.raw('MIN(collection.id_collection)'), 'desc')
-        .limit(120);
+        .limit(150);
 
       if (!deckRows.length) {
         return res.json([]);
       }
 
       // ── Step 2: Fetch card data from Scryfall ────────────────────────────────
-      const scryfallIds  = [...new Set(deckRows.map(r => r.card_id))];
+      const scryfallIds   = [...new Set(deckRows.map(r => r.card_id))];
       const scryfallCards = await scryfall.batchGetCards(scryfallIds);
       const cardMap       = new Map(scryfallCards.map(c => [c.id, c]));
 
@@ -88,12 +82,13 @@ module.exports = {
           if (!cardData) return null;
           return {
             ...cardData,
-            id_collection: row.id_collection,
-            id_card:       row.id_card,
+            id_collection:  row.id_collection,
+            id_card:        row.id_card,
             id_constructed: row.id_constructed,
-            id_deck:       row.id_deck,
-            countById:     parseInt(row.countById, 10),
-            inCollection:  collectionCountMap.get(row.card_id) || 0,
+            id_deck:        row.id_deck,
+            countById:      parseInt(row.countById, 10),
+            inCollection:   collectionCountMap.get(row.card_id) || 0,
+            sideboard:      Boolean(row.sideboard),
           };
         })
         .filter(Boolean);
@@ -107,143 +102,196 @@ module.exports = {
     }
   },
 
-  //Post on Deck
+  // Add a card to the main deck or sideboard
   async postOnDeck(req, res) {
-    //Console logging with IP and Date (in yellow)
     const now = new Date();
-    let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+    const { id_card, deck, sideboard = false } = req.body;
+    const user_id   = req.userId;
+    const isSideboard = !!sideboard;
 
-    //This is a body request. Data comes in json and not in params.
-    const body = req.body;
-    const { id_card } = body;
-    const { deck } = body;
-
-     //Authenticated userId
-     const user_id = req.userId;
-
-     //Backend validation (to prevent bugs and 'dups')
-   // Fetch the deck cards and collection cards for the user
-  const deckCards = await knex("deck").where({ user_id, deck });
-  const collectionCards = await knex("collection").where({ user_id });
-
-  // Check if the card drag operation is valid
-  const isDraggableResult = isDraggable( id_card, deckCards, collectionCards);
-
-  if (isDraggableResult !== true) {
-    // Return an error response
-    console.error(
-      `Card drag operation failed for card ${id_card} on Deck ${deck} of user ${user_id} by ${req.ip} at ${formattedDate}`
-    );
-    return res.status(400).json({ error: isDraggableResult });
-  } else {
     try {
-      const result = await knex("deck").insert({
+      // Resolve which Scryfall card this collection entry belongs to
+      const collEntry = await knex('collection')
+        .where({ id_collection: id_card, user_id })
+        .first();
+
+      if (!collEntry) {
+        return res.status(400).json({ error: 'Card not found in your collection' });
+      }
+
+      // All id_collection values the user owns for this Scryfall card
+      const collectionIds = await knex('collection')
+        .where({ card_id: collEntry.card_id, user_id })
+        .pluck('id_collection');
+
+      // All deck rows for this deck (main + sideboard combined)
+      const deckRows = await knex('deck').where({ user_id, deck });
+
+      const error = validateAdd(collectionIds, deckRows, collectionIds.length, isSideboard);
+      if (error) {
+        console.error(`postOnDeck rejected: ${error} — card ${id_card}, deck ${deck}, user ${user_id}`);
+        return res.status(400).json({ error });
+      }
+
+      const result = await knex('deck').insert({
         id_card,
         deck,
-        user_id
+        user_id,
+        sideboard: isSideboard ? 1 : 0,
       });
 
-      console.log(
-        `Post successful of ${id_card} on Deck ${deck} of user ${user_id} by ${req.ip} at ${formattedDate}`
-      );
-
+      console.log(`Post successful: card ${id_card} → deck ${deck} (sideboard=${isSideboard}) of user ${user_id} at ${formattedDate}`);
       return res.json(result);
+
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
-      return res.status(500).json({
-        error:
-          "TO BE UPDATE // TO BE UPDATED  // TO BE UPDATED // TO BE UPDATED // TO BE UPDATED // TO BE UPDATED.",
-      });
+      return res.status(500).json({ error: 'Failed to add card to deck.' });
     }
-  }
-
-
-    
   },
 
-  // Set exact quantity of a card in a deck (add or remove copies as needed)
+  // Set exact quantity of a card in the main deck or sideboard.
+  // Cross-partition ownership is enforced: main + sideboard combined cannot exceed owned copies.
   async setQty(req, res) {
     const now = new Date();
     const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-    const { card_id, deck, qty } = req.body;
-    const user_id = req.userId;
-    const newQty = parseInt(qty, 10);
+    const { card_id, deck, qty, sideboard = false } = req.body;
+    const user_id   = req.userId;
+    const isSideboard = !!sideboard;
+    const newQty    = parseInt(qty, 10);
 
     if (isNaN(newQty) || newQty < 0 || newQty > 99) {
       return res.status(400).json({ error: 'Invalid quantity' });
     }
 
     try {
-      // All collection entries for this Scryfall card owned by user
+      // All collection entries for this Scryfall card
       const collectionEntries = await knex('collection').where({ card_id, user_id });
-      const totalOwned = collectionEntries.length;
+      const totalOwned    = collectionEntries.length;
       const collectionIds = collectionEntries.map(c => c.id_collection);
 
-      if (newQty > totalOwned) {
+      // Current qty in the target partition (main or sideboard)
+      const targetRows = await knex('deck')
+        .where({ deck, user_id, sideboard: isSideboard ? 1 : 0 })
+        .whereIn('id_card', collectionIds);
+      const currentQty = targetRows.length;
+
+      // Qty already in the OTHER partition
+      const otherRows = await knex('deck')
+        .where({ deck, user_id, sideboard: isSideboard ? 0 : 1 })
+        .whereIn('id_card', collectionIds);
+      const otherPartitionQty = otherRows.length;
+
+      // Cross-partition ownership check
+      if (newQty + otherPartitionQty > totalOwned) {
         return res.status(400).json({ error: 'Not enough copies in collection' });
       }
 
-      // Current deck entries for this card in this deck
-      const currentDeckRows = await knex('deck')
-        .where({ deck, user_id })
-        .whereIn('id_card', collectionIds);
-      const currentQty = currentDeckRows.length;
+      // Sideboard total-size check
+      if (isSideboard) {
+        const { count } = await knex('deck').where({ deck, user_id, sideboard: 1 }).count('* as count').first();
+        const totalSideboard = parseInt(count);
+        if (totalSideboard - currentQty + newQty > 15) {
+          return res.status(400).json({ error: 'Sideboard cannot exceed 15 cards' });
+        }
+      }
 
       if (newQty === currentQty) return res.json({ message: 'No change' });
 
       if (newQty > currentQty) {
         const toAdd = newQty - currentQty;
         const inserts = Array.from({ length: toAdd }, () => ({
-          id_card: collectionIds[0], deck, user_id,
+          id_card: collectionIds[0], deck, user_id, sideboard: isSideboard ? 1 : 0,
         }));
         await knex('deck').insert(inserts);
       } else {
         const toRemove = currentQty - newQty;
-        const idsToDelete = currentDeckRows.slice(0, toRemove).map(r => r.id_constructed);
+        const idsToDelete = targetRows.slice(0, toRemove).map(r => r.id_constructed);
         await knex('deck').whereIn('id_constructed', idsToDelete).where({ user_id }).del();
       }
 
-      console.log(`setQty: ${card_id} in deck ${deck} → ${newQty} for user ${user_id} at ${formattedDate}`);
+      console.log(`setQty: ${card_id} in deck ${deck} (sideboard=${isSideboard}) → ${newQty} for user ${user_id} at ${formattedDate}`);
       return res.json({ success: true, qty: newQty });
+
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
       return res.status(500).json({ error: 'Failed to set deck card quantity.' });
     }
   },
 
-  async deleteById(req, res) {
-    //Console logging with IP and Date (in yellow)
+  // Move all copies of a card between main deck ↔ sideboard (atomic flip)
+  async moveCard(req, res) {
     const now = new Date();
-    let formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
+    const { card_id, deck, sideboard } = req.body; // card_id = Scryfall UUID
+    const user_id   = req.userId;
+    const toSideboard = !!sideboard;
 
-    //Params request
+    try {
+      const collectionIds = await knex('collection')
+        .where({ card_id, user_id })
+        .pluck('id_collection');
+
+      if (!collectionIds.length) {
+        return res.status(400).json({ error: 'Card not in collection' });
+      }
+
+      // Rows in the SOURCE partition
+      const sourceRows = await knex('deck')
+        .where({ deck, user_id, sideboard: toSideboard ? 0 : 1 })
+        .whereIn('id_card', collectionIds);
+
+      if (!sourceRows.length) {
+        return res.json({ message: 'No cards to move', moved: 0 });
+      }
+
+      if (toSideboard) {
+        const { count } = await knex('deck')
+          .where({ deck, user_id, sideboard: 1 })
+          .count('* as count')
+          .first();
+        if (parseInt(count) + sourceRows.length > 15) {
+          return res.status(400).json({
+            error: `Cannot move: sideboard would exceed 15 cards (currently ${count})`,
+          });
+        }
+      }
+
+      const idsToUpdate = sourceRows.map(r => r.id_constructed);
+      await knex('deck')
+        .whereIn('id_constructed', idsToUpdate)
+        .where({ user_id })
+        .update({ sideboard: toSideboard ? 1 : 0 });
+
+      console.log(`moveCard: ${card_id} in deck ${deck} → sideboard=${toSideboard} for user ${user_id} at ${formattedDate}`);
+      return res.json({ success: true, moved: sourceRows.length });
+
+    } catch (error) {
+      console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
+      return res.status(500).json({ error: 'Failed to move card.' });
+    }
+  },
+
+  async deleteById(req, res) {
+    const now = new Date();
+    const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
     const { id_constructed } = req.params;
-
-    //Authenticated userId
     const user_id = req.userId;
 
     try {
       const result = await knex
-        .select("id_constructed")
-        .from("deck")
-        .where("deck.user_id" , user_id)
-        .where(`id_constructed`, id_constructed )
+        .select('id_constructed')
+        .from('deck')
+        .where('deck.user_id', user_id)
+        .where('id_constructed', id_constructed)
         .del();
 
-      console.log(
-        `Delete successful of card number "${id_constructed}" of user ${user_id} by ${req.ip} at ${formattedDate}`
-        //It is possible to inform which deck deleted card was in. Implement later.
-      );
-
+      console.log(`Delete successful of card number "${id_constructed}" of user ${user_id} by ${req.ip} at ${formattedDate}`);
       return res.json(result);
+
     } catch (error) {
-      console.error(
-        `IP: ${req.ip}, Time: ${formattedDate}, id_constructed: ${id_constructed} ERROR:`,
-        error
-      );
-      return res.status(500).json({
-        error: "something went wrong",
-      });
+      console.error(`IP: ${req.ip}, Time: ${formattedDate}, id_constructed: ${id_constructed} ERROR:`, error);
+      return res.status(500).json({ error: 'something went wrong' });
     }
   },
 };

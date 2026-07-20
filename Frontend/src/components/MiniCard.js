@@ -59,6 +59,8 @@ const MiniCard = ({
   supertypes,
   inCollection,
   onSetDeckQty,
+  isSideboard = false,
+  onMoveTo,
 }) => {
   //Delete
 
@@ -140,7 +142,11 @@ const MiniCard = ({
       cardName: name,
       currentQty: count,
       maxQty,
-      message: t('modal.setDeckQtyMsg'),
+      message: t(isSideboard ? 'modal.setDeckSideboardMsg' : 'modal.setDeckQtyMsg'),
+      moveButton: onMoveTo ? {
+        label: t(isSideboard ? 'minicard.moveToDeck' : 'minicard.moveToSideboard'),
+        onClick: onMoveTo,
+      } : undefined,
       onCancel: () => setModal(null),
       onConfirm: (newQty) => {
         setModal(null);
@@ -179,7 +185,7 @@ const MiniCard = ({
     setIsMouseOver(false);
     setIsTouchOver(false);
     e.dataTransfer.clearData();
-    e.dataTransfer.setData("cardDeletion", cardId);
+    e.dataTransfer.setData(isSideboard ? "sideboardCard" : "cardDeletion", cardId);
   };
 
   //Mana Cost icons handler

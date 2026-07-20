@@ -162,8 +162,12 @@ const translations = {
     'card.notObtained':         'not obtained',
     'card.inCollection':        'in Collection:',
     'card.perUnit':              '/unit',
-    'minicard.removeDeckTitle': 'Remove from Deck',
-    'minicard.removeDeckMsg':   'Remove {name} from this deck?',
+    'minicard.removeDeckTitle':   'Remove from Deck',
+    'minicard.removeDeckMsg':    'Remove {name} from this deck?',
+    'minicard.moveToSideboard':  'Move to Sideboard',
+    'minicard.moveToDeck':       'Move to Main Deck',
+    'modal.setDeckSideboardMsg': 'How many copies of this card do you want in the sideboard?',
+    'collection.sideboard':      'Sideboard',
 
     // WISHLIST
     'wishlist.title': 'Wishlist',
@@ -408,8 +412,12 @@ const translations = {
     'card.notObtained':         'não obtida',
     'card.inCollection':        'na Coleção:',
     'card.perUnit':              '/unid',
-    'minicard.removeDeckTitle': 'Remover do Deck',
-    'minicard.removeDeckMsg':   'Remover {name} deste deck?',
+    'minicard.removeDeckTitle':   'Remover do Deck',
+    'minicard.removeDeckMsg':    'Remover {name} deste deck?',
+    'minicard.moveToSideboard':  'Mover para Sideboard',
+    'minicard.moveToDeck':       'Mover para o Deck',
+    'modal.setDeckSideboardMsg': 'Quantas cópias dessa carta você quer no sideboard?',
+    'collection.sideboard':      'Sideboard',
 
     // WISHLIST
     'wishlist.title': 'Lista de Desejos',

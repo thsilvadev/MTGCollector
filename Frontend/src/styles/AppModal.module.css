@@ -73,6 +73,14 @@
   color: #fff;
 }
 
+.moveBtn {
+  composes: baseBtn;
+  background: #6c4fa3;
+  color: #fff;
+  width: 100%;
+  justify-content: center;
+}
+
 /* Quantity stepper row */
 
 .qtyRow {

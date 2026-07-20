@@ -184,6 +184,7 @@ function Collection() {
   //Drag handlers
 
   const [isDraggedOver, setIsDraggedOver] = useState(false);
+  const [isSideboardDragOver, setIsSideboardDragOver] = useState(false);
   const uponDraggingItem = isDraggedOver
     ? styles.UponDraggedItem
     : styles.deckContainer;
@@ -196,37 +197,41 @@ function Collection() {
     setIsDraggedOver(false);
   };
 
-  /*
-
-  useEffect(() => {
-    console.log('isDroppable updated:', isDroppable);
-    // You can perform other actions here based on the updated state.
-  }, [isDroppable]);
-
-  */
-
   const handleDrop = (e) => {
-    //on drop, get card ID
     setIsDraggedOver(false);
+    setIsSideboardDragOver(false);
 
-    const pickedCard = e.dataTransfer.getData("card");
-    const pickedMiniCard = e.dataTransfer.getData("cardDeletion");
-    if (e.currentTarget.id === "lower") {
-      if (pickedCard) {
-        postOnDeck(pickedCard);
-        /* setIsDroppable(true) */
-        console.log("card Id:", pickedCard);
-      } else {
-        /* setIsDroppable(true) */
-        console.log("no data was caught.");
+    const pickedCard     = e.dataTransfer.getData("card");          // from collection
+    const pickedDeckCard = e.dataTransfer.getData("cardDeletion");   // from main deck
+    const pickedSideCard = e.dataTransfer.getData("sideboardCard");  // from sideboard
+    const zone = e.currentTarget.id;
+
+    if (zone === "lower") {
+      if (pickedCard)     postOnDeck(pickedCard, false);
+      else if (pickedSideCard) {
+        // Move sideboard card back to main deck
+        const card = sideboardCards.find(c => c.id_constructed.toString() === pickedSideCard.toString());
+        if (card) moveCard(card.id, false);
       }
-    } else if (e.currentTarget.id === "upper") {
-      if (pickedMiniCard) {
-        deleteFromDeck(pickedMiniCard);
-        console.log("card id_constructed: ", pickedMiniCard);
-      } else {
-        console.log("no data was caught");
-      }
+    } else if (zone === "upper") {
+      if (pickedDeckCard) deleteFromDeck(pickedDeckCard);
+      else if (pickedSideCard) deleteFromDeck(pickedSideCard);
+    }
+  };
+
+  // Drop handler for the sideboard zone (stops propagation to #lower)
+  const handleSideboardDrop = (e) => {
+    e.stopPropagation();
+    setIsSideboardDragOver(false);
+
+    const pickedCard     = e.dataTransfer.getData("card");         // from collection
+    const pickedDeckCard = e.dataTransfer.getData("cardDeletion"); // from main deck
+
+    if (pickedCard)     postOnDeck(pickedCard, true);
+    else if (pickedDeckCard) {
+      // Move main deck card to sideboard
+      const card = mainDeckCards.find(c => c.id_constructed.toString() === pickedDeckCard.toString());
+      if (card) moveCard(card.id, true);
     }
   };
 
@@ -237,56 +242,58 @@ function Collection() {
     } else {
       setIsDraggedOver(false);
     }
-
-    console.log("drag over");
   };
 
   //make it a dropzone using `e.dataTransfer.getData`
 
   //postOnDeck
-  const postOnDeck = async (collectionId) => {
-    let chosenDeck = selectedDeck;
-    console.log({ isDroppable });
-    if (!isDroppable) {
-      return;
-    }
+  const postOnDeck = async (collectionId, isSideboard = false) => {
+    const chosenDeck = selectedDeck;
+    if (!isDroppable) return;
 
-    // ── Deck-rules validation (same logic as Card.js isDraggable) ────────────
-    const collIdStr = collectionId.toString();
+    const collIdStr       = collectionId.toString();
     const onCollectionCard = cards.find((c) => c.id_collection.toString() === collIdStr);
-    const onDeckCard       = deckCards.find((c) => c.id_card.toString() === collIdStr);
-    const onCollectionCounter = onCollectionCard ? onCollectionCard.countById : 0;
-    const onDeckCounter       = onDeckCard       ? onDeckCard.countById       : 0;
 
-    if (onCollectionCounter - onDeckCounter <= 0) {
+    // Count owned copies
+    const owned = onCollectionCard ? onCollectionCard.countById : 0;
+
+    // Count already placed across all 75 (main + sideboard)
+    const allPlaced = deckCards
+      .filter(c => c.id_card.toString() === collIdStr)
+      .reduce((sum, c) => sum + c.countById, 0);
+
+    if (owned - allPlaced <= 0) {
       toast.error("You don't own enough copies of this card to add to the deck!");
       return;
     }
 
     const cardName  = onCollectionCard ? onCollectionCard.name : null;
     const superType = onCollectionCard ? onCollectionCard.supertypes : null;
-    let nameCounter = 0;
-    deckCards.forEach((card) => {
-      if (card.name === cardName) nameCounter += card.countById;
+
+    // 4-copy rule within the target partition
+    const targetPartition = isSideboard ? sideboardCards : mainDeckCards;
+    let nameCounterInTarget = 0;
+    targetPartition.forEach((card) => {
+      if (card.name === cardName) nameCounterInTarget += card.countById;
     });
 
-    if ((onDeckCounter >= 4 || nameCounter >= 4) && superType !== "Basic") {
-      toast.error("You already have 4 copies of this card in the deck!");
+    if (nameCounterInTarget >= 4 && superType !== "Basic") {
+      toast.error(`Already have 4 copies of this card in the ${isSideboard ? "sideboard" : "deck"}!`);
       return;
     }
-    // ─────────────────────────────────────────────────────────────────────────
+
+    if (isSideboard && SideboardSize >= 15) {
+      toast.error("Sideboard is full (max 15 cards)!");
+      return;
+    }
+
     try {
       setIsDroppable(false);
       await Axios.post(
         `${window.name}/eachDeck/`,
-        {
-          id_card: collectionId,
-          deck: chosenDeck,
-        },
+        { id_card: collectionId, deck: chosenDeck, sideboard: isSideboard },
         config
-      )
-        .then(console.log(`id postado: ${collectionId}`))
-        .then(() => setDeckToggler((t) => !t));
+      ).then(() => setDeckToggler((t) => !t));
     } catch (error) {
       console.error("Failed to add card to deck:", error);
     }
@@ -294,25 +301,38 @@ function Collection() {
 
   //Delete from Deck
   const deleteFromDeck = (cardIdConstructed) => {
-    if (!isDroppable) {
-      return;
-    }
+    if (!isDroppable) return;
     try {
       Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`, config)
-        .then(console.log(`requested to delete card from deck`))
         .then(() => setDeckToggler((t) => !t));
     } catch (error) {
       console.error("Failed to remove card from deck:", error);
     }
   };
 
-  // Set exact qty of a card in the deck (from MiniCard modal)
-  const setDeckCardQty = async (cardScryfallId, newQty) => {
+  // Move all copies of a card between main deck ↔ sideboard
+  const moveCard = async (cardScryfallId, toSideboard) => {
+    try {
+      await Axios.put(
+        `${window.name}/eachDeck/move`,
+        { card_id: cardScryfallId, deck: selectedDeck, sideboard: toSideboard },
+        config
+      );
+      setDeckToggler((t) => !t);
+    } catch (error) {
+      console.error("Failed to move card:", error);
+      toast.error("Failed to move card.");
+    }
+  };
+
+  // Set exact qty of a card in the deck or sideboard (from MiniCard modal)
+  const setDeckCardQty = async (cardScryfallId, newQty, isSideboard = false) => {
     try {
       await Axios.put(`${window.name}/eachDeck/setqty`, {
         card_id: cardScryfallId,
         deck: selectedDeck,
         qty: newQty,
+        sideboard: isSideboard,
       }, config);
       setDeckToggler((t) => !t);
     } catch (error) {
@@ -367,40 +387,42 @@ function Collection() {
 
   //How many cards there are in selected deck?
 
-  const handleCardCount = () => {
-    if (selectedDeck) {
-      let deckCardsCount = 0;
-      deckCards.forEach((deckCard) => {
-        deckCardsCount += 1 * deckCard.countById;
-      });
+  // Separate main deck from sideboard
+  const mainDeckCards = useMemo(() => deckCards.filter(c => !c.sideboard), [deckCards]);
+  const sideboardCards = useMemo(() => deckCards.filter(c => c.sideboard), [deckCards]);
 
-      console.log("cards in deck: ", deckCardsCount);
-      return deckCardsCount;
-    } else {
-      return "";
-    }
-  };
-
-  //Dividing this deck in up to 7 columns
+  //Dividing main deck in up to 7 columns
 
   // Initialize arrays for different categories
   const manaValueArrays = Array.from({ length: 7 }, () => []);
   const landCards = [];
 
-  // Categorize cards into different arrays
-  deckCards.forEach((card) => {
-    if (card.manaValue <= 1) {
-      if (card.types.indexOf("Land") === -1) {
-        manaValueArrays[0].push(card);
-      }
+  // Categorize main deck cards into columns
+  mainDeckCards.forEach((card) => {
+    if (card.types.includes("Land")) {
+      landCards.push(card);
+    } else if (card.manaValue <= 1) {
+      manaValueArrays[0].push(card);
     } else if (card.manaValue <= 5) {
       manaValueArrays[card.manaValue - 1].push(card);
     } else {
       manaValueArrays[5].push(card);
     }
+  });
 
+  // Categorize sideboard cards into columns
+  const sideboardManaArrays = Array.from({ length: 7 }, () => []);
+  const sideboardLandCards = [];
+
+  sideboardCards.forEach((card) => {
     if (card.types.includes("Land")) {
-      landCards.push(card);
+      sideboardLandCards.push(card);
+    } else if (card.manaValue <= 1) {
+      sideboardManaArrays[0].push(card);
+    } else if (card.manaValue <= 5) {
+      sideboardManaArrays[card.manaValue - 1].push(card);
+    } else {
+      sideboardManaArrays[5].push(card);
     }
   });
 
@@ -492,7 +514,15 @@ function Collection() {
 
   let deckColorDefined = useMemo(() => handleDeckColor(), [deckCards]);
 
-  let DeckSize = useMemo(() => handleCardCount(), [deckCards]);
+  let DeckSize = useMemo(() => {
+    if (!selectedDeck) return "";
+    return mainDeckCards.reduce((sum, c) => sum + c.countById, 0);
+  }, [mainDeckCards, selectedDeck]);
+
+  const SideboardSize = useMemo(
+    () => sideboardCards.reduce((sum, c) => sum + c.countById, 0),
+    [sideboardCards]
+  );
 
   //function to UPDATE deck card_count and deck color
 
@@ -638,41 +668,43 @@ function Collection() {
             </a>
           </div>
         </div>
-        <div className={styles.minicardsContainer}>
-          {manaValueArrays.map(
-            (manaArray, index) =>
-              // Check if the manaArray is not empty
-              manaArray.length > 0 && (
-                <div className={styles.minicardsCol} key={index}>
-                  {manaArray
-                    .slice() // Create a shallow copy of the array to avoid mutating the original
-                    .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by 'name'
-                    .map((deckCard, key) => (
-                      <MiniCard
-                        key={key}
-                        id={deckCard.id}
-                        cost={deckCard.manaCost}
-                        name={deckCard.name}
-                        table="deck"
-                        id_collection={deckCard.id_collection}
-                        id_constructed={deckCard.id_constructed}
-                        count={deckCard.countById}
-                        isModalOpen={true}
-                        toggle={() => setDeckToggler((t) => !t)}
-                        scryfallId={deckCard.scryfallId}
-                        types={deckCard.types}
-                        keywords={deckCard.keywords}
-                        supertypes={deckCard.supertypes}
-                        inCollection={deckCard.inCollection}
-                        onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty)}
-                      />
-                    ))}
-                </div>
-              )
-          )}
-          <div className={styles.minicardsCol}>
-            {landCards
-              .map((deckCard, key) => (
+
+        <div className={styles.deckBodyWrapper}>
+          {/* ── Main deck columns ── */}
+          <div className={styles.minicardsContainer}>
+            {manaValueArrays.map(
+              (manaArray, index) =>
+                manaArray.length > 0 && (
+                  <div className={styles.minicardsCol} key={index}>
+                    {manaArray
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((deckCard, key) => (
+                        <MiniCard
+                          key={key}
+                          id={deckCard.id}
+                          cost={deckCard.manaCost}
+                          name={deckCard.name}
+                          table="deck"
+                          id_collection={deckCard.id_collection}
+                          id_constructed={deckCard.id_constructed}
+                          count={deckCard.countById}
+                          isModalOpen={true}
+                          toggle={() => setDeckToggler((t) => !t)}
+                          scryfallId={deckCard.scryfallId}
+                          types={deckCard.types}
+                          keywords={deckCard.keywords}
+                          supertypes={deckCard.supertypes}
+                          inCollection={deckCard.inCollection}
+                          onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, false)}
+                          onMoveTo={() => moveCard(deckCard.id, true)}
+                        />
+                      ))}
+                  </div>
+                )
+            )}
+            <div className={styles.minicardsCol}>
+              {landCards.map((deckCard, key) => (
                 <MiniCard
                   key={key}
                   id={deckCard.id}
@@ -689,10 +721,86 @@ function Collection() {
                   keywords={deckCard.keywords}
                   supertypes={deckCard.supertypes}
                   inCollection={deckCard.inCollection}
-                  onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty)}
+                  onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, false)}
+                  onMoveTo={() => moveCard(deckCard.id, true)}
                 />
-              ))
-              .sort((a, b) => b - a)}
+              ))}
+            </div>
+          </div>
+
+          {/* ── Sideboard ── */}
+          <div
+            id="sideboard"
+            className={isSideboardDragOver ? styles.sideboardSectionOver : styles.sideboardSection}
+            onDrop={handleSideboardDrop}
+            onDragOver={(e) => { e.preventDefault(); setIsSideboardDragOver(true); }}
+            onDragEnter={() => setIsSideboardDragOver(true)}
+            onDragLeave={() => setIsSideboardDragOver(false)}
+          >
+            <div className={styles.sideboardHeader}>
+              <span>{t('collection.sideboard')}</span>
+              <span className={styles.sideboardCount}> · {SideboardSize} / 15</span>
+            </div>
+            <div className={styles.minicardsContainer}>
+              {sideboardManaArrays.map(
+                (manaArray, index) =>
+                  manaArray.length > 0 && (
+                    <div className={styles.minicardsCol} key={index}>
+                      {manaArray
+                        .slice()
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((deckCard, key) => (
+                          <MiniCard
+                            key={key}
+                            id={deckCard.id}
+                            cost={deckCard.manaCost}
+                            name={deckCard.name}
+                            table="deck"
+                            isSideboard={true}
+                            id_collection={deckCard.id_collection}
+                            id_constructed={deckCard.id_constructed}
+                            count={deckCard.countById}
+                            isModalOpen={true}
+                            toggle={() => setDeckToggler((t) => !t)}
+                            scryfallId={deckCard.scryfallId}
+                            types={deckCard.types}
+                            keywords={deckCard.keywords}
+                            supertypes={deckCard.supertypes}
+                            inCollection={deckCard.inCollection}
+                            onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, true)}
+                            onMoveTo={() => moveCard(deckCard.id, false)}
+                          />
+                        ))}
+                    </div>
+                  )
+              )}
+              {sideboardLandCards.length > 0 && (
+                <div className={styles.minicardsCol}>
+                  {sideboardLandCards.map((deckCard, key) => (
+                    <MiniCard
+                      key={key}
+                      id={deckCard.id}
+                      cost={deckCard.manaCost}
+                      name={deckCard.name}
+                      table="deck"
+                      isSideboard={true}
+                      id_collection={deckCard.id_collection}
+                      id_constructed={deckCard.id_constructed}
+                      count={deckCard.countById}
+                      isModalOpen={true}
+                      toggle={() => setDeckToggler((t) => !t)}
+                      scryfallId={deckCard.scryfallId}
+                      types={deckCard.types}
+                      keywords={deckCard.keywords}
+                      supertypes={deckCard.supertypes}
+                      inCollection={deckCard.inCollection}
+                      onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, true)}
+                      onMoveTo={() => moveCard(deckCard.id, false)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

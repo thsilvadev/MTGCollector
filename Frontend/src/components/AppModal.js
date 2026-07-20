@@ -27,6 +27,7 @@ export default function AppModal({
   deckName = '',
   deckDesc = '',
   confirmLabel,
+  moveButton = null,
   onConfirm,
   onCancel,
 }) {
@@ -127,6 +128,16 @@ export default function AppModal({
             <p style={{ color: '#e74c3c', fontSize: '0.85rem', margin: '-8px 0 12px' }}>
               {t('modal.setQtyRemoveAll')}
             </p>
+          )}
+          {moveButton && (
+            <div className={styles.btnRow} style={{ marginBottom: 4 }}>
+              <button
+                className={styles.moveBtn}
+                onClick={() => { moveButton.onClick(); onCancel(); }}
+              >
+                {moveButton.label}
+              </button>
+            </div>
           )}
           <div className={styles.btnRow}>
             <button className={styles.cancelBtn} onClick={onCancel}>{t('modal.cancel')}</button>
