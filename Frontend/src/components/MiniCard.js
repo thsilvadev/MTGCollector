@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { useAuthHeader } from "react-auth-kit";
 import AppModal from './AppModal';
 import { useI18n } from '../i18n/LanguageContext';
+import { isLegendaryCreature } from '../utils/deckRules';
 
 //imgs
 import black from "../images/black.png";
@@ -61,6 +62,10 @@ const MiniCard = ({
   onSetDeckQty,
   isSideboard = false,
   onMoveTo,
+  isCommanderDeck = false,
+  isTheCommander = false,
+  onSetCommander,
+  cardIssue,
 }) => {
   //Delete
 
@@ -136,7 +141,11 @@ const MiniCard = ({
   const editDeckQty = (e) => {
     if (e) e.stopPropagation();
     const isBasicLand = supertypes === 'Basic';
-    const maxQty = isBasicLand ? (inCollection || 99) : Math.min(4, inCollection || 4);
+    const cardIsLand  = types?.includes('Land');
+    // Commander caps non-land cards at 1 copy
+    const maxQty = (isCommanderDeck && !cardIsLand)
+      ? 1
+      : (isBasicLand ? (inCollection || 99) : Math.min(4, inCollection || 4));
     setModal({
       type: 'set-qty',
       cardName: name,
@@ -146,6 +155,11 @@ const MiniCard = ({
       moveButton: onMoveTo ? {
         label: t(isSideboard ? 'minicard.moveToDeck' : 'minicard.moveToSideboard'),
         onClick: onMoveTo,
+      } : undefined,
+      commanderButton: (isCommanderDeck && !isSideboard && isLegendaryCreature({ supertypes, types })) ? {
+        label: isTheCommander ? t('commander.isCommander') : t('commander.setBtn'),
+        disabled: isTheCommander,
+        onClick: () => { if (onSetCommander) onSetCommander(); },
       } : undefined,
       onCancel: () => setModal(null),
       onConfirm: (newQty) => {
@@ -685,7 +699,7 @@ const MiniCard = ({
             onTouchEnd={handleTouchLeave}
             onTouchMove={handleMouseMove}
           >
-            <div className={styles.Count}>
+            <div className={isCommanderDeck && cardIssue ? styles.CountRed : styles.Count}>
               <p>{count}x</p>
             </div>
 

@@ -26,14 +26,17 @@ export default function AppModal({
   cardName,
   deckName = '',
   deckDesc = '',
+  deckIsCommander = false,
   confirmLabel,
   moveButton = null,
+  commanderButton = null,
   onConfirm,
   onCancel,
 }) {
-  const [qty, setQty]     = useState(type === 'set-qty' ? currentQty : 1);
-  const [dName, setDName] = useState(deckName);
-  const [dDesc, setDDesc] = useState(deckDesc);
+  const [qty, setQty]           = useState(type === 'set-qty' ? currentQty : 1);
+  const [dName, setDName]       = useState(deckName);
+  const [dDesc, setDDesc]       = useState(deckDesc);
+  const [dCommander, setDCommander] = useState(deckIsCommander);
   const { t } = useI18n();
 
   const stopProp = (e) => e.stopPropagation();
@@ -139,6 +142,17 @@ export default function AppModal({
               </button>
             </div>
           )}
+          {commanderButton && (
+            <div className={styles.btnRow} style={{ marginBottom: 4 }}>
+              <button
+                className={commanderButton.disabled ? styles.commanderBtnActive : styles.commanderBtn}
+                onClick={() => { if (!commanderButton.disabled) { commanderButton.onClick(); onCancel(); } }}
+                disabled={commanderButton.disabled}
+              >
+                {commanderButton.label}
+              </button>
+            </div>
+          )}
           <div className={styles.btnRow}>
             <button className={styles.cancelBtn} onClick={onCancel}>{t('modal.cancel')}</button>
             <button
@@ -171,12 +185,23 @@ export default function AppModal({
             onChange={(e) => setDDesc(e.target.value)}
             placeholder={t('modal.deckDesc')}
           />
+          <div className={styles.commanderToggleRow}>
+            <label className={styles.commanderToggleLabel}>
+              <input
+                type="checkbox"
+                checked={dCommander}
+                onChange={e => setDCommander(e.target.checked)}
+                style={{ width: 15, height: 15, cursor: 'pointer', accentColor: '#7b45c7' }}
+              />
+              {t('commander.toggle')}
+            </label>
+          </div>
           <div className={styles.btnRow}>
             <button className={styles.cancelBtn} onClick={onCancel}>{t('modal.cancel')}</button>
             <button
               className={styles.confirmBtn}
               style={{ background: '#2980b9' }}
-              onClick={() => onConfirm(dName, dDesc)}
+              onClick={() => onConfirm(dName, dDesc, dCommander)}
             >
               {confirmLabel || t('modal.save')}
             </button>

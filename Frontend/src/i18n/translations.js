@@ -169,8 +169,12 @@ const translations = {
     'modal.setDeckSideboardMsg': 'How many copies of this card do you want in the sideboard?',
     'collection.sideboard':      'Sideboard',
 
+    // COMMANDER
+    'commander.toggle':      'Commander',
+    'commander.setBtn':      'Set as Commander',
+    'commander.isCommander': '\u2605 Commander',
+
     // WISHLIST
-    'wishlist.title': 'Wishlist',
 
     // FRIENDS
     'nav.friends':                  'Friends',
@@ -418,6 +422,11 @@ const translations = {
     'minicard.moveToDeck':       'Mover para o Deck',
     'modal.setDeckSideboardMsg': 'Quantas cópias dessa carta você quer no sideboard?',
     'collection.sideboard':      'Sideboard',
+
+    // COMMANDER
+    'commander.toggle':      'Commander',
+    'commander.setBtn':      'Definir como Comandante',
+    'commander.isCommander': '\u2605 Comandante',
 
     // WISHLIST
     'wishlist.title': 'Lista de Desejos',

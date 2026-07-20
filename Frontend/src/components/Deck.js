@@ -16,6 +16,7 @@ const Deck = ({
   name,
   toggler,
   cardCount,
+  isCommander,
 }) => {
   const navigate = useNavigate();
   // Define the selected property (it can be null or a string)
@@ -75,12 +76,13 @@ const Deck = ({
       title: t('deck.editTitle'),
       deckName: name,
       deckDesc: description,
+      deckIsCommander: Boolean(isCommander),
       onCancel: () => setModal(null),
-      onConfirm: (newName, newDesc) => {
+      onConfirm: (newName, newDesc, newIsCommander) => {
         setModal(null);
         Axios.put(
           `${window.name}/decks/${id_deck}`,
-          { name: newName, description: newDesc },
+          { name: newName, description: newDesc, isCommander: newIsCommander ? 1 : 0 },
           config
         ).then(() => {
           console.log(`requested to update deck "${name}"`);

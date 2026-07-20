@@ -81,6 +81,41 @@
   justify-content: center;
 }
 
+.commanderBtn {
+  composes: baseBtn;
+  background: #7b45c7;
+  color: #fff;
+  width: 100%;
+  justify-content: center;
+}
+
+.commanderBtnActive {
+  composes: baseBtn;
+  background: #3a2060;
+  color: #ffd700;
+  border: 1px solid #7b45c7;
+  width: 100%;
+  justify-content: center;
+  cursor: default;
+}
+
+.commanderToggleRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+  gap: 8px;
+}
+
+.commanderToggleLabel {
+  color: #c0c0cc;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
 /* Quantity stepper row */
 
 .qtyRow {

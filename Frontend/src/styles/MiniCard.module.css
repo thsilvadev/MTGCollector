@@ -42,6 +42,20 @@
 
 }
 
+/* Commander: highlight cards with rule violations */
+.CountRed {
+    text-align: start;
+    padding-left: 8px;
+    padding-top: 3px;
+    width: 55px;
+    margin-right: -23px;
+    color: #e74c3c;
+    background:
+      radial-gradient(circle at right, transparent, transparent 44%, #000000 15%) right;
+  background-size: 100% 100%;
+  background-repeat:no-repeat;
+}
+
 
 .Main {
     align-items: center;

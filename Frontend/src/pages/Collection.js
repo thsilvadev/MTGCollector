@@ -22,6 +22,7 @@ import MiniCard from "../components/MiniCard";
 import { useLocation } from "react-router-dom";
 import { useI18n } from "../i18n/LanguageContext";
 import { toast } from "react-toastify";
+import { standardRules, commanderRules, parseColorIdentity } from '../utils/deckRules';
 
 //Component
 
@@ -269,21 +270,45 @@ function Collection() {
 
     const cardName  = onCollectionCard ? onCollectionCard.name : null;
     const superType = onCollectionCard ? onCollectionCard.supertypes : null;
+    const cardIsLand = onCollectionCard?.types?.includes('Land');
 
-    // 4-copy rule within the target partition
-    const targetPartition = isSideboard ? sideboardCards : mainDeckCards;
-    let nameCounterInTarget = 0;
-    targetPartition.forEach((card) => {
-      if (card.name === cardName) nameCounterInTarget += card.countById;
-    });
-
-    if (nameCounterInTarget >= 4 && superType !== "Basic") {
-      toast.error(`Already have 4 copies of this card in the ${isSideboard ? "sideboard" : "deck"}!`);
-      return;
+    if (!isSideboard && isCommanderDeck) {
+      // Commander: 1-copy rule for non-lands
+      if (!cardIsLand) {
+        let nameCountInMain = 0;
+        mainDeckCards.forEach(card => { if (card.name === cardName) nameCountInMain += card.countById; });
+        if (nameCountInMain >= 1) {
+          toast.error('Only 1 copy of each card is allowed in Commander!');
+          return;
+        }
+      }
+      // Commander: color identity check (only if commander is set)
+      if (commanderColorIdentity) {
+        const commanderColors = parseColorIdentity(commanderColorIdentity);
+        const cardCI = parseColorIdentity(onCollectionCard?.colorIdentity || '');
+        if (cardCI.size > 0) {
+          const hasOutsideColor = [...cardCI].some(c => !commanderColors.has(c));
+          if (hasOutsideColor) {
+            toast.error("This card's color identity is outside your commander's colors!");
+            return;
+          }
+        }
+      }
+    } else {
+      // Standard: 4-copy rule within the target partition
+      const targetPartition = isSideboard ? sideboardCards : mainDeckCards;
+      let nameCounterInTarget = 0;
+      targetPartition.forEach((card) => {
+        if (card.name === cardName) nameCounterInTarget += card.countById;
+      });
+      if (nameCounterInTarget >= 4 && superType !== 'Basic') {
+        toast.error(`Already have 4 copies of this card in the ${isSideboard ? 'sideboard' : 'deck'}!`);
+        return;
+      }
     }
 
     if (isSideboard && SideboardSize >= 15) {
-      toast.error("Sideboard is full (max 15 cards)!");
+      toast.error('Sideboard is full (max 15 cards)!');
       return;
     }
 
@@ -339,6 +364,43 @@ function Collection() {
     } catch (error) {
       console.error("Failed to set deck card quantity:", error);
       toast.error("Failed to update quantity.");
+    }
+  };
+
+  // Toggle Commander mode for the selected deck
+  const handleCommanderToggle = async () => {
+    if (!selectedDeck || selectedDeck === 0 || selectedDeck === 'Default') return;
+    const newValue   = isCommanderDeck ? 0 : 1;
+    const clearFields = newValue === 0 ? { commanderName: null, commanderColors: null } : {};
+    try {
+      await Axios.put(`${window.name}/decks/${selectedDeck}`, { isCommander: newValue, ...clearFields }, config);
+      setDecks(prev => prev.map(d =>
+        d.id_deck.toString() === selectedDeck.toString()
+          ? { ...d, isCommander: newValue, ...clearFields }
+          : d
+      ));
+    } catch (error) {
+      console.error('Failed to toggle Commander mode:', error);
+      toast.error('Failed to update deck format.');
+    }
+  };
+
+  // Set a card as the deck's commander
+  const setDeckCommander = async (card) => {
+    if (!selectedDeck) return;
+    try {
+      await Axios.put(`${window.name}/decks/${selectedDeck}`, {
+        commanderName:   card.name,
+        commanderColors: card.colorIdentity,
+      }, config);
+      setDecks(prev => prev.map(d =>
+        d.id_deck.toString() === selectedDeck.toString()
+          ? { ...d, commanderName: card.name, commanderColors: card.colorIdentity }
+          : d
+      ));
+    } catch (error) {
+      console.error('Failed to set commander:', error);
+      toast.error('Failed to set commander.');
     }
   };
 
@@ -515,6 +577,15 @@ function Collection() {
 
   let deckColorDefined = useMemo(() => handleDeckColor(), [deckCards]);
 
+  // Commander-mode derived state (depends on decks + selectedDeck)
+  const selectedDeckInfo = useMemo(() => {
+    if (!selectedDeck || selectedDeck === 0 || selectedDeck === 'Default') return null;
+    return decks.find(d => d.id_deck.toString() === selectedDeck.toString()) || null;
+  }, [decks, selectedDeck]);
+  const isCommanderDeck        = Boolean(selectedDeckInfo?.isCommander);
+  const commanderName          = selectedDeckInfo?.commanderName  || null;
+  const commanderColorIdentity = selectedDeckInfo?.commanderColors || '';
+
   let DeckSize = useMemo(() => {
     if (!selectedDeck) return "";
     return mainDeckCards.reduce((sum, c) => sum + c.countById, 0);
@@ -524,6 +595,16 @@ function Collection() {
     () => sideboardCards.reduce((sum, c) => sum + c.countById, 0),
     [sideboardCards]
   );
+
+  // Format validation — recomputes whenever deck contents or format settings change
+  const validation = useMemo(() => {
+    if (!selectedDeck || selectedDeck === 0 || selectedDeck === 'Default') {
+      return { isValid: true, errors: [], cardIssues: new Map() };
+    }
+    return isCommanderDeck
+      ? commanderRules(mainDeckCards, commanderName)
+      : standardRules(mainDeckCards);
+  }, [mainDeckCards, isCommanderDeck, commanderName, selectedDeck]);
 
   //function to UPDATE deck card_count and deck color
 
@@ -558,9 +639,11 @@ function Collection() {
     }
   }, [deckColorDefined, DeckSize]);
 
-  const RenderedDeckSize = DeckSize > 0 ? DeckSize + " Cards" : "";
-  const isLessThanSixty =
-    DeckSize < 60 && DeckSize !== "" ? styles.Red : styles.Normal;
+  const RenderedDeckSize = DeckSize > 0
+    ? (isCommanderDeck ? `${DeckSize} / 100 Cards` : `${DeckSize} Cards`)
+    : "";
+  const isLessThanSixty = !validation.isValid && RenderedDeckSize !== ""
+    ? styles.Red : styles.Normal;
 
   return (
     <div className={styles.Background}>
@@ -612,6 +695,8 @@ function Collection() {
                   getDeckCards={deckCards}
                   getCollectionCards={cards}
                   prices={card.prices}
+                  isCommanderDeck={isCommanderDeck}
+                  commanderColorIdentity={commanderColorIdentity}
                   onAddToDeck={(collId) => postOnDeck(collId)}
                 />
               ))}
@@ -661,13 +746,38 @@ function Collection() {
             </select>
           </div>
           <div id="3" className={styles.even}>
-            <span className={isLessThanSixty}>{RenderedDeckSize}</span>
+            <div className={styles.deckSizeWrapper}>
+              <span className={isLessThanSixty}>{RenderedDeckSize}</span>
+              {!validation.isValid && validation.errors.length > 0 && RenderedDeckSize && (
+                <div className={styles.validationHintBox}>
+                  {validation.errors.map((err, i) => (
+                    <p key={i} className={styles.validationHintItem}>{err}</p>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <a href="/decks">
               <button className={styles.newDeckButton}>{t('collection.addNewDeck')}</button>
             </a>
           </div>
+          {selectedDeck && selectedDeck !== 0 && selectedDeck !== 'Default' && (
+            <div className={styles.commanderRow}>
+              <label className={styles.commanderLabel}>
+                <input
+                  type="checkbox"
+                  checked={isCommanderDeck}
+                  onChange={handleCommanderToggle}
+                  className={styles.commanderCheckbox}
+                />
+                {t('commander.toggle')}
+              </label>
+              {isCommanderDeck && commanderName && (
+                <span className={styles.commanderNameTag}>★ {commanderName}</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={styles.deckBodyWrapper}>
@@ -699,6 +809,10 @@ function Collection() {
                           inCollection={deckCard.inCollection}
                           onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, false)}
                           onMoveTo={(qty) => moveCard(deckCard.id, true, qty)}
+                          isCommanderDeck={isCommanderDeck}
+                          isTheCommander={deckCard.name === commanderName}
+                          onSetCommander={() => setDeckCommander(deckCard)}
+                          cardIssue={validation.cardIssues.get(deckCard.id)}
                         />
                       ))}
                   </div>
@@ -724,6 +838,10 @@ function Collection() {
                   inCollection={deckCard.inCollection}
                   onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, false)}
                   onMoveTo={(qty) => moveCard(deckCard.id, true, qty)}
+                  isCommanderDeck={isCommanderDeck}
+                  isTheCommander={deckCard.name === commanderName}
+                  onSetCommander={() => setDeckCommander(deckCard)}
+                  cardIssue={validation.cardIssues.get(deckCard.id)}
                 />
               ))}
             </div>
@@ -770,6 +888,8 @@ function Collection() {
                             inCollection={deckCard.inCollection}
                             onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, true)}
                             onMoveTo={(qty) => moveCard(deckCard.id, false, qty)}
+                            isCommanderDeck={isCommanderDeck}
+                            cardIssue={validation.cardIssues.get(deckCard.id)}
                           />
                         ))}
                     </div>
@@ -797,6 +917,8 @@ function Collection() {
                       inCollection={deckCard.inCollection}
                       onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, true)}
                       onMoveTo={(qty) => moveCard(deckCard.id, false, qty)}
+                      isCommanderDeck={isCommanderDeck}
+                      cardIssue={validation.cardIssues.get(deckCard.id)}
                     />
                   ))}
                 </div>

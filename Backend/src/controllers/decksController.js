@@ -23,8 +23,10 @@ module.exports = {
         "decks.description",
         "decks.color",
         "decks.id_deck",
-        "decks.card_count"
-        
+        "decks.card_count",
+        "decks.isCommander",
+        "decks.commanderColors",
+        "decks.commanderName"
       )
       .from("decks")
       .where("decks.user_id", user_id)
@@ -58,6 +60,7 @@ module.exports = {
     const { description } = body;
     const {color} = body;
     const {card_count} = body;
+    const {isCommander} = body;
 
     //Authenticated userId
     const user_id = req.userId
@@ -68,7 +71,8 @@ module.exports = {
        description,
        color,
        user_id,
-       card_count
+       card_count,
+       isCommander: isCommander ? 1 : 0,
       });
 
       console.log(
@@ -133,16 +137,22 @@ module.exports = {
     const { name } = body;
     const { description } = body;
     const {color} = body;
+    const { isCommander }    = body;
+    const { commanderColors } = body;
+    const { commanderName }   = body;
 
     //Authenticated userId
     const user_id = req.userId
 
     try {
       const updates = {};
-      if (name        !== undefined) updates.name        = name;
-      if (color       !== undefined) updates.color       = color;
-      if (description !== undefined) updates.description = description;
-      if (card_count  !== undefined) updates.card_count  = card_count;
+      if (name             !== undefined) updates.name             = name;
+      if (color            !== undefined) updates.color            = color;
+      if (description      !== undefined) updates.description      = description;
+      if (card_count       !== undefined) updates.card_count       = card_count;
+      if (isCommander      !== undefined) updates.isCommander      = isCommander ? 1 : 0;
+      if (commanderColors  !== undefined) updates.commanderColors  = commanderColors;
+      if (commanderName    !== undefined) updates.commanderName    = commanderName;
 
       if (!Object.keys(updates).length) {
         return res.json({ message: 'Nothing to update' });

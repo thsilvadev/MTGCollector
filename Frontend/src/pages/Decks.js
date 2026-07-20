@@ -75,9 +75,10 @@ function Decks() {
         title: t('deck.createTitle'),
         deckName: '',
         deckDesc: '',
+        deckIsCommander: false,
         confirmLabel: t('deck.createBtn'),
         onCancel: () => setModal(null),
-        onConfirm: (deckName, deckDescription) => {
+        onConfirm: (deckName, deckDescription, isCommanderFlag) => {
           setModal(null);
           if (!deckName) return;
           Axios.post(
@@ -88,6 +89,7 @@ function Decks() {
               color: '',
               card_count: 0,
               id_deck: null,
+              isCommander: isCommanderFlag ? 1 : 0,
             },
             config
           ).then(() => toggleRefresh());
@@ -147,6 +149,7 @@ function Decks() {
               name={deck.name}
               toggler={toggleRefresh}
               cardCount={deck.card_count}
+              isCommander={deck.isCommander}
             />
           ))}
         </div>

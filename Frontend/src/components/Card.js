@@ -35,6 +35,8 @@ function Card({
   getDeckCards,
   getCollectionCards,
   prices,
+  isCommanderDeck = false,
+  commanderColorIdentity = '',
   onAddToDeck,
 }) {
   //Scryfall ID management
@@ -296,9 +298,38 @@ function Card({
         onCollectionSuperType !== "Basic"
       ) {
         return "You have already 4 cards of this in the deck!";
-      } else {
-        return true;
       }
+
+      // Commander-specific rules
+      if (isCommanderDeck) {
+        const cardIsLand = onCollectionCard?.types?.includes('Land');
+        if (!cardIsLand) {
+          // 1-copy rule: check name count already in main deck
+          const mainDeckNameCount = getDeckCards
+            .filter(c => !c.sideboard && c.name === CardName)
+            .reduce((sum, c) => sum + c.countById, 0);
+          if (mainDeckNameCount >= 1) {
+            return 'Only 1 copy of each card is allowed in Commander!';
+          }
+        }
+        // Color identity check (only if commander colors are known)
+        if (commanderColorIdentity) {
+          const commanderColors = new Set(
+            commanderColorIdentity.split(',').map(s => s.trim()).filter(Boolean)
+          );
+          const cardCI = new Set(
+            (onCollectionCard?.colorIdentity || '').split(',').map(s => s.trim()).filter(Boolean)
+          );
+          if (cardCI.size > 0) {
+            const hasOutsideColor = [...cardCI].some(c => !commanderColors.has(c));
+            if (hasOutsideColor) {
+              return `Color identity (${onCollectionCard?.colorIdentity || 'colorless'}) is outside your commander's colors!`;
+            }
+          }
+        }
+      }
+
+      return true;
     }
   };
 
