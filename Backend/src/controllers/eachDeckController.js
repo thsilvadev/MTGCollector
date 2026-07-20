@@ -223,7 +223,7 @@ module.exports = {
   async moveCard(req, res) {
     const now = new Date();
     const formattedDate = `\x1b[33m${now.toISOString()}\x1b[0m`;
-    const { card_id, deck, sideboard } = req.body; // card_id = Scryfall UUID
+    const { card_id, deck, sideboard, qty } = req.body; // card_id = Scryfall UUID
     const user_id   = req.userId;
     const toSideboard = !!sideboard;
 
@@ -245,26 +245,28 @@ module.exports = {
         return res.json({ message: 'No cards to move', moved: 0 });
       }
 
+      const toMove = qty ? Math.min(parseInt(qty, 10), sourceRows.length) : sourceRows.length;
+
       if (toSideboard) {
         const { count } = await knex('deck')
           .where({ deck, user_id, sideboard: 1 })
           .count('* as count')
           .first();
-        if (parseInt(count) + sourceRows.length > 15) {
+        if (parseInt(count) + toMove > 15) {
           return res.status(400).json({
             error: `Cannot move: sideboard would exceed 15 cards (currently ${count})`,
           });
         }
       }
 
-      const idsToUpdate = sourceRows.map(r => r.id_constructed);
+      const idsToUpdate = sourceRows.slice(0, toMove).map(r => r.id_constructed);
       await knex('deck')
         .whereIn('id_constructed', idsToUpdate)
         .where({ user_id })
         .update({ sideboard: toSideboard ? 1 : 0 });
 
-      console.log(`moveCard: ${card_id} in deck ${deck} → sideboard=${toSideboard} for user ${user_id} at ${formattedDate}`);
-      return res.json({ success: true, moved: sourceRows.length });
+      console.log(`moveCard: ${card_id} in deck ${deck} → sideboard=${toSideboard} (qty=${toMove}) for user ${user_id} at ${formattedDate}`);
+      return res.json({ success: true, moved: toMove });
 
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);

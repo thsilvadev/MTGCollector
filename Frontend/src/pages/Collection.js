@@ -310,12 +310,13 @@ function Collection() {
     }
   };
 
-  // Move all copies of a card between main deck ↔ sideboard
-  const moveCard = async (cardScryfallId, toSideboard) => {
+  // Move copies of a card between main deck ↔ sideboard
+  // qty=null → move all copies (DnD), qty=N → move exactly N copies (modal)
+  const moveCard = async (cardScryfallId, toSideboard, qty = null) => {
     try {
       await Axios.put(
         `${window.name}/eachDeck/move`,
-        { card_id: cardScryfallId, deck: selectedDeck, sideboard: toSideboard },
+        { card_id: cardScryfallId, deck: selectedDeck, sideboard: toSideboard, qty },
         config
       );
       setDeckToggler((t) => !t);
@@ -697,7 +698,7 @@ function Collection() {
                           supertypes={deckCard.supertypes}
                           inCollection={deckCard.inCollection}
                           onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, false)}
-                          onMoveTo={() => moveCard(deckCard.id, true)}
+                          onMoveTo={(qty) => moveCard(deckCard.id, true, qty)}
                         />
                       ))}
                   </div>
@@ -722,7 +723,7 @@ function Collection() {
                   supertypes={deckCard.supertypes}
                   inCollection={deckCard.inCollection}
                   onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, false)}
-                  onMoveTo={() => moveCard(deckCard.id, true)}
+                  onMoveTo={(qty) => moveCard(deckCard.id, true, qty)}
                 />
               ))}
             </div>
@@ -768,7 +769,7 @@ function Collection() {
                             supertypes={deckCard.supertypes}
                             inCollection={deckCard.inCollection}
                             onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, true)}
-                            onMoveTo={() => moveCard(deckCard.id, false)}
+                            onMoveTo={(qty) => moveCard(deckCard.id, false, qty)}
                           />
                         ))}
                     </div>
@@ -795,7 +796,7 @@ function Collection() {
                       supertypes={deckCard.supertypes}
                       inCollection={deckCard.inCollection}
                       onSetDeckQty={(newQty) => setDeckCardQty(deckCard.id, newQty, true)}
-                      onMoveTo={() => moveCard(deckCard.id, false)}
+                      onMoveTo={(qty) => moveCard(deckCard.id, false, qty)}
                     />
                   ))}
                 </div>

@@ -144,21 +144,26 @@
     flex: 0 0 220px;
     display: flex;
     flex-direction: column;
-    border-left: 1px solid #000;
+    border-left: 2px solid #000033;
     padding-left: 14px;
+    padding: 10px 14px;
     margin-left: 6px;
     min-height: 293px;
+    background-color: #000047;
+    border-radius: 0 8px 8px 0;
 }
 
 .sideboardSectionOver {
     flex: 0 0 220px;
     display: flex;
     flex-direction: column;
-    border-left: 1px solid #000;
+    border-left: 2px solid #000033;
     padding-left: 14px;
+    padding: 10px 14px;
     margin-left: 6px;
     min-height: 293px;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: #00006a;
+    border-radius: 0 8px 8px 0;
 }
 
 .sideboardHeader {
@@ -180,7 +185,8 @@
     .sideboardSectionOver {
         flex: 1 0 100%;
         border-left: none;
-        border-top: 1px solid #000;
+        border-top: 2px solid #000033;
+        border-radius: 0 0 8px 8px;
         padding-left: 0;
         padding-top: 10px;
         margin-left: 0;

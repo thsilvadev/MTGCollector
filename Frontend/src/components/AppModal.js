@@ -133,7 +133,7 @@ export default function AppModal({
             <div className={styles.btnRow} style={{ marginBottom: 4 }}>
               <button
                 className={styles.moveBtn}
-                onClick={() => { moveButton.onClick(); onCancel(); }}
+                onClick={() => { moveButton.onClick(qty); onCancel(); }}
               >
                 {moveButton.label}
               </button>
