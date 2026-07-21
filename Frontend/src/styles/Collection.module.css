@@ -124,18 +124,56 @@
 .commanderLabel {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     color: #c0c0cc;
     font-size: 0.85rem;
     cursor: pointer;
     user-select: none;
 }
 
-.commanderCheckbox {
-    accent-color: #7b45c7;
+/* Pill toggle switch */
+.commanderToggleSwitch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.commanderToggleSwitch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.commanderToggleSlider {
+    position: absolute;
     cursor: pointer;
-    width: 15px;
-    height: 15px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #555;
+    border-radius: 20px;
+    transition: background-color 0.2s;
+}
+
+.commanderToggleSlider::before {
+    content: '';
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.commanderToggleSwitch input:checked + .commanderToggleSlider {
+    background-color: #7b45c7;
+}
+
+.commanderToggleSwitch input:checked + .commanderToggleSlider::before {
+    transform: translateX(16px);
 }
 
 .commanderNameTag {

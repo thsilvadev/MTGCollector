@@ -765,12 +765,14 @@ function Collection() {
           {selectedDeck && selectedDeck !== 0 && selectedDeck !== 'Default' && (
             <div className={styles.commanderRow}>
               <label className={styles.commanderLabel}>
-                <input
-                  type="checkbox"
-                  checked={isCommanderDeck}
-                  onChange={handleCommanderToggle}
-                  className={styles.commanderCheckbox}
-                />
+                <span className={styles.commanderToggleSwitch}>
+                  <input
+                    type="checkbox"
+                    checked={isCommanderDeck}
+                    onChange={handleCommanderToggle}
+                  />
+                  <span className={styles.commanderToggleSlider} />
+                </span>
                 {t('commander.toggle')}
               </label>
               {isCommanderDeck && commanderName && (
