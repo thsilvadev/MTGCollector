@@ -439,7 +439,7 @@ module.exports = {
   },
 
   async applyDeck(req, res) {
-    const { deckId, mainboard, sideboard, selectedCommander } = req.body;
+    const { deckId, mainboard, sideboard, selectedCommander, strategy } = req.body;
     const user_id = req.userId;
 
     if (!deckId || !Array.isArray(mainboard)) {
@@ -452,7 +452,18 @@ module.exports = {
         console.log(`[AI] Setting commander: ${selectedCommander.name} (${selectedCommander.colorIdentity})`);
       }
       
-      // ── Step 1: If commander was selected, update deck metadata ───────────
+      // ── Step 1: Update deck description with strategy ──────────────────────
+      if (strategy) {
+        await knex('decks')
+          .where('id', deckId)
+          .where('user_id', user_id)
+          .update({
+            description: strategy,
+          });
+        console.log(`[AI] Deck description updated with strategy`);
+      }
+      
+      // ── Step 2: If commander was selected, update deck metadata ───────────
       if (selectedCommander) {
         await knex('decks')
           .where('id', deckId)
@@ -464,7 +475,7 @@ module.exports = {
         console.log(`[AI] Deck metadata updated with commander`);
       }
 
-      // ── Step 2: Collect only the NEW cards to insert (mainboard + sideboard) ───────
+      // ── Step 3: Collect only the NEW cards to insert (mainboard + sideboard) ───────
       const cardsToInsert = [];
 
       // Mainboard cards
@@ -515,7 +526,7 @@ module.exports = {
         }
       }
 
-      // ── Insert all NEW cards in one operation (existing cards remain) ──────
+      // ── Step 4: Insert all NEW cards in one operation (existing cards remain) ──────
       if (cardsToInsert.length > 0) {
         await knex('deck').insert(cardsToInsert);
         console.log(`[AI] Inserted ${cardsToInsert.length} cards into deck ${deckId}`);
@@ -523,7 +534,7 @@ module.exports = {
         console.warn(`[AI] WARNING: No cards were inserted!`);
       }
 
-      // ── Step 3: If commander was selected, add it to the deck ────────────
+      // ── Step 5: If commander was selected, add it to the deck ────────────
       if (selectedCommander) {
         const commanderRows = await knex('collection')
           .select('id_collection')

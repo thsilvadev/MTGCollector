@@ -452,6 +452,7 @@ function Collection() {
         deckId: selectedDeck,
         mainboard: result.mainboard,
         sideboard: result.sideboard || [],
+        strategy: result.strategy,
       };
       
       if (result.selectedCommander) {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import styles from '../styles/AIDeckModal.module.css';
 import { useI18n } from '../i18n/LanguageContext';
 
@@ -23,12 +23,15 @@ function AIDeckModal({
   const [localColors, setLocalColors] = useState(new Set(['B', 'G', 'R', 'U', 'W']));
   const [localIsCommander, setLocalIsCommander] = useState(isCommanderDeck);
 
-  // Initialize local colors from locked colors if deck is not empty
-  useMemo(() => {
-    if (lockedColors && lockedColors.size > 0) {
-      setLocalColors(new Set(lockedColors));
+  // Initialize local colors and commander flag when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      if (lockedColors && lockedColors.size > 0) {
+        setLocalColors(new Set(lockedColors));
+      }
+      setLocalIsCommander(isCommanderDeck);
     }
-  }, [lockedColors]);
+  }, [isOpen, lockedColors, isCommanderDeck]);
 
   if (!isOpen) return null;
 
