@@ -414,9 +414,11 @@ function Collection() {
   // Compute locked colors from existing deck cards
   const lockedColors = useMemo(() => {
     const s = new Set();
-    deckCards.forEach(c => {
-      (c.colorIdentity || '').split(',').map(x => x.trim()).filter(Boolean).forEach(col => s.add(col));
-    });
+    if (deckCards && Array.isArray(deckCards)) {
+      deckCards.forEach(c => {
+        (c.colorIdentity || '').split(',').map(x => x.trim()).filter(Boolean).forEach(col => s.add(col));
+      });
+    }
     return s;
   }, [deckCards]);
 
