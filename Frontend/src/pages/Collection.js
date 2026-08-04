@@ -771,7 +771,13 @@ function Collection() {
                     checked={isCommanderDeck}
                     onChange={handleCommanderToggle}
                   />
-                  <span className={styles.commanderToggleSlider} />
+                  <span
+                    className={
+                      isCommanderDeck
+                        ? `${styles.commanderToggleSlider} ${styles.commanderToggleSliderOn}`
+                        : styles.commanderToggleSlider
+                    }
+                  />
                 </span>
                 {t('commander.toggle')}
               </label>

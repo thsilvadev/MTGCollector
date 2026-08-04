@@ -131,12 +131,11 @@
     user-select: none;
 }
 
-/* Pill toggle switch */
 .commanderToggleSwitch {
     position: relative;
     display: inline-block;
-    width: 36px;
-    height: 20px;
+    width: 38px;
+    height: 21px;
     flex-shrink: 0;
 }
 
@@ -147,33 +146,36 @@
     position: absolute;
 }
 
+/* Pill background — OFF state */
 .commanderToggleSlider {
     position: absolute;
     cursor: pointer;
     top: 0; left: 0; right: 0; bottom: 0;
     background-color: #555;
-    border-radius: 20px;
+    border-radius: 21px;
     transition: background-color 0.2s;
 }
 
+/* White dot */
 .commanderToggleSlider::before {
     content: '';
     position: absolute;
-    height: 14px;
-    width: 14px;
+    height: 15px;
+    width: 15px;
     left: 3px;
-    bottom: 3px;
+    top: 3px;
     background-color: #fff;
     border-radius: 50%;
     transition: transform 0.2s;
 }
 
-.commanderToggleSwitch input:checked + .commanderToggleSlider {
+/* ON state — applied via React class */
+.commanderToggleSliderOn {
     background-color: #7b45c7;
 }
 
-.commanderToggleSwitch input:checked + .commanderToggleSlider::before {
-    transform: translateX(16px);
+.commanderToggleSliderOn::before {
+    transform: translateX(17px);
 }
 
 .commanderNameTag {
