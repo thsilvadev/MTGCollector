@@ -53,6 +53,11 @@ function extractJsonFromResponse(text) {
   return JSON.parse(match[0]);
 }
 
+// ── Check if a card is a land ──────────────────────────────────────────────
+function isLand(card) {
+  return card.types && card.types.includes('Land');
+}
+
 module.exports = {
   async buildDeck(req, res) {
     const now           = new Date();
@@ -108,13 +113,14 @@ module.exports = {
         return res.status(400).json({ error: 'No cards match the selected colors' });
       }
 
-      // ── Step 4b: Remove basic lands from AI prompt ──────────────────────────
-      const basicLandNames = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest']);
-      const filteredWithoutBasicLands = filteredCollection.filter(c => 
-        !basicLandNames.has(c.name)
-      );
+      // ── Step 4b: Remove all lands from AI prompt (player chooses lands) ──────
+      const nonLandCards = filteredCollection.filter(c => !isLand(c));
 
-      console.log(`[AI] Filtering: ${fullCollection.length} total → ${filteredCollection.length} after color filter → ${filteredWithoutBasicLands.length} without basics`);
+      console.log(`[AI] Filtering: ${fullCollection.length} total → ${filteredCollection.length} after color filter → ${nonLandCards.length} non-land cards`);
+
+      if (!nonLandCards.length) {
+        return res.status(400).json({ error: 'No non-land cards match the selected colors' });
+      }
 
       // ── Step 5: Fetch current deck cards (for context) ────────────────────
       const currentDeckRows = await knex('deck')
@@ -137,43 +143,49 @@ module.exports = {
 
       // ── Step 6: Build Groq prompt ──────────────────────────────────────────
       const format = isCommander ? 'Commander' : 'Modern';
-      const targetSize = isCommander ? 100 : 60;
+      const targetNonLandSize = isCommander ? 98 : 36;
       const copyLimit = isCommander ? 1 : 4;
       const selectedColorsStr = selectedColors.length > 0 ? selectedColors.join(', ') : 'any';
 
-      // Calculate current deck size and remaining slots
-      const currentDeckSize = currentDeckCards.reduce((sum, c) => sum + c.qty, 0);
-      const remainingSlots = Math.max(0, targetSize - currentDeckSize);
+      // Calculate current deck size (non-land cards only) and remaining slots
+      const currentDeckNonLands = currentDeckCards.filter(c => !isLand(cardMap.get(c.card_id)));
+      const currentDeckNonLandSize = currentDeckNonLands.reduce((sum, c) => sum + c.qty, 0);
+      const remainingSlots = Math.max(0, targetNonLandSize - currentDeckNonLandSize);
 
-      // Card names with quantities only
-      const cardNamesList = filteredWithoutBasicLands.map(c => `${c.name} (up to ${c.qty})`).join(', ');
+      // Card names with quantities only (non-lands only)
+      const cardNamesList = nonLandCards.map(c => `${c.name} (${c.qty})`).join(', ');
 
-      const prompt = `You are an expert Magic: The Gathering deckbuilder. Complete a ${format} deck.
+      const prompt = `You are an expert Magic: The Gathering ${format} deckbuilder.
 
-Current deck: ${currentDeckSize} cards
-Remaining slots to fill: ${remainingSlots}
-Target deck size: ${targetSize} cards
+OBJECTIVE: Suggest EXACTLY ${remainingSlots} new non-land card(s) to complete the deck.
 
-${currentDeckCards.length > 0 ? `Cards already in deck: ${currentDeckCards.map(c => `${c.name}(${c.qty})`).join(', ')}` : 'Deck is empty.'}
+CURRENT DECK STATE:
+- Non-land cards in deck: ${currentDeckNonLandSize}
+- Target non-land cards: ${targetNonLandSize}
+- Remaining non-land cards needed: ${remainingSlots}
 
-CRITICAL RULES:
-- Suggest ONLY ${remainingSlots} new card(s) to complete the deck to exactly ${targetSize} cards
-- You can ONLY use cards from the available list
-- For each card, you can use UP TO the quantity shown in parentheses
-- NEVER suggest cards already in the deck (unless suggesting more copies up to the ${copyLimit} copy limit)
-- Max ${copyLimit} copies of any non-basic card
-- Include basic lands (Plains, Island, Swamp, Mountain, Forest) as needed
-- Colors: ${selectedColorsStr}
-- Your suggestion MUST be valid and use only available quantities
+${currentDeckNonLands.length > 0 ? `Cards already in deck: ${currentDeckNonLands.map(c => `${c.name}(${c.qty})`).join(', ')}` : 'Deck is empty.'}
 
-Available cards (name (up to qty)):
+STRICT RULES - YOU MUST FOLLOW ALL:
+1. Suggest ONLY ${remainingSlots} card(s) total (mainboard + sideboard combined)
+2. You can ONLY use cards from the available list below
+3. For EACH card, you must use the EXACT quantity shown in parentheses - NO MORE, NO LESS
+4. NEVER suggest a card that is NOT in the available list
+5. NEVER suggest more than the available quantity for any card
+6. NEVER suggest cards already in the deck (unless adding more copies up to ${copyLimit} total)
+7. Max ${copyLimit} copies of any non-basic card
+8. Colors: ${selectedColorsStr}
+9. DO NOT INCLUDE LANDS - the player will choose lands separately
+
+AVAILABLE CARDS (name (qty)):
 ${cardNamesList}
 
-Respond ONLY with JSON:
-{"strategy":"string","mainboard":[{"name":"string","qty":number}],"sideboard":[{"name":"string","qty":number}]}`;
+RESPONSE FORMAT - ONLY JSON, NO OTHER TEXT:
+{"strategy":"brief description of strategy","mainboard":[{"name":"card name","qty":number}],"sideboard":[{"name":"card name","qty":number}]}`;
 
       // ── Step 7: Call Groq ──────────────────────────────────────────────────
       console.log(`[AI] Calling Groq for deck ${deckId}, format ${format}, colors [${selectedColorsStr}]`);
+      console.log(`[AI] Target: ${remainingSlots} non-land cards, ${nonLandCards.length} available`);
       
       const chatCompletion = await groq.chat.completions.create({
         messages: [
@@ -203,8 +215,8 @@ Respond ONLY with JSON:
         return res.status(500).json({ error: 'Failed to parse deck response from AI' });
       }
 
-      // ── Step 9: Validate response - only return valid cards ────────────────
-      const collectionMap = new Map(filteredCollection.map(c => [c.name.toLowerCase(), c]));
+      // ── Step 9: Validate response - MUST be exactly remainingSlots valid cards ────────
+      const collectionMap = new Map(nonLandCards.map(c => [c.name.toLowerCase(), c]));
       const validMainboard = [];
       const validSideboard = [];
       const validationErrors = [];
@@ -213,9 +225,9 @@ Respond ONLY with JSON:
       for (const card of (deckResponse.mainboard || [])) {
         const owned = collectionMap.get(card.name.toLowerCase());
         if (!owned) {
-          validationErrors.push(`Mainboard: "${card.name}" not in filtered collection`);
-        } else if (card.qty > owned.qty) {
-          validationErrors.push(`Mainboard: "${card.name}" needs ${card.qty} but only ${owned.qty} available`);
+          validationErrors.push(`Mainboard: "${card.name}" not in available collection`);
+        } else if (card.qty !== owned.qty) {
+          validationErrors.push(`Mainboard: "${card.name}" - requested ${card.qty} but only ${owned.qty} available`);
         } else {
           validMainboard.push({ ...card, card_id: owned.card_id });
         }
@@ -225,23 +237,23 @@ Respond ONLY with JSON:
       for (const card of (deckResponse.sideboard || [])) {
         const owned = collectionMap.get(card.name.toLowerCase());
         if (!owned) {
-          validationErrors.push(`Sideboard: "${card.name}" not in filtered collection`);
-        } else if (card.qty > owned.qty) {
-          validationErrors.push(`Sideboard: "${card.name}" needs ${card.qty} but only ${owned.qty} available`);
+          validationErrors.push(`Sideboard: "${card.name}" not in available collection`);
+        } else if (card.qty !== owned.qty) {
+          validationErrors.push(`Sideboard: "${card.name}" - requested ${card.qty} but only ${owned.qty} available`);
         } else {
           validSideboard.push({ ...card, card_id: owned.card_id });
         }
       }
 
-      const totalCards = validMainboard.length + validSideboard.length;
-      console.log(`[AI] Validation complete: ${totalCards} valid cards`);
+      const totalCards = validMainboard.reduce((sum, c) => sum + c.qty, 0) + validSideboard.reduce((sum, c) => sum + c.qty, 0);
+      console.log(`[AI] Validation complete: ${totalCards} valid cards out of ${remainingSlots} needed`);
       if (validationErrors.length > 0) {
-        console.log(`[AI] Validation errors (showing first 5):`);
-        validationErrors.slice(0, 5).forEach(err => console.log(`  - ${err}`));
+        console.log(`[AI] Validation errors (showing first 10):`);
+        validationErrors.slice(0, 10).forEach(err => console.log(`  - ${err}`));
       }
-      console.log(`[AI] Context: current deck ${currentDeckSize}/${targetSize}, remaining ${remainingSlots}, filtered collection size ${filteredCollection.length}`);
+      console.log(`[AI] Context: current deck ${currentDeckNonLandSize}/${targetNonLandSize}, remaining ${remainingSlots}, available non-lands ${nonLandCards.length}`);
 
-      // ── Step 10: Return result (no skipped cards) ────────────────────────────
+      // ── Step 10: Return result ────────────────────────────────────────────
       return res.json({
         strategy: deckResponse.strategy || 'No strategy provided',
         mainboard: validMainboard,
