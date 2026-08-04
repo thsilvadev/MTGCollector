@@ -445,25 +445,22 @@ function Collection() {
     }
   };
 
-  // AI Deck Builder: Apply (add cards to deck)
+  // AI Deck Builder: Apply (add all cards to deck in one request)
   const handleAIApply = async (result) => {
     try {
-      for (const card of result.mainboard) {
-        await setDeckCardQty(card.card_id, card.qty, false);
-      }
-      for (const card of result.sideboard) {
-        await setDeckCardQty(card.card_id, card.qty, true);
-      }
-      if (result.skippedCards?.length) {
-        const skippedNames = result.skippedCards.map(c => c.name).join(', ');
-        toast.warn(`Skipped ${result.skippedCards.length} card(s): ${skippedNames}`);
-      }
+      const response = await Axios.post(`${window.name}/ai/applyDeck`, {
+        deckId: selectedDeck,
+        mainboard: result.mainboard,
+        sideboard: result.sideboard || [],
+      }, config);
+      
+      toast.success(`Deck updated with ${response.data.cardsAdded} cards!`);
       setAiModalOpen(false);
       setAiResult(null);
       setDeckToggler(t => !t);
     } catch (err) {
       console.error('AI apply failed:', err);
-      toast.error('Failed to apply AI deck.');
+      toast.error(err.response?.data?.error || 'Failed to apply AI deck.');
     }
   };
 

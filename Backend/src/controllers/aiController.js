@@ -139,24 +139,36 @@ module.exports = {
       const copyLimit = isCommander ? 1 : 4;
       const selectedColorsStr = selectedColors.length > 0 ? selectedColors.join(', ') : 'any';
 
+      // Calculate current deck size and remaining slots
+      const currentDeckSize = currentDeckCards.reduce((sum, c) => sum + c.qty, 0);
+      const remainingSlots = Math.max(0, targetSize - currentDeckSize);
+
       // Card names with quantities only
-      const cardNamesList = filteredWithoutBasicLands.map(c => `${c.name} (${c.qty})`).join(', ');
+      const cardNamesList = filteredWithoutBasicLands.map(c => `${c.name} (up to ${c.qty})`).join(', ');
 
-      const prompt = `You are an expert Magic: The Gathering deckbuilder for ${format} format.
+      const prompt = `You are an expert Magic: The Gathering deckbuilder. Complete a ${format} deck.
 
-${currentDeckCards.length > 0 ? `The user already has these cards in the deck: ${currentDeckCards.map(c => `${c.name}(${c.qty})`).join(', ')}` : 'The deck is empty. Build from scratch.'}
+Current deck: ${currentDeckSize} cards
+Remaining slots to fill: ${remainingSlots}
+Target deck size: ${targetSize} cards
 
-Build the best ${format} deck using ONLY cards from the list below. Format rules:
-- Exactly ${targetSize} cards total
-- Max ${copyLimit} copy/copies of non-basic cards
-- Healthy mana curve, ~16-18 lands (can use any basic land: Plains, Island, Swamp, Mountain, Forest)
+${currentDeckCards.length > 0 ? `Cards already in deck: ${currentDeckCards.map(c => `${c.name}(${c.qty})`).join(', ')}` : 'Deck is empty.'}
+
+CRITICAL RULES:
+- Suggest ONLY ${remainingSlots} new card(s) to complete the deck to exactly ${targetSize} cards
+- You can ONLY use cards from the available list
+- For each card, you can use UP TO the quantity shown in parentheses
+- NEVER suggest cards already in the deck (unless suggesting more copies up to the ${copyLimit} copy limit)
+- Max ${copyLimit} copies of any non-basic card
+- Include basic lands (Plains, Island, Swamp, Mountain, Forest) as needed
 - Colors: ${selectedColorsStr}
+- Your suggestion MUST be valid and use only available quantities
 
-Available cards (name (qty)):
+Available cards (name (up to qty)):
 ${cardNamesList}
 
-Respond ONLY with valid JSON:
-{"strategy":"string","mainboard":[{"name":"string","qty":number}],"sideboard":[{"name":"string","qty":number}],"landCount":number}`;
+Respond ONLY with JSON:
+{"strategy":"string","mainboard":[{"name":"string","qty":number}],"sideboard":[{"name":"string","qty":number}]}`;
 
       // ── Step 7: Call Groq ──────────────────────────────────────────────────
       console.log(`[AI] Calling Groq for deck ${deckId}, format ${format}, colors [${selectedColorsStr}]`);
@@ -187,32 +199,109 @@ Respond ONLY with valid JSON:
         return res.status(500).json({ error: 'Failed to parse deck response from AI' });
       }
 
-      // ── Step 9: Validate response ──────────────────────────────────────────
-      const { valid, invalid } = validateDeckResponse(deckResponse, filteredCollection);
+      // ── Step 9: Validate response - only return valid cards ────────────────
+      const collectionMap = new Map(filteredCollection.map(c => [c.name.toLowerCase(), c]));
+      const validMainboard = [];
+      const validSideboard = [];
 
-      // Separate mainboard and sideboard from valid
-      const validMainboard = valid.filter(c => 
-        deckResponse.mainboard.some(m => m.name.toLowerCase() === c.name.toLowerCase())
-      );
-      const validSideboard = valid.filter(c =>
-        deckResponse.sideboard && deckResponse.sideboard.some(s => s.name.toLowerCase() === c.name.toLowerCase())
-      );
+      // Validate mainboard
+      for (const card of (deckResponse.mainboard || [])) {
+        const owned = collectionMap.get(card.name.toLowerCase());
+        if (owned && card.qty <= owned.qty) {
+          validMainboard.push({ ...card, card_id: owned.card_id });
+        }
+      }
 
-      console.log(`[AI] Validation: ${valid.length} valid, ${invalid.length} invalid cards`);
+      // Validate sideboard
+      for (const card of (deckResponse.sideboard || [])) {
+        const owned = collectionMap.get(card.name.toLowerCase());
+        if (owned && card.qty <= owned.qty) {
+          validSideboard.push({ ...card, card_id: owned.card_id });
+        }
+      }
 
-      // ── Step 10: Return result ──────────────────────────────────────────────
+      const totalCards = validMainboard.length + validSideboard.length;
+      console.log(`[AI] Generated ${totalCards} valid cards`);
+
+      // ── Step 10: Return result (no skipped cards) ────────────────────────────
       return res.json({
         strategy: deckResponse.strategy || 'No strategy provided',
         mainboard: validMainboard,
         sideboard: validSideboard,
-        landCount: deckResponse.landCount || 0,
-        skippedCards: invalid,
       });
 
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
       return res.status(500).json({ 
         error: error.message || 'Failed to build deck with AI' 
+      });
+    }
+  },
+
+  async applyDeck(req, res) {
+    const { deckId, mainboard, sideboard } = req.body;
+    const user_id = req.userId;
+
+    if (!deckId || !Array.isArray(mainboard)) {
+      return res.status(400).json({ error: 'Invalid request' });
+    }
+
+    try {
+      // ── Collect only the NEW cards to insert (mainboard + sideboard) ───────
+      const cardsToInsert = [];
+
+      // Mainboard cards
+      for (const card of mainboard) {
+        const collectionRows = await knex('collection')
+          .select('id_collection')
+          .where('user_id', user_id)
+          .where('card_id', card.card_id)
+          .limit(card.qty);
+
+        for (const row of collectionRows) {
+          cardsToInsert.push({
+            user_id,
+            deck: deckId,
+            id_card: row.id_collection,
+            sideboard: 0,
+          });
+        }
+      }
+
+      // Sideboard cards
+      for (const card of (sideboard || [])) {
+        const collectionRows = await knex('collection')
+          .select('id_collection')
+          .where('user_id', user_id)
+          .where('card_id', card.card_id)
+          .limit(card.qty);
+
+        for (const row of collectionRows) {
+          cardsToInsert.push({
+            user_id,
+            deck: deckId,
+            id_card: row.id_collection,
+            sideboard: 1,
+          });
+        }
+      }
+
+      // ── Insert all NEW cards in one operation (existing cards remain) ──────
+      if (cardsToInsert.length > 0) {
+        await knex('deck').insert(cardsToInsert);
+      }
+
+      console.log(`[AI] Added ${cardsToInsert.length} cards to deck ${deckId}`);
+
+      return res.json({
+        success: true,
+        cardsAdded: cardsToInsert.length,
+      });
+
+    } catch (error) {
+      console.error(`[AI] Apply deck failed:`, error);
+      return res.status(500).json({ 
+        error: error.message || 'Failed to apply deck' 
       });
     }
   },

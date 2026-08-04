@@ -159,31 +159,12 @@ function AIDeckModal({
               <p className={styles.strategyText}>{result.strategy}</p>
             </div>
 
-            {/* Land Count */}
+            {/* Card Count */}
             <div className={styles.section}>
               <p className={styles.infoText}>
-                {t('ai.landCountLabel') || 'Land count'}: {result.landCount}
+                {(result.mainboard?.length || 0) + (result.sideboard?.length || 0)} total cards
               </p>
             </div>
-
-            {/* Skipped Cards Warning */}
-            {result.skippedCards && result.skippedCards.length > 0 && (
-              <div className={styles.warningBox}>
-                <p className={styles.warningTitle}>
-                  {t('ai.skippedLabel')}: {result.skippedCards.length}
-                </p>
-                <ul className={styles.skippedList}>
-                  {result.skippedCards.slice(0, 5).map((card, idx) => (
-                    <li key={idx}>
-                      {card.name} x{card.qty} — {card.reason}
-                    </li>
-                  ))}
-                  {result.skippedCards.length > 5 && (
-                    <li>... and {result.skippedCards.length - 5} more</li>
-                  )}
-                </ul>
-              </div>
-            )}
 
             {/* Action Buttons */}
             <div className={styles.buttonRow}>

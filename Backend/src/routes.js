@@ -70,6 +70,7 @@ routes.delete('/eachDeck/:id_constructed', authMiddleware, eachDeckController.de
 
 ///////ROUTES AND REQUISITIONS FOR AI DECK BUILDER
 routes.post('/ai/buildDeck', authMiddleware, aiController.buildDeck); // POST build deck with AI
+routes.post('/ai/applyDeck', authMiddleware, aiController.applyDeck); // POST apply AI deck to collection
 
 ///////ROUTES AND REQUISITIONS FOR THE WISHLIST TABLE
 //routes.get('/wishlist/:id', wishlistController.getById); // GET wishlist
