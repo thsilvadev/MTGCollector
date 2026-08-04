@@ -256,7 +256,7 @@ module.exports = {
             content: prompt,
           },
         ],
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         temperature: 1,
         max_completion_tokens: 4096,
         top_p: 1,
@@ -288,8 +288,10 @@ module.exports = {
 
       console.log(`[AI] Quantity check: mainboard sum=${mainboardQtySum}, sideboard sum=${sideboardQtySum}, total=${totalQtySum}, needed=${remainingSlots}`);
 
-      if (totalQtySum !== remainingSlots) {
-        console.error(`[AI] CRITICAL: AI did not suggest correct total quantity. Got ${totalQtySum}, needed ${remainingSlots}`);
+      // Allow tolerance of ±1 card (model limitation with arithmetic)
+      const tolerance = 1;
+      if (Math.abs(totalQtySum - remainingSlots) > tolerance) {
+        console.error(`[AI] CRITICAL: AI did not suggest correct total quantity. Got ${totalQtySum}, needed ${remainingSlots} (tolerance: ±${tolerance})`);
         return res.status(500).json({ 
           error: `AI did not suggest the correct number of cards. Requested ${remainingSlots}, got ${totalQtySum}. Please try again.` 
         });
