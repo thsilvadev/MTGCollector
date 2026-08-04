@@ -19,6 +19,7 @@ import { Scrollbars } from "react-custom-scrollbars-2";
 import { useAuthHeader } from "react-auth-kit";
 
 import MiniCard from "../components/MiniCard";
+import AIDeckModal from "../components/AIDeckModal";
 import { useLocation } from "react-router-dom";
 import { useI18n } from "../i18n/LanguageContext";
 import { toast } from "react-toastify";
@@ -90,6 +91,12 @@ function Collection() {
   }, []);
   // Deck-only refresh toggler — deck ops use this so the collection scroll is never reset
   const [deckToggler, setDeckToggler] = useState(false);
+  
+  // AI Deck Builder state
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
+  
   //Select Deck coming from Decks page
   const comingFromDecks = () => {
     if (selected !== undefined) {
@@ -401,6 +408,60 @@ function Collection() {
     } catch (error) {
       console.error('Failed to set commander:', error);
       toast.error('Failed to set commander.');
+    }
+  };
+
+  // Compute locked colors from existing deck cards
+  const lockedColors = useMemo(() => {
+    const s = new Set();
+    deckCards.forEach(c => {
+      (c.colorIdentity || '').split(',').map(x => x.trim()).filter(Boolean).forEach(col => s.add(col));
+    });
+    return s;
+  }, [deckCards]);
+
+  // AI Deck Builder: Submit (call backend)
+  const handleAISubmit = async ({ selectedColors, isCommander }) => {
+    if (isCommander !== isCommanderDeck) {
+      await handleCommanderToggle();
+    }
+    setAiLoading(true);
+    try {
+      const res = await Axios.post(`${window.name}/ai/buildDeck`, {
+        deckId: selectedDeck,
+        selectedColors,
+        isCommander,
+      }, config);
+      setAiResult(res.data);
+    } catch (err) {
+      console.error('AI build failed:', err);
+      toast.error(err.response?.data?.error || 'AI deck build failed.');
+      setAiLoading(false);
+      setAiModalOpen(false);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // AI Deck Builder: Apply (add cards to deck)
+  const handleAIApply = async (result) => {
+    try {
+      for (const card of result.mainboard) {
+        await setDeckCardQty(card.card_id, card.qty, false);
+      }
+      for (const card of result.sideboard) {
+        await setDeckCardQty(card.card_id, card.qty, true);
+      }
+      if (result.skippedCards?.length) {
+        const skippedNames = result.skippedCards.map(c => c.name).join(', ');
+        toast.warn(`Skipped ${result.skippedCards.length} card(s): ${skippedNames}`);
+      }
+      setAiModalOpen(false);
+      setAiResult(null);
+      setDeckToggler(t => !t);
+    } catch (err) {
+      console.error('AI apply failed:', err);
+      toast.error('Failed to apply AI deck.');
     }
   };
 
@@ -781,6 +842,13 @@ function Collection() {
                 </span>
                 {t('commander.toggle')}
               </label>
+              <button
+                className={styles.aiButton}
+                onClick={() => setAiModalOpen(true)}
+                title="Build deck with AI"
+              >
+                {t('ai.buttonLabel')}
+              </button>
               {isCommanderDeck && commanderName && (
                 <span className={styles.commanderNameTag}>★ {commanderName}</span>
               )}
@@ -935,6 +1003,16 @@ function Collection() {
           </div>
         </div>
       </div>
+      <AIDeckModal
+        isOpen={aiModalOpen}
+        onClose={() => { setAiModalOpen(false); setAiResult(null); }}
+        isCommanderDeck={isCommanderDeck}
+        lockedColors={lockedColors}
+        onSubmit={handleAISubmit}
+        isLoading={aiLoading}
+        result={aiResult}
+        onApply={handleAIApply}
+      />
     </div>
   );
 }

@@ -1,0 +1,339 @@
+/* ── Overlay and Modal ────────────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: #2a2a2a;
+  border: 2px solid #7b45c7;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  color: #c0c0cc;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #7b45c7;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+/* ── Section ──────────────────────────────────────────────────────────────── */
+
+.section {
+  margin-bottom: 20px;
+}
+
+.sectionLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #c0c0cc;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Color Selection ──────────────────────────────────────────────────────── */
+
+.colorRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.colorItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+input[type='checkbox'] {
+  display: none;
+}
+
+.colorLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border: 4px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.colorLabel:hover {
+  border-color: #7b45c7;
+  transform: scale(1.05);
+}
+
+.colorLabel img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+input[type='checkbox']:checked + .colorLabel {
+  border-color: #fff;
+  box-shadow: 0 0 10px rgba(123, 69, 199, 0.5);
+}
+
+/* Locked color styling */
+.lockedCheckbox {
+  opacity: 0 !important;
+}
+
+.lockedColorLabel {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #888 !important;
+  border-width: 4px !important;
+}
+
+.lockedColorLabel:hover {
+  transform: none;
+  border-color: #888 !important;
+}
+
+.lockedNote {
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* ── Commander Toggle ────────────────────────────────────────────────────── */
+
+.commanderToggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  color: #c0c0cc;
+  font-size: 14px;
+}
+
+.commanderToggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 21px;
+  flex-shrink: 0;
+}
+
+.commanderToggleSwitch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.commanderToggleSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #555;
+  border-radius: 21px;
+  transition: background-color 0.2s;
+}
+
+.commanderToggleSlider::before {
+  content: '';
+  position: absolute;
+  height: 15px;
+  width: 15px;
+  left: 3px;
+  top: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.commanderToggleSliderOn {
+  background-color: #7b45c7;
+}
+
+.commanderToggleSwitch input:checked + .commanderToggleSliderOn::before {
+  transform: translateX(17px);
+}
+
+.formatNote {
+  font-size: 12px;
+  color: #888;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* ── Strategy Display ────────────────────────────────────────────────────── */
+
+.strategyText {
+  background-color: #1a1a1a;
+  border-left: 3px solid #7b45c7;
+  padding: 12px;
+  border-radius: 4px;
+  line-height: 1.5;
+  font-size: 13px;
+  color: #c0c0cc;
+  margin: 0;
+}
+
+.infoText {
+  font-size: 13px;
+  color: #c0c0cc;
+  margin: 0;
+}
+
+/* ── Warning Box (Skipped Cards) ──────────────────────────────────────────── */
+
+.warningBox {
+  background-color: #3a2a2a;
+  border: 2px solid #d4a574;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.warningTitle {
+  font-size: 13px;
+  font-weight: bold;
+  color: #d4a574;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.skippedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  color: #c0c0cc;
+}
+
+.skippedList li {
+  padding: 4px 0;
+  border-bottom: 1px solid #555;
+}
+
+.skippedList li:last-child {
+  border-bottom: none;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+
+.buttonRow {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.cancelBtn,
+.buildBtn,
+.applyBtn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cancelBtn {
+  background-color: #555;
+  color: #fff;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background-color: #666;
+}
+
+.cancelBtn:active:not(:disabled) {
+  background-color: #444;
+}
+
+.buildBtn {
+  background-color: #7b45c7;
+  color: #fff;
+}
+
+.buildBtn:hover:not(:disabled) {
+  background-color: #9363d9;
+  box-shadow: 0 0 10px rgba(123, 69, 199, 0.4);
+}
+
+.buildBtn:active:not(:disabled) {
+  background-color: #6a3aa3;
+  box-shadow: inset 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.buildBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.applyBtn {
+  background-color: #2980b9;
+  color: #fff;
+}
+
+.applyBtn:hover {
+  background-color: #3498db;
+  box-shadow: 0 0 10px rgba(41, 128, 185, 0.4);
+}
+
+.applyBtn:active {
+  background-color: #1a5a8a;
+  box-shadow: inset 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Scrollbar styling for modal ──────────────────────────────────────────── */
+
+.modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}

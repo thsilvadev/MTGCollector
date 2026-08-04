@@ -248,6 +248,20 @@ const translations = {
     // BATTLES PAGE
     'battles.empty':                 'No battles yet.',
 
+    // AI DECK BUILDER
+    'ai.buttonLabel':              'Complete with AI',
+    'ai.modalTitle':               'AI Deck Builder',
+    'ai.buildButton':              'Build Deck',
+    'ai.applyButton':              'Apply to Deck',
+    'ai.cancelButton':             'Cancel',
+    'ai.strategyLabel':            'Strategy:',
+    'ai.skippedLabel':             'Skipped Cards:',
+    'ai.loadingMessage':           'Building your deck with AI...',
+    'ai.lockedColorsNote':         'Colors in your deck are locked and cannot be changed.',
+    'ai.commanderFormatNote':      'Building for Commander format (100 cards max).',
+    'ai.modernFormatNote':         'Building for Modern format (60 cards).',
+    'ai.landCountLabel':           'Lands:',
+
     // ERRORS
     'error.scryfallDown':            'Card data is temporarily unavailable (Scryfall is down). Try again in a few minutes.',
     'error.collectionLoad':          'Failed to load your collection. Please try again.'
@@ -502,6 +516,20 @@ const translations = {
 
     // BATTLES PAGE
     'battles.empty':                 'Nenhuma batalha ainda.',
+
+    // AI DECK BUILDER
+    'ai.buttonLabel':              'Completar com IA',
+    'ai.modalTitle':               'Construtor de Deck com IA',
+    'ai.buildButton':              'Construir Deck',
+    'ai.applyButton':              'Aplicar ao Deck',
+    'ai.cancelButton':             'Cancelar',
+    'ai.strategyLabel':            'Estratégia:',
+    'ai.skippedLabel':             'Cartas Não Adicionadas:',
+    'ai.loadingMessage':           'Construindo seu deck com IA...',
+    'ai.lockedColorsNote':         'As cores do seu deck estão bloqueadas e não podem ser alteradas.',
+    'ai.commanderFormatNote':      'Construindo para o formato Commander (100 cartas no máximo).',
+    'ai.modernFormatNote':         'Construindo para o formato Modern (60 cartas).',
+    'ai.landCountLabel':           'Terras:',
 
     // ERRORS
     'error.scryfallDown':            'Dados de cartas indisponíveis temporariamente (Scryfall fora do ar). Tente novamente em alguns minutos.',

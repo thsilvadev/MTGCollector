@@ -16,6 +16,7 @@ const scanController = require('./controllers/scanController');
 const friendsController = require('./controllers/friendsController');
 const profileController = require('./controllers/profileController');
 const battlesController = require('./controllers/battlesController');
+const aiController = require('./controllers/aiController');
 //const wishlistController = require('./controllers/wishlistController');
 
 /////////// EMAIL ////////////
@@ -66,6 +67,9 @@ routes.post('/eachDeck', authMiddleware, eachDeckController.postOnDeck); // POST
 routes.put('/eachDeck/setqty', authMiddleware, eachDeckController.setQty); // PUT set exact deck card qty
 routes.put('/eachDeck/move', authMiddleware, eachDeckController.moveCard); // PUT move card between main deck and sideboard
 routes.delete('/eachDeck/:id_constructed', authMiddleware, eachDeckController.deleteById); //DELETE eachDeck
+
+///////ROUTES AND REQUISITIONS FOR AI DECK BUILDER
+routes.post('/ai/buildDeck', authMiddleware, aiController.buildDeck); // POST build deck with AI
 
 ///////ROUTES AND REQUISITIONS FOR THE WISHLIST TABLE
 //routes.get('/wishlist/:id', wishlistController.getById); // GET wishlist
