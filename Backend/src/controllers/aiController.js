@@ -288,12 +288,19 @@ module.exports = {
 
       console.log(`[AI] Quantity check: mainboard sum=${mainboardQtySum}, sideboard sum=${sideboardQtySum}, total=${totalQtySum}, needed=${remainingSlots}`);
 
-      // Allow tolerance of ±1 card (model limitation with arithmetic)
-      const tolerance = 1;
-      if (Math.abs(totalQtySum - remainingSlots) > tolerance) {
-        console.error(`[AI] CRITICAL: AI did not suggest correct total quantity. Got ${totalQtySum}, needed ${remainingSlots} (tolerance: ±${tolerance})`);
+      // Validate mainboard and sideboard separately
+      if (mainboardQtySum !== remainingSlots) {
+        console.error(`[AI] CRITICAL: Mainboard quantity incorrect. Got ${mainboardQtySum}, needed ${remainingSlots}`);
         return res.status(500).json({ 
-          error: `AI did not suggest the correct number of cards. Requested ${remainingSlots}, got ${totalQtySum}. Please try again.` 
+          error: `Mainboard should have exactly ${remainingSlots} cards. Got ${mainboardQtySum}. Please try again.` 
+        });
+      }
+
+      // For Modern: sideboard must have 0-15 cards
+      if (!isCommander && sideboardQtySum > 15) {
+        console.error(`[AI] CRITICAL: Sideboard too large. Got ${sideboardQtySum}, max 15 allowed`);
+        return res.status(500).json({ 
+          error: `Sideboard cannot exceed 15 cards. Got ${sideboardQtySum}. Please try again.` 
         });
       }
 

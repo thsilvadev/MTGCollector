@@ -17,20 +17,20 @@ function getModernPrompt({
 }) {
   return `You are an expert Magic: The Gathering Modern deckbuilder.
 
-OBJECTIVE: Suggest cards to complete the deck with a TOTAL of EXACTLY ${remainingSlots} card copies.
+OBJECTIVE: Suggest cards to complete the deck.
 
 CURRENT DECK STATE:
-- Non-land cards in deck: ${currentDeckNonLandSize}
-- Target non-land cards: ${targetNonLandSize}
-- Need to add: EXACTLY ${remainingSlots} more card copies (sum of all quantities must equal ${remainingSlots})
+- Non-land cards in mainboard: ${currentDeckNonLandSize}
+- Target non-land cards in mainboard: ${targetNonLandSize}
+- NEED EXACTLY: ${remainingSlots} more cards in MAINBOARD
 
 ${currentDeckNonLands.length > 0 ? `Cards already in deck: ${currentDeckNonLands.map(c => `${c.name}(${c.qty})`).join(', ')}` : 'Deck is empty.'}
 
-CRITICAL RULES:
-1. TOTAL quantity sum MUST equal ${remainingSlots} (mainboard qty + sideboard qty = ${remainingSlots})
-2. You can ONLY use cards from the available list below
-3. For EACH card in your suggestion, qty MUST EXACTLY match the number shown in parentheses
-4. NEVER suggest more of a card than the available quantity shown
+CRITICAL RULES - DO NOT IGNORE:
+1. MAINBOARD: Put exactly ${remainingSlots} cards in "mainboard" array (sum of quantities = ${remainingSlots})
+2. SIDEBOARD: Optional. Maximum 15 cards total in "sideboard" array (0 to 15 cards)
+3. You can ONLY use cards from the available list below
+4. NEVER suggest more of a card than shown in parentheses
 5. Max ${copyLimit} copies of any single card name
 6. Colors: ${selectedColorsStr}
 7. DO NOT INCLUDE LANDS - player chooses lands separately
@@ -38,22 +38,25 @@ CRITICAL RULES:
 AVAILABLE CARDS (format: name (available_qty)):
 ${cardNamesList}
 
-RESPONSE EXAMPLE (EXACTLY this format, no variations):
+RESPONSE EXAMPLE (EXACTLY this format):
 {
   "strategy": "brief strategy description",
   "mainboard": [
-    {"name": "Card One", "qty": 3},
-    {"name": "Card Two", "qty": 1},
+    {"name": "Card One", "qty": 4},
+    {"name": "Card Two", "qty": 3},
     {"name": "Card Three", "qty": 4}
   ],
   "sideboard": [
-    {"name": "Card Four", "qty": 2}
+    {"name": "Card Four", "qty": 2},
+    {"name": "Card Five", "qty": 3}
   ]
 }
 
-Notes on example above: 3+1+4+2 = 10 total cards (if ${remainingSlots} were 10)
+Example above: mainboard = 4+3+4 = 11, sideboard = 2+3 = 5 (if remainingSlots were 11).
+YOUR MAINBOARD SUM MUST BE: ${remainingSlots}
+SIDEBOARD SUM MUST BE: 0-15
 
-RESPONSE - ONLY VALID JSON, NO OTHER TEXT, ENSURE SUM = ${remainingSlots}:`;
+RESPONSE - JSON ONLY, NO OTHER TEXT:`;
 }
 
 /**
