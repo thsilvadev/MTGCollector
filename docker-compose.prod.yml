@@ -27,6 +27,7 @@ services:
       EMAIL_FROM:              ${EMAIL_FROM}
       EMAIL_TO:                ${EMAIL_TO}
       PYTHON_OCR_URL:          http://python-ocr:8001
+      GROQ_API_KEY:            ${GROQ_API_KEY}
     ports: []   # not exposed to host — Caddy reaches it via Docker network
 
   # ── Caddy reverse proxy (auto HTTPS via Let's Encrypt) ───────────────────────
