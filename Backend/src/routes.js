@@ -17,7 +17,7 @@ const friendsController = require('./controllers/friendsController');
 const profileController = require('./controllers/profileController');
 const battlesController = require('./controllers/battlesController');
 const aiController = require('./controllers/aiController');
-//const wishlistController = require('./controllers/wishlistController');
+const wishlistController = require('./controllers/wishlistController');
 
 /////////// EMAIL ////////////
 const email = require('./email/email');
@@ -71,13 +71,14 @@ routes.delete('/eachDeck/:id_constructed', authMiddleware, eachDeckController.de
 ///////ROUTES AND REQUISITIONS FOR AI DECK BUILDER
 routes.post('/ai/buildDeck', authMiddleware, aiController.buildDeck); // POST build deck with AI
 routes.post('/ai/applyDeck', authMiddleware, aiController.applyDeck); // POST apply AI deck to collection
+routes.post('/ai/applyDeckWithWishlist', authMiddleware, aiController.applyDeckWithWishlist); // POST apply AI deck with wishlist matching
 
 ///////ROUTES AND REQUISITIONS FOR THE WISHLIST TABLE
-//routes.get('/wishlist/:id', wishlistController.getById); // GET wishlist
-//routes.get('/wishlist', wishlistController.getAll); // GET wishlist
-//routes.post('/wishlist', wishlistController.create); // POST wishlist
-//routes.put('/wishlist/:id', wishlistController.update); //PUT wishlist
-//routes.delete('/wishlist/:id', wishlistController.delete);//DELETE wishlist
+routes.get('/wishlist/:id', authMiddleware, wishlistController.getById); // GET wishlist by ID
+routes.get('/wishlist', authMiddleware, wishlistController.getAll); // GET all user wishlist items
+routes.post('/wishlist', authMiddleware, wishlistController.create); // POST create/update wishlist item
+routes.put('/wishlist/:id', authMiddleware, wishlistController.update); // PUT update wishlist item quantity
+routes.delete('/wishlist/:id', authMiddleware, wishlistController.delete); // DELETE wishlist item
 
 ///////ROUTES AND REQUISITIONS FOR THE SETS TABLE
 routes.get('/sets', setsController.getSets); //GET sets

@@ -319,8 +319,8 @@ module.exports = {
         } else if (isCommander && card.qty !== 1) {
           // Commander: must be singleton (qty must be 1)
           validationErrors.push(`Mainboard: "${card.name}" - Commander is singleton, qty must be 1 (got ${card.qty})`);
-        } else if (!isCommander && card.qty !== owned.qty) {
-          // Modern: qty must match available
+        } else if (!isCommander && card.qty > owned.qty) {
+          // Modern: qty must not exceed available (can use 1-4 copies of available cards)
           validationErrors.push(`Mainboard: "${card.name}" - requested ${card.qty} but only ${owned.qty} available`);
         } else if (isCommander && deckCardNamesSet.has(cardNameLower)) {
           // Commander: reject cards already in deck
@@ -354,8 +354,8 @@ module.exports = {
         } else if (isCommander && card.qty !== 1) {
           // Commander: must be singleton (qty must be 1)
           validationErrors.push(`Sideboard: "${card.name}" - Commander is singleton, qty must be 1 (got ${card.qty})`);
-        } else if (!isCommander && card.qty !== owned.qty) {
-          // Modern: qty must match available
+        } else if (!isCommander && card.qty > owned.qty) {
+          // Modern: qty must not exceed available (can use 1-4 copies of available cards)
           validationErrors.push(`Sideboard: "${card.name}" - requested ${card.qty} but only ${owned.qty} available`);
         } else if (isCommander && deckCardNamesSet.has(cardNameLower)) {
           // Commander: reject cards already in deck
@@ -575,6 +575,208 @@ module.exports = {
       console.error(`[AI] Apply deck failed:`, error);
       return res.status(500).json({ 
         error: error.message || 'Failed to apply deck' 
+      });
+    }
+  },
+
+  // ── NEW: Apply deck with intelligent Collection + Wishlist matching ───────
+  async applyDeckWithWishlist(req, res) {
+    const { deckId, mainboard, sideboard, selectedCommander, strategy } = req.body;
+    const user_id = req.userId;
+
+    if (!deckId || !Array.isArray(mainboard)) {
+      return res.status(400).json({ error: 'Invalid request' });
+    }
+
+    try {
+      console.log(`[AI-Wishlist] Processing deck ${deckId} with intelligent matching`);
+
+      // ── Step 1: Fetch all collection cards (qty grouped) ────────────────
+      const collectionRows = await knex('collection')
+        .select('card_id')
+        .count('id_collection as qty')
+        .where('user_id', user_id)
+        .groupBy('card_id');
+
+      const collectionMap = new Map(
+        collectionRows.map(row => [row.card_id, row.qty])
+      );
+
+      // ── Step 2: Fetch all wishlist cards ────────────────────────────────
+      const allWishlistRows = await knex('wishlist')
+        .select('card_id', 'quantity')
+        .where('user_id', user_id);
+
+      const wishlistMap = new Map(
+        allWishlistRows.map(row => [row.card_id, row.quantity])
+      );
+
+      // ── Step 3: Process all suggested cards (mainboard + sideboard) ────────
+      const allSuggested = [
+        ...mainboard.map(c => ({ ...c, sideboard: false })),
+        ...(sideboard || []).map(c => ({ ...c, sideboard: true }))
+      ];
+
+      const collectionToAdd = [];    // Cards to add from collection
+      const wishlistToAdd = [];       // Cards to add/create in wishlist
+      const validationErrors = [];
+
+      for (const suggestedCard of allSuggested) {
+        const collectionQty = collectionMap.get(suggestedCard.card_id) || 0;
+        const wishlistQty = wishlistMap.get(suggestedCard.card_id) || 0;
+        const totalAvailable = collectionQty + wishlistQty;
+
+        // ── Check 4x global limit ──────────────────────────────────────────
+        if (totalAvailable >= 4 && suggestedCard.qty > totalAvailable) {
+          validationErrors.push({
+            name: suggestedCard.name,
+            requested: suggestedCard.qty,
+            available: totalAvailable,
+            reason: 'Max 4x total (Collection + Wishlist)'
+          });
+          continue;
+        }
+
+        // ── Allocate from Collection first ─────────────────────────────────
+        const fromCollection = Math.min(suggestedCard.qty, collectionQty);
+        if (fromCollection > 0) {
+          // Get physical id_collection rows for this card
+          const physicalRows = await knex('collection')
+            .select('id_collection')
+            .where('user_id', user_id)
+            .where('card_id', suggestedCard.card_id)
+            .limit(fromCollection);
+
+          for (const row of physicalRows) {
+            collectionToAdd.push({
+              user_id,
+              deck: deckId,
+              id_card: row.id_collection,
+              sideboard: suggestedCard.sideboard ? 1 : 0,
+            });
+          }
+        }
+
+        // ── Allocate remaining from Wishlist (or auto-create) ──────────────
+        const remaining = suggestedCard.qty - fromCollection;
+        if (remaining > 0) {
+          const existingWishlist = wishlistMap.get(suggestedCard.card_id);
+          const totalWishlistNeeded = (existingWishlist || 0) + remaining;
+
+          // Cap at 4x global limit
+          const capped = Math.min(totalWishlistNeeded, 4 - fromCollection);
+          const qtyToAddToWishlist = capped - (existingWishlist || 0);
+
+          if (qtyToAddToWishlist > 0) {
+            wishlistToAdd.push({
+              card_id: suggestedCard.card_id,
+              name: suggestedCard.name,
+              qty: capped,  // Total final qty in wishlist
+              original_qty: existingWishlist || 0,
+              qty_added: qtyToAddToWishlist,
+              sideboard: suggestedCard.sideboard ? 1 : 0,
+            });
+
+            // Update wishlistMap for subsequent cards
+            wishlistMap.set(suggestedCard.card_id, capped);
+          }
+        }
+      }
+
+      // ── Step 4: Validate no errors occurred ────────────────────────────
+      if (validationErrors.length > 0) {
+        console.warn(`[AI-Wishlist] Validation errors:`, validationErrors);
+        return res.status(400).json({
+          error: 'Cannot allocate cards with 4x limit',
+          details: validationErrors
+        });
+      }
+
+      // ── Step 5: Update deck metadata ──────────────────────────────────
+      if (strategy || selectedCommander) {
+        const updateData = {};
+        if (strategy) updateData.description = strategy;
+        if (selectedCommander) {
+          updateData.commanderName = selectedCommander.name;
+          updateData.commanderColors = selectedCommander.colorIdentity;
+        }
+
+        await knex('decks')
+          .where('id_deck', deckId)
+          .where('user_id', user_id)
+          .update(updateData);
+        console.log(`[AI-Wishlist] Deck metadata updated`);
+      }
+
+      // ── Step 6: Insert collection cards into deck ─────────────────────
+      if (collectionToAdd.length > 0) {
+        await knex('deck').insert(collectionToAdd);
+        console.log(`[AI-Wishlist] Inserted ${collectionToAdd.length} collection cards`);
+      }
+
+      // ── Step 7: Upsert wishlist items ─────────────────────────────────
+      for (const wishlistItem of wishlistToAdd) {
+        // Check if wishlist item already exists
+        const existing = await knex('wishlist')
+          .where('card_id', wishlistItem.card_id)
+          .where('user_id', user_id)
+          .first();
+
+        if (existing) {
+          // Update existing wishlist item
+          await knex('wishlist')
+            .where('id_wishlist', existing.id_wishlist)
+            .update({ quantity: wishlistItem.qty });
+          console.log(`[AI-Wishlist] Wishlist updated: ${wishlistItem.name} → ${wishlistItem.qty}x`);
+        } else {
+          // Insert new wishlist item
+          await knex('wishlist').insert({
+            card_id: wishlistItem.card_id,
+            user_id,
+            quantity: wishlistItem.qty,
+            in_collection: 0,
+          });
+          console.log(`[AI-Wishlist] Wishlist created: ${wishlistItem.name} → ${wishlistItem.qty}x`);
+        }
+      }
+
+      // ── Step 8: Add commander if selected ──────────────────────────────
+      if (selectedCommander) {
+        const commanderRows = await knex('collection')
+          .select('id_collection')
+          .where('user_id', user_id)
+          .where('card_id', selectedCommander.card_id)
+          .limit(1);
+
+        if (commanderRows.length > 0) {
+          await knex('deck').insert({
+            user_id,
+            deck: deckId,
+            id_card: commanderRows[0].id_collection,
+            sideboard: 0,
+            is_commander: true,
+          });
+          console.log(`[AI-Wishlist] Commander added: ${selectedCommander.name}`);
+        } else {
+          console.warn(`[AI-Wishlist] Commander not in collection`);
+        }
+      }
+
+      return res.json({
+        success: true,
+        collectionAdded: collectionToAdd.length,
+        wishlistAdded: wishlistToAdd.length,
+        commanderAdded: selectedCommander ? selectedCommander.name : null,
+        details: {
+          collection: collectionToAdd.map(c => ({ deck: c.deck, sideboard: c.sideboard })),
+          wishlist: wishlistToAdd.map(w => ({ name: w.name, qty: w.qty, sideboard: w.sideboard }))
+        }
+      });
+
+    } catch (error) {
+      console.error(`[AI-Wishlist] Apply deck failed:`, error);
+      return res.status(500).json({
+        error: error.message || 'Failed to apply deck with wishlist'
       });
     }
   },

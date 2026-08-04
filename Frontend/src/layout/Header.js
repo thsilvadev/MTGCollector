@@ -156,13 +156,8 @@ function Header() {
               <a className="nav-link" href="/contact">{t('nav.contact')}</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" id={styles.off} href="/wishlist">
-                {t('nav.wishlist')} <span className={styles.coming}>{t('nav.comingSoon')}</span>
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" id={styles.off} href="/wishlist">
-                {t('nav.aiDeck')} <span className={styles.coming}>{t('nav.comingSoon')}</span>
+              <a className="nav-link" href="/wishlist">
+                {t('nav.wishlist')}
               </a>
             </li>
           </ul>

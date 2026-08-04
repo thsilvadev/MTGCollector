@@ -262,6 +262,17 @@ const translations = {
     'ai.modernFormatNote':         'Building for Modern format (60 cards).',
     'ai.landCountLabel':           'Lands:',
 
+    // WISHLIST
+    'wishlist.title':              'My Wishlist',
+    'wishlist.items':              'items',
+    'wishlist.empty':              'Your wishlist is empty',
+    'wishlist.quantity':           'Quantity',
+    'wishlist.remove':             'Remove',
+    'wishlist.qtyError':           'Quantity must be 0-4',
+    'wishlist.updated':            'Wishlist updated',
+    'wishlist.removed':            'Card removed from wishlist',
+    'wishlist.error':              'Failed to load wishlist',
+
     // ERRORS
     'error.scryfallDown':            'Card data is temporarily unavailable (Scryfall is down). Try again in a few minutes.',
     'error.collectionLoad':          'Failed to load your collection. Please try again.'
@@ -530,6 +541,17 @@ const translations = {
     'ai.commanderFormatNote':      'Construindo para o formato Commander (100 cartas no máximo).',
     'ai.modernFormatNote':         'Construindo para o formato Modern (60 cartas).',
     'ai.landCountLabel':           'Terras:',
+
+    // WISHLIST
+    'wishlist.title':              'Minha Lista de Desejos',
+    'wishlist.items':              'itens',
+    'wishlist.empty':              'Sua lista de desejos está vazia',
+    'wishlist.quantity':           'Quantidade',
+    'wishlist.remove':             'Remover',
+    'wishlist.qtyError':           'Quantidade deve ser 0-4',
+    'wishlist.updated':            'Lista de desejos atualizada',
+    'wishlist.removed':            'Carta removida da lista de desejos',
+    'wishlist.error':              'Falha ao carregar lista de desejos',
 
     // ERRORS
     'error.scryfallDown':            'Dados de cartas indisponíveis temporariamente (Scryfall fora do ar). Tente novamente em alguns minutos.',

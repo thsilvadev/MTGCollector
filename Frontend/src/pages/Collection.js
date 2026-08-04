@@ -459,9 +459,13 @@ function Collection() {
         payload.selectedCommander = result.selectedCommander;
       }
       
-      const response = await Axios.post(`${window.name}/ai/applyDeck`, payload, config);
+      // Use new intelligent matching endpoint
+      const response = await Axios.post(`${window.name}/ai/applyDeckWithWishlist`, payload, config);
       
-      let message = `Deck updated with ${response.data.cardsAdded} cards!`;
+      let message = `Deck updated with ${response.data.collectionAdded} cards!`;
+      if (response.data.wishlistAdded > 0) {
+        message += ` (${response.data.wishlistAdded} added to Wishlist)`;
+      }
       if (response.data.commanderAdded) {
         message += ` Commander: ${response.data.commanderAdded}`;
       }
