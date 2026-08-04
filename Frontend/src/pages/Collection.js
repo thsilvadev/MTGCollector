@@ -448,13 +448,24 @@ function Collection() {
   // AI Deck Builder: Apply (add all cards to deck in one request)
   const handleAIApply = async (result) => {
     try {
-      const response = await Axios.post(`${window.name}/ai/applyDeck`, {
+      const payload = {
         deckId: selectedDeck,
         mainboard: result.mainboard,
         sideboard: result.sideboard || [],
-      }, config);
+      };
       
-      toast.success(`Deck updated with ${response.data.cardsAdded} cards!`);
+      if (result.selectedCommander) {
+        payload.selectedCommander = result.selectedCommander;
+      }
+      
+      const response = await Axios.post(`${window.name}/ai/applyDeck`, payload, config);
+      
+      let message = `Deck updated with ${response.data.cardsAdded} cards!`;
+      if (response.data.commanderAdded) {
+        message += ` Commander: ${response.data.commanderAdded}`;
+      }
+      
+      toast.success(message);
       setAiModalOpen(false);
       setAiResult(null);
       setDeckToggler(t => !t);

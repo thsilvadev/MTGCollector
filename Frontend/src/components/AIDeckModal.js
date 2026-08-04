@@ -153,6 +153,16 @@ function AIDeckModal({
           <>
             <h2 className={styles.title}>{t('ai.modalTitle')}</h2>
 
+            {/* Selected Commander (if any) */}
+            {result.selectedCommander && (
+              <div className={styles.section}>
+                <label className={styles.sectionLabel}>Selected Commander</label>
+                <p className={styles.strategyText}>
+                  {result.selectedCommander.name} ({result.selectedCommander.colorIdentity})
+                </p>
+              </div>
+            )}
+
             {/* Strategy */}
             <div className={styles.section}>
               <label className={styles.sectionLabel}>{t('ai.strategyLabel')}</label>

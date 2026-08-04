@@ -1,6 +1,7 @@
 const knex     = require('../database/index');
 const scryfall = require('../utils/scryfall');
 const { Groq } = require('groq-sdk');
+const { getModernPrompt, getCommanderPrompt, getCommanderPromptWithoutCommander } = require('../services/aiPrompts');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -56,6 +57,26 @@ function extractJsonFromResponse(text) {
 // ── Check if a card is a land ──────────────────────────────────────────────
 function isLand(card) {
   return card.types && card.types.includes('Land');
+}
+
+// ── Check if card colors match commander color identity ──────────────────
+function matchesCommanderColorIdentity(cardColorIdentity, commanderColorIdentity) {
+  if (!commanderColorIdentity || commanderColorIdentity === 'colorless') {
+    // Only colorless cards allowed
+    return !cardColorIdentity || cardColorIdentity === '' || cardColorIdentity.split(', ').length === 0;
+  }
+  
+  const allowedColors = new Set(commanderColorIdentity.split(', ').filter(Boolean));
+  const cardColors = new Set((cardColorIdentity || '').split(', ').filter(Boolean));
+  
+  // All card colors must be in the allowed colors (or colorless)
+  return [...cardColors].every(c => allowedColors.has(c));
+}
+
+// ── Check if card is a basic land ──────────────────────────────────────────
+function isBasicLand(cardName) {
+  const basicLands = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest']);
+  return basicLands.has(cardName);
 }
 
 module.exports = {
@@ -143,7 +164,7 @@ module.exports = {
 
       // ── Step 6: Build Groq prompt ──────────────────────────────────────────
       const format = isCommander ? 'Commander' : 'Modern';
-      const targetNonLandSize = isCommander ? 98 : 36;
+      const targetNonLandSize = isCommander ? 60 : 36;
       const copyLimit = isCommander ? 1 : 4;
       const selectedColorsStr = selectedColors.length > 0 ? selectedColors.join(', ') : 'any';
 
@@ -155,33 +176,74 @@ module.exports = {
       // Card names with quantities only (non-lands only)
       const cardNamesList = nonLandCards.map(c => `${c.name} (${c.qty})`).join(', ');
 
-      const prompt = `You are an expert Magic: The Gathering ${format} deckbuilder.
+      // Build prompt based on format
+      let prompt;
+      let commanderColorIdentity = '';
+      let commanderName = '';
+      let hasCommander = false;
 
-OBJECTIVE: Suggest EXACTLY ${remainingSlots} new non-land card(s) to complete the deck.
+      if (isCommander) {
+        // Fetch commander data for Commander format
+        const commanderRows = await knex('deck')
+          .select('collection.card_id')
+          .join('collection', 'collection.id_collection', '=', 'deck.id_card')
+          .where('deck.user_id', user_id)
+          .where('deck.deck', deckId)
+          .where('deck.is_commander', true)
+          .limit(1);
 
-CURRENT DECK STATE:
-- Non-land cards in deck: ${currentDeckNonLandSize}
-- Target non-land cards: ${targetNonLandSize}
-- Remaining non-land cards needed: ${remainingSlots}
+        if (commanderRows.length > 0) {
+          // Commander already exists
+          hasCommander = true;
+          const commanderCardId = commanderRows[0].card_id;
+          const commanderCardData = cardMap.get(commanderCardId);
+          if (commanderCardData) {
+            commanderName = commanderCardData.name;
+            commanderColorIdentity = commanderCardData.colorIdentity || 'colorless';
+          }
 
-${currentDeckNonLands.length > 0 ? `Cards already in deck: ${currentDeckNonLands.map(c => `${c.name}(${c.qty})`).join(', ')}` : 'Deck is empty.'}
+          prompt = getCommanderPrompt({
+            remainingSlots,
+            targetNonLandSize,
+            currentDeckNonLandSize,
+            currentDeckNonLands,
+            commanderName,
+            commanderColorIdentity,
+            cardNamesList,
+          });
+        } else {
+          // No commander yet - filter legendary creatures and let AI choose
+          const legendaryCreatures = nonLandCards.filter(c => 
+            c.supertypes && c.supertypes.includes('Legendary') && 
+            c.types && c.types.includes('Creature')
+          );
 
-STRICT RULES - YOU MUST FOLLOW ALL:
-1. Suggest ONLY ${remainingSlots} card(s) total (mainboard + sideboard combined)
-2. You can ONLY use cards from the available list below
-3. For EACH card, you must use the EXACT quantity shown in parentheses - NO MORE, NO LESS
-4. NEVER suggest a card that is NOT in the available list
-5. NEVER suggest more than the available quantity for any card
-6. NEVER suggest cards already in the deck (unless adding more copies up to ${copyLimit} total)
-7. Max ${copyLimit} copies of any non-basic card
-8. Colors: ${selectedColorsStr}
-9. DO NOT INCLUDE LANDS - the player will choose lands separately
+          if (legendaryCreatures.length === 0) {
+            return res.status(400).json({ error: 'No legendary creatures found to use as commander' });
+          }
 
-AVAILABLE CARDS (name (qty)):
-${cardNamesList}
+          const legendaryCreaturesList = legendaryCreatures.map(c => `${c.name} (colors: ${c.colorIdentity || 'colorless'})`).join(', ');
 
-RESPONSE FORMAT - ONLY JSON, NO OTHER TEXT:
-{"strategy":"brief description of strategy","mainboard":[{"name":"card name","qty":number}],"sideboard":[{"name":"card name","qty":number}]}`;
+          prompt = getCommanderPromptWithoutCommander({
+            remainingSlots,
+            targetNonLandSize,
+            currentDeckNonLandSize,
+            currentDeckNonLands,
+            cardNamesList,
+            legendaryCreaturesList,
+          });
+        }
+      } else {
+        prompt = getModernPrompt({
+          remainingSlots,
+          targetNonLandSize,
+          currentDeckNonLandSize,
+          currentDeckNonLands,
+          selectedColorsStr,
+          copyLimit,
+          cardNamesList,
+        });
+      }
 
       // ── Step 7: Call Groq ──────────────────────────────────────────────────
       console.log(`[AI] Calling Groq for deck ${deckId}, format ${format}, colors [${selectedColorsStr}]`);
@@ -215,20 +277,60 @@ RESPONSE FORMAT - ONLY JSON, NO OTHER TEXT:
         return res.status(500).json({ error: 'Failed to parse deck response from AI' });
       }
 
-      // ── Step 9: Validate response - MUST be exactly remainingSlots valid cards ────────
+      // ── Step 9: Validate response based on format ───────────────────────────
       const collectionMap = new Map(nonLandCards.map(c => [c.name.toLowerCase(), c]));
+      const deckCardNamesSet = new Set(currentDeckNonLands.map(c => c.name.toLowerCase())); // Cards already in deck
+      
+      // Calculate total quantity sum
+      const mainboardQtySum = (deckResponse.mainboard || []).reduce((sum, c) => sum + (c.qty || 0), 0);
+      const sideboardQtySum = (deckResponse.sideboard || []).reduce((sum, c) => sum + (c.qty || 0), 0);
+      const totalQtySum = mainboardQtySum + sideboardQtySum;
+
+      console.log(`[AI] Quantity check: mainboard sum=${mainboardQtySum}, sideboard sum=${sideboardQtySum}, total=${totalQtySum}, needed=${remainingSlots}`);
+
+      if (totalQtySum !== remainingSlots) {
+        console.error(`[AI] CRITICAL: AI did not suggest correct total quantity. Got ${totalQtySum}, needed ${remainingSlots}`);
+        return res.status(500).json({ 
+          error: `AI did not suggest the correct number of cards. Requested ${remainingSlots}, got ${totalQtySum}. Please try again.` 
+        });
+      }
+
       const validMainboard = [];
       const validSideboard = [];
       const validationErrors = [];
+      const suggestedCardNames = new Set(); // Track suggested cards for singleton rule
 
       // Validate mainboard
       for (const card of (deckResponse.mainboard || [])) {
         const owned = collectionMap.get(card.name.toLowerCase());
+        const cardNameLower = card.name.toLowerCase();
+        
         if (!owned) {
           validationErrors.push(`Mainboard: "${card.name}" not in available collection`);
-        } else if (card.qty !== owned.qty) {
+        } else if (isCommander && card.qty !== 1) {
+          // Commander: must be singleton (qty must be 1)
+          validationErrors.push(`Mainboard: "${card.name}" - Commander is singleton, qty must be 1 (got ${card.qty})`);
+        } else if (!isCommander && card.qty !== owned.qty) {
+          // Modern: qty must match available
           validationErrors.push(`Mainboard: "${card.name}" - requested ${card.qty} but only ${owned.qty} available`);
+        } else if (isCommander && deckCardNamesSet.has(cardNameLower)) {
+          // Commander: reject cards already in deck
+          validationErrors.push(`Mainboard: "${card.name}" is already in deck (Commander is singleton)`);
+        } else if (isCommander) {
+          // Commander-specific validations
+          // 1. Check singleton rule (no duplicates in suggestions)
+          if (suggestedCardNames.has(cardNameLower) && !isBasicLand(card.name)) {
+            validationErrors.push(`Mainboard: "${card.name}" appears multiple times in suggestions (must be unique)`);
+          }
+          // 2. Check color identity matches commander
+          else if (!matchesCommanderColorIdentity(owned.colorIdentity, commanderColorIdentity)) {
+            validationErrors.push(`Mainboard: "${card.name}" has colors outside commander identity`);
+          } else {
+            validMainboard.push({ ...card, card_id: owned.card_id });
+            suggestedCardNames.add(cardNameLower);
+          }
         } else {
+          // Modern format (simpler validation)
           validMainboard.push({ ...card, card_id: owned.card_id });
         }
       }
@@ -236,11 +338,34 @@ RESPONSE FORMAT - ONLY JSON, NO OTHER TEXT:
       // Validate sideboard
       for (const card of (deckResponse.sideboard || [])) {
         const owned = collectionMap.get(card.name.toLowerCase());
+        const cardNameLower = card.name.toLowerCase();
+        
         if (!owned) {
           validationErrors.push(`Sideboard: "${card.name}" not in available collection`);
-        } else if (card.qty !== owned.qty) {
+        } else if (isCommander && card.qty !== 1) {
+          // Commander: must be singleton (qty must be 1)
+          validationErrors.push(`Sideboard: "${card.name}" - Commander is singleton, qty must be 1 (got ${card.qty})`);
+        } else if (!isCommander && card.qty !== owned.qty) {
+          // Modern: qty must match available
           validationErrors.push(`Sideboard: "${card.name}" - requested ${card.qty} but only ${owned.qty} available`);
+        } else if (isCommander && deckCardNamesSet.has(cardNameLower)) {
+          // Commander: reject cards already in deck
+          validationErrors.push(`Sideboard: "${card.name}" is already in deck (Commander is singleton)`);
+        } else if (isCommander) {
+          // Commander-specific validations
+          // 1. Check singleton rule (no duplicates in suggestions)
+          if (suggestedCardNames.has(cardNameLower) && !isBasicLand(card.name)) {
+            validationErrors.push(`Sideboard: "${card.name}" appears multiple times in suggestions (must be unique)`);
+          }
+          // 2. Check color identity matches commander
+          else if (!matchesCommanderColorIdentity(owned.colorIdentity, commanderColorIdentity)) {
+            validationErrors.push(`Sideboard: "${card.name}" has colors outside commander identity`);
+          } else {
+            validSideboard.push({ ...card, card_id: owned.card_id });
+            suggestedCardNames.add(cardNameLower);
+          }
         } else {
+          // Modern format (simpler validation)
           validSideboard.push({ ...card, card_id: owned.card_id });
         }
       }
@@ -253,12 +378,57 @@ RESPONSE FORMAT - ONLY JSON, NO OTHER TEXT:
       }
       console.log(`[AI] Context: current deck ${currentDeckNonLandSize}/${targetNonLandSize}, remaining ${remainingSlots}, available non-lands ${nonLandCards.length}`);
 
-      // ── Step 10: Return result ────────────────────────────────────────────
-      return res.json({
+      // ── Step 10: Validate commander selection (if AI chose one) ────────────
+      let selectedCommander = null;
+      let selectedCommanderColorIdentity = '';
+
+      if (isCommander && !hasCommander && deckResponse.selectedCommander) {
+        const selectedCommanderName = deckResponse.selectedCommander;
+        const selectedCommanderCard = nonLandCards.find(c => c.name.toLowerCase() === selectedCommanderName.toLowerCase());
+
+        if (!selectedCommanderCard) {
+          validationErrors.push(`Commander: "${selectedCommanderName}" not found in available legendary creatures`);
+        } else if (!selectedCommanderCard.supertypes?.includes('Legendary') || !selectedCommanderCard.types?.includes('Creature')) {
+          validationErrors.push(`Commander: "${selectedCommanderName}" is not a legendary creature`);
+        } else {
+          selectedCommander = selectedCommanderCard;
+          selectedCommanderColorIdentity = selectedCommanderCard.colorIdentity || 'colorless';
+          
+          // Remove commander from suggestions if it appears there (safety check)
+          const selectedCommanderNameLower = selectedCommanderName.toLowerCase();
+          for (let i = validMainboard.length - 1; i >= 0; i--) {
+            if (validMainboard[i].name.toLowerCase() === selectedCommanderNameLower) {
+              validationErrors.push(`Commander: "${selectedCommanderName}" was in suggestions but cannot be suggested (it will be added as commander)`);
+              validMainboard.splice(i, 1);
+            }
+          }
+          for (let i = validSideboard.length - 1; i >= 0; i--) {
+            if (validSideboard[i].name.toLowerCase() === selectedCommanderNameLower) {
+              validationErrors.push(`Commander: "${selectedCommanderName}" was in sideboard but cannot be suggested (it will be added as commander)`);
+              validSideboard.splice(i, 1);
+            }
+          }
+          
+          console.log(`[AI] Selected commander: ${selectedCommander.name} (${selectedCommanderColorIdentity})`);
+        }
+      }
+
+      // ── Step 11: Return result ────────────────────────────────────────────
+      const result = {
         strategy: deckResponse.strategy || 'No strategy provided',
         mainboard: validMainboard,
         sideboard: validSideboard,
-      });
+      };
+
+      if (selectedCommander) {
+        result.selectedCommander = {
+          name: selectedCommander.name,
+          colorIdentity: selectedCommanderColorIdentity,
+          card_id: selectedCommander.card_id,
+        };
+      }
+
+      return res.json(result);
 
     } catch (error) {
       console.error(`IP: ${req.ip}, Time: ${formattedDate}. ERROR:`, error);
@@ -269,7 +439,7 @@ RESPONSE FORMAT - ONLY JSON, NO OTHER TEXT:
   },
 
   async applyDeck(req, res) {
-    const { deckId, mainboard, sideboard } = req.body;
+    const { deckId, mainboard, sideboard, selectedCommander } = req.body;
     const user_id = req.userId;
 
     if (!deckId || !Array.isArray(mainboard)) {
@@ -278,8 +448,23 @@ RESPONSE FORMAT - ONLY JSON, NO OTHER TEXT:
 
     try {
       console.log(`[AI] Applying deck ${deckId}: ${mainboard.length} mainboard, ${sideboard?.length || 0} sideboard`);
+      if (selectedCommander) {
+        console.log(`[AI] Setting commander: ${selectedCommander.name} (${selectedCommander.colorIdentity})`);
+      }
       
-      // ── Collect only the NEW cards to insert (mainboard + sideboard) ───────
+      // ── Step 1: If commander was selected, update deck metadata ───────────
+      if (selectedCommander) {
+        await knex('decks')
+          .where('id', deckId)
+          .where('user_id', user_id)
+          .update({
+            commanderName: selectedCommander.name,
+            commanderColors: selectedCommander.colorIdentity,
+          });
+        console.log(`[AI] Deck metadata updated with commander`);
+      }
+
+      // ── Step 2: Collect only the NEW cards to insert (mainboard + sideboard) ───────
       const cardsToInsert = [];
 
       // Mainboard cards
@@ -338,9 +523,32 @@ RESPONSE FORMAT - ONLY JSON, NO OTHER TEXT:
         console.warn(`[AI] WARNING: No cards were inserted!`);
       }
 
+      // ── Step 3: If commander was selected, add it to the deck ────────────
+      if (selectedCommander) {
+        const commanderRows = await knex('collection')
+          .select('id_collection')
+          .where('user_id', user_id)
+          .where('card_id', selectedCommander.card_id)
+          .limit(1);
+
+        if (commanderRows.length > 0) {
+          await knex('deck').insert({
+            user_id,
+            deck: deckId,
+            id_card: commanderRows[0].id_collection,
+            sideboard: 0,
+            is_commander: true,
+          });
+          console.log(`[AI] Commander card added: ${selectedCommander.name}`);
+        } else {
+          console.warn(`[AI] WARNING: No physical commander copy found!`);
+        }
+      }
+
       return res.json({
         success: true,
         cardsAdded: cardsToInsert.length,
+        commanderAdded: selectedCommander ? selectedCommander.name : null,
       });
 
     } catch (error) {
