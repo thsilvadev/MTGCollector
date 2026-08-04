@@ -18,6 +18,9 @@ function AIDeckModal({
   isLoading,
   result,
   onApply,
+  confirmationData,
+  onConfirm,
+  onBackToResult,
 }) {
   const { t } = useI18n();
   const [localColors, setLocalColors] = useState(new Set(['B', 'G', 'R', 'U', 'W']));
@@ -189,7 +192,58 @@ function AIDeckModal({
               </button>
             </div>
           </>
-        )}
+        ) : confirmationData ? (
+          // Confirmation State - Collection vs Wishlist Split
+          <>
+            <h2 className={styles.title}>{t('ai.modalTitle')}</h2>
+            <p className={styles.confirmLabel}>Confirmar adição de cartas</p>
+
+            {/* 2-Column Split */}
+            <div className={styles.splitContainer}>
+              {/* Left: Collection */}
+              <div className={styles.splitColumn}>
+                <h3 className={styles.columnTitle}>{t('collection.title') || 'Cartas da Coleção'}</h3>
+                <div className={styles.cardsList}>
+                  {confirmationData.collection?.map((card, idx) => (
+                    <div key={idx} className={styles.cardItem}>
+                      <span className={styles.cardName}>{card.name}</span>
+                      <span className={styles.cardQty}>× {card.qty}</span>
+                    </div>
+                  ))}
+                  {!confirmationData.collection?.length && (
+                    <p className={styles.emptyText}>Nenhuma carta</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: Wishlist */}
+              <div className={styles.splitColumn}>
+                <h3 className={styles.columnTitle}>{t('wishlist.title') || 'Nova Wishlist'}</h3>
+                <div className={styles.cardsList} style={{ backgroundColor: '#E6E6FA' }}>
+                  {confirmationData.wishlist?.map((card, idx) => (
+                    <div key={idx} className={styles.cardItem}>
+                      <span className={styles.cardName}>{card.name}</span>
+                      <span className={styles.cardQty}>× {card.qty}</span>
+                    </div>
+                  ))}
+                  {!confirmationData.wishlist?.length && (
+                    <p className={styles.emptyText}>Nenhuma carta</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className={styles.buttonRow}>
+              <button className={styles.cancelBtn} onClick={() => onBackToResult()}>
+                {t('modal.back') || 'Voltar'}
+              </button>
+              <button className={styles.applyBtn} onClick={() => onConfirm()} disabled={isLoading}>
+                {isLoading ? t('ai.loadingMessage') : (t('modal.confirm') || 'Confirmar')}
+              </button>
+            </div>
+          </>
+        ) : null}
       </div>
     </div>
   );

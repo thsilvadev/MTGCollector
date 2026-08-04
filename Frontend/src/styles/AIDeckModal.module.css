@@ -337,3 +337,101 @@ input[type='checkbox']:checked + .colorLabel {
 .modal::-webkit-scrollbar-thumb:hover {
   background: #666;
 }
+
+/* ── Confirmation Split View ──────────────────────────────────────────────── */
+
+.confirmLabel {
+  font-size: 14px;
+  color: #c0c0cc;
+  text-align: center;
+  margin: 10px 0 20px 0;
+  font-weight: normal;
+}
+
+.splitContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+  max-height: 400px;
+}
+
+.splitColumn {
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a;
+  border: 1px solid #555;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.columnTitle {
+  font-size: 13px;
+  font-weight: bold;
+  color: #7b45c7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px;
+  border-bottom: 1px solid #555;
+  margin: 0;
+  background-color: #0f0f0f;
+}
+
+.cardsList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  background-color: #1a1a1a;
+}
+
+.cardItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 3px;
+  border-bottom: 1px solid #333;
+  font-size: 12px;
+  color: #c0c0cc;
+}
+
+.cardItem:last-child {
+  border-bottom: none;
+}
+
+.cardName {
+  font-weight: 500;
+  flex: 1;
+}
+
+.cardQty {
+  color: #7b45c7;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.emptyText {
+  padding: 12px 8px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  font-size: 12px;
+  margin: 0;
+}
+
+.cardsList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cardsList::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+
+.cardsList::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+.cardsList::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

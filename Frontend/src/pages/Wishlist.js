@@ -114,8 +114,7 @@ function Wishlist() {
               {filteredWishlist.map((item) => (
                 <div
                   key={item.id_wishlist}
-                  className={styles.wishlistCardWrapper}
-                  style={{ backgroundColor: '#E6E6FA' }}
+                  style={{ backgroundColor: '#E6E6FA', padding: '8px', borderRadius: '4px' }}
                 >
                   <MiniCard
                     name={item.name}

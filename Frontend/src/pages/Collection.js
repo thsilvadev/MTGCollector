@@ -96,6 +96,7 @@ function Collection() {
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState(null);
+  const [aiConfirmationData, setAiConfirmationData] = useState(null);
   
   //Select Deck coming from Decks page
   const comingFromDecks = () => {
@@ -448,6 +449,8 @@ function Collection() {
   // AI Deck Builder: Apply (add all cards to deck in one request)
   const handleAIApply = async (result) => {
     try {
+      setAiLoading(true);
+      
       const payload = {
         deckId: selectedDeck,
         mainboard: result.mainboard,
@@ -462,22 +465,36 @@ function Collection() {
       // Use new intelligent matching endpoint
       const response = await Axios.post(`${window.name}/ai/applyDeckWithWishlist`, payload, config);
       
-      let message = `Deck updated with ${response.data.collectionAdded} cards!`;
-      if (response.data.wishlistAdded > 0) {
-        message += ` (${response.data.wishlistAdded} added to Wishlist)`;
-      }
-      if (response.data.commanderAdded) {
-        message += ` Commander: ${response.data.commanderAdded}`;
-      }
-      
-      toast.success(message);
-      setAiModalOpen(false);
-      setAiResult(null);
-      setDeckToggler(t => !t);
+      // Show confirmation screen with details
+      setAiConfirmationData(response.data.details);
+      setAiLoading(false);
     } catch (err) {
       console.error('AI apply failed:', err);
       toast.error(err.response?.data?.error || 'Failed to apply AI deck.');
+      setAiLoading(false);
     }
+  };
+
+  // AI Deck Builder: Confirm and close modal
+  const handleAIConfirm = () => {
+    const collectionAdded = aiConfirmationData?.collection?.reduce((sum, c) => sum + c.qty, 0) || 0;
+    const wishlistAdded = aiConfirmationData?.wishlist?.length || 0;
+    
+    let message = `Deck atualizado com ${collectionAdded} cartas!`;
+    if (aiConfirmationData?.wishlist?.length > 0) {
+      message += ` (${wishlistAdded} itens adicionados à Lista de Desejos)`;
+    }
+    
+    toast.success(message);
+    setAiModalOpen(false);
+    setAiResult(null);
+    setAiConfirmationData(null);
+    setDeckToggler(t => !t);
+  };
+
+  // AI Deck Builder: Back to result screen
+  const handleAIBackToResult = () => {
+    setAiConfirmationData(null);
   };
 
   //selectDeck
@@ -1020,13 +1037,16 @@ function Collection() {
       </div>
       <AIDeckModal
         isOpen={aiModalOpen}
-        onClose={() => { setAiModalOpen(false); setAiResult(null); }}
+        onClose={() => { setAiModalOpen(false); setAiResult(null); setAiConfirmationData(null); }}
         isCommanderDeck={isCommanderDeck}
         lockedColors={lockedColors}
         onSubmit={handleAISubmit}
         isLoading={aiLoading}
         result={aiResult}
         onApply={handleAIApply}
+        confirmationData={aiConfirmationData}
+        onConfirm={handleAIConfirm}
+        onBackToResult={handleAIBackToResult}
       />
     </div>
   );

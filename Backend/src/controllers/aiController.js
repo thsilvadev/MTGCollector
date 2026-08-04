@@ -627,8 +627,9 @@ module.exports = {
         ...(sideboard || []).map(c => ({ ...c, sideboard: true }))
       ];
 
-      const collectionToAdd = [];    // Cards to add from collection
+      const collectionToAdd = [];    // Cards to add from collection (for DB insert)
       const wishlistToAdd = [];       // Cards to add/create in wishlist
+      const collectionDetails = [];   // For response (includes names/qty)
       const validationErrors = [];
 
       for (const suggestedCard of allSuggested) {
@@ -665,6 +666,13 @@ module.exports = {
               sideboard: suggestedCard.sideboard ? 1 : 0,
             });
           }
+
+          // Track for response
+          collectionDetails.push({
+            name: suggestedCard.name,
+            qty: fromCollection,
+            sideboard: suggestedCard.sideboard ? 1 : 0,
+          });
         }
 
         // ── Allocate remaining from Wishlist (or auto-create) ──────────────
@@ -778,7 +786,7 @@ module.exports = {
         wishlistAdded: wishlistToAdd.length,
         commanderAdded: selectedCommander ? selectedCommander.name : null,
         details: {
-          collection: collectionToAdd.map(c => ({ deck: c.deck, sideboard: c.sideboard })),
+          collection: collectionDetails,
           wishlist: wishlistToAdd.map(w => ({ name: w.name, qty: w.qty, sideboard: w.sideboard }))
         }
       });
