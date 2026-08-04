@@ -108,6 +108,12 @@ module.exports = {
         return res.status(400).json({ error: 'No cards match the selected colors' });
       }
 
+      // ── Step 4b: Remove basic lands from AI prompt ──────────────────────────
+      const basicLandNames = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest']);
+      const filteredWithoutBasicLands = filteredCollection.filter(c => 
+        !basicLandNames.has(c.name)
+      );
+
       // ── Step 5: Fetch current deck cards (for context) ────────────────────
       const currentDeckRows = await knex('deck')
         .select(
@@ -133,36 +139,24 @@ module.exports = {
       const copyLimit = isCommander ? 1 : 4;
       const selectedColorsStr = selectedColors.length > 0 ? selectedColors.join(', ') : 'any';
 
-      const prompt = `Você é um deckbuilder experiente de Magic: The Gathering, especializado no formato ${format}.
+      // Card names with quantities only
+      const cardNamesList = filteredWithoutBasicLands.map(c => `${c.name} (${c.qty})`).join(', ');
 
-${currentDeckCards.length > 0 ? `O usuário já tem algumas cartas no deck:
-${JSON.stringify(currentDeckCards, null, 2)}
+      const prompt = `You are an expert Magic: The Gathering deckbuilder for ${format} format.
 
-Você pode manter essas cartas como base e adicionar novas para completar o deck.` : 'O deck está vazio. Você precisa construir do zero.'}
+${currentDeckCards.length > 0 ? `The user already has these cards in the deck: ${currentDeckCards.map(c => `${c.name}(${c.qty})`).join(', ')}` : 'The deck is empty. Build from scratch.'}
 
-Monte o melhor deck possível de ${format} usando APENAS cartas da lista de coleção abaixo (JSON).
+Build the best ${format} deck using ONLY cards from the list below. Format rules:
+- Exactly ${targetSize} cards total
+- Max ${copyLimit} copy/copies of non-basic cards
+- Healthy mana curve, ~16-18 lands (can use any basic land: Plains, Island, Swamp, Mountain, Forest)
+- Colors: ${selectedColorsStr}
 
-Regras obrigatórias:
-- NUNCA sugira uma carta que não esteja na lista fornecida.
-- NUNCA sugira quantidade maior que o campo "qty" de cada carta.
-- O deck deve ter exatamente ${targetSize} cartas (incluindo terrenos), formato ${format}, cores: ${selectedColorsStr}.
-- Max ${copyLimit} cópia(s) de qualquer carta não-terreno.
-- Priorize curva de mana saudável, sinergias entre as cartas disponíveis, e proporção adequada de terrenos (~16-18, ajuste conforme a curva).
-- Se houver muito poucas cartas na coleção filtrada, use as melhores disponíveis mesmo que não preencha todas as sinergias ideais.
-- Explique brevemente (2-3 frases) a estratégia geral do deck.
-- Depois, liste um sideboard sugerido (até 15 cartas) só com o que sobrou na coleção filtrada, se fizer sentido.
+Available cards (name (qty)):
+${cardNamesList}
 
-Retorne a resposta EXCLUSIVAMENTE em JSON, no seguinte formato, sem texto fora do JSON:
-
-{
-  "strategy": "string",
-  "mainboard": [{ "name": "string", "qty": number }],
-  "sideboard": [{ "name": "string", "qty": number }],
-  "landCount": number
-}
-
-Coleção disponível (após filtro de cor):
-${JSON.stringify(filteredCollection, null, 2)}`;
+Respond ONLY with valid JSON:
+{"strategy":"string","mainboard":[{"name":"string","qty":number}],"sideboard":[{"name":"string","qty":number}],"landCount":number}`;
 
       // ── Step 7: Call Groq ──────────────────────────────────────────────────
       console.log(`[AI] Calling Groq for deck ${deckId}, format ${format}, colors [${selectedColorsStr}]`);
