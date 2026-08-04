@@ -457,7 +457,7 @@ module.exports = {
       // ── Step 1: Update deck description with strategy ──────────────────────
       if (strategy) {
         await knex('decks')
-          .where('id', deckId)
+          .where('id_deck', deckId)
           .where('user_id', user_id)
           .update({
             description: strategy,
@@ -468,7 +468,7 @@ module.exports = {
       // ── Step 2: If commander was selected, update deck metadata ───────────
       if (selectedCommander) {
         await knex('decks')
-          .where('id', deckId)
+          .where('id_deck', deckId)
           .where('user_id', user_id)
           .update({
             commanderName: selectedCommander.name,
