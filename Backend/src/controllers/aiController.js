@@ -114,6 +114,8 @@ module.exports = {
         !basicLandNames.has(c.name)
       );
 
+      console.log(`[AI] Filtering: ${fullCollection.length} total → ${filteredCollection.length} after color filter → ${filteredWithoutBasicLands.length} without basics`);
+
       // ── Step 5: Fetch current deck cards (for context) ────────────────────
       const currentDeckRows = await knex('deck')
         .select(
@@ -189,11 +191,13 @@ Respond ONLY with JSON:
 
       const responseText = chatCompletion.choices[0]?.message?.content || '';
       console.log(`[AI] Groq response received (length: ${responseText.length})`);
+      console.log(`[AI] Raw response:\n${responseText.substring(0, 500)}...`); // First 500 chars
 
       // ── Step 8: Extract and parse JSON ──────────────────────────────────────
       let deckResponse;
       try {
         deckResponse = extractJsonFromResponse(responseText);
+        console.log(`[AI] Parsed deck: ${deckResponse.mainboard?.length || 0} mainboard, ${deckResponse.sideboard?.length || 0} sideboard`);
       } catch (err) {
         console.error(`[AI] JSON extraction failed:`, err.message);
         return res.status(500).json({ error: 'Failed to parse deck response from AI' });
@@ -203,11 +207,16 @@ Respond ONLY with JSON:
       const collectionMap = new Map(filteredCollection.map(c => [c.name.toLowerCase(), c]));
       const validMainboard = [];
       const validSideboard = [];
+      const validationErrors = [];
 
       // Validate mainboard
       for (const card of (deckResponse.mainboard || [])) {
         const owned = collectionMap.get(card.name.toLowerCase());
-        if (owned && card.qty <= owned.qty) {
+        if (!owned) {
+          validationErrors.push(`Mainboard: "${card.name}" not in filtered collection`);
+        } else if (card.qty > owned.qty) {
+          validationErrors.push(`Mainboard: "${card.name}" needs ${card.qty} but only ${owned.qty} available`);
+        } else {
           validMainboard.push({ ...card, card_id: owned.card_id });
         }
       }
@@ -215,13 +224,22 @@ Respond ONLY with JSON:
       // Validate sideboard
       for (const card of (deckResponse.sideboard || [])) {
         const owned = collectionMap.get(card.name.toLowerCase());
-        if (owned && card.qty <= owned.qty) {
+        if (!owned) {
+          validationErrors.push(`Sideboard: "${card.name}" not in filtered collection`);
+        } else if (card.qty > owned.qty) {
+          validationErrors.push(`Sideboard: "${card.name}" needs ${card.qty} but only ${owned.qty} available`);
+        } else {
           validSideboard.push({ ...card, card_id: owned.card_id });
         }
       }
 
       const totalCards = validMainboard.length + validSideboard.length;
-      console.log(`[AI] Generated ${totalCards} valid cards`);
+      console.log(`[AI] Validation complete: ${totalCards} valid cards`);
+      if (validationErrors.length > 0) {
+        console.log(`[AI] Validation errors (showing first 5):`);
+        validationErrors.slice(0, 5).forEach(err => console.log(`  - ${err}`));
+      }
+      console.log(`[AI] Context: current deck ${currentDeckSize}/${targetSize}, remaining ${remainingSlots}, filtered collection size ${filteredCollection.length}`);
 
       // ── Step 10: Return result (no skipped cards) ────────────────────────────
       return res.json({
@@ -247,6 +265,8 @@ Respond ONLY with JSON:
     }
 
     try {
+      console.log(`[AI] Applying deck ${deckId}: ${mainboard.length} mainboard, ${sideboard?.length || 0} sideboard`);
+      
       // ── Collect only the NEW cards to insert (mainboard + sideboard) ───────
       const cardsToInsert = [];
 
@@ -257,6 +277,12 @@ Respond ONLY with JSON:
           .where('user_id', user_id)
           .where('card_id', card.card_id)
           .limit(card.qty);
+
+        if (collectionRows.length > 0) {
+          console.log(`[AI]   Mainboard: "${card.name}" (${card.qty} requested, ${collectionRows.length} inserted)`);
+        } else {
+          console.warn(`[AI]   Mainboard: "${card.name}" - NO PHYSICAL COPIES FOUND!`);
+        }
 
         for (const row of collectionRows) {
           cardsToInsert.push({
@@ -276,6 +302,12 @@ Respond ONLY with JSON:
           .where('card_id', card.card_id)
           .limit(card.qty);
 
+        if (collectionRows.length > 0) {
+          console.log(`[AI]   Sideboard: "${card.name}" (${card.qty} requested, ${collectionRows.length} inserted)`);
+        } else {
+          console.warn(`[AI]   Sideboard: "${card.name}" - NO PHYSICAL COPIES FOUND!`);
+        }
+
         for (const row of collectionRows) {
           cardsToInsert.push({
             user_id,
@@ -289,9 +321,10 @@ Respond ONLY with JSON:
       // ── Insert all NEW cards in one operation (existing cards remain) ──────
       if (cardsToInsert.length > 0) {
         await knex('deck').insert(cardsToInsert);
+        console.log(`[AI] Inserted ${cardsToInsert.length} cards into deck ${deckId}`);
+      } else {
+        console.warn(`[AI] WARNING: No cards were inserted!`);
       }
-
-      console.log(`[AI] Added ${cardsToInsert.length} cards to deck ${deckId}`);
 
       return res.json({
         success: true,
