@@ -309,74 +309,82 @@ module.exports = {
       const validationErrors = [];
       const suggestedCardNames = new Set(); // Track suggested cards for singleton rule
 
-      // Validate mainboard
+      // Validate mainboard - IMPORTANT: Return ALL suggested cards (even if not in collection)
+      // applyDeckWithWishlist will handle intelligent allocation (Collection -> Wishlist -> auto-add)
       for (const card of (deckResponse.mainboard || [])) {
         const owned = collectionMap.get(card.name.toLowerCase());
         const cardNameLower = card.name.toLowerCase();
         
+        // Skip only if card doesn't exist in Scryfall (shouldn't happen with AI)
         if (!owned) {
-          validationErrors.push(`Mainboard: "${card.name}" not in available collection`);
-        } else if (isCommander && card.qty !== 1) {
-          // Commander: must be singleton (qty must be 1)
-          validationErrors.push(`Mainboard: "${card.name}" - Commander is singleton, qty must be 1 (got ${card.qty})`);
-        } else if (!isCommander && card.qty > owned.qty) {
-          // Modern: qty must not exceed available (can use 1-4 copies of available cards)
-          validationErrors.push(`Mainboard: "${card.name}" - requested ${card.qty} but only ${owned.qty} available`);
-        } else if (isCommander && deckCardNamesSet.has(cardNameLower)) {
-          // Commander: reject cards already in deck
-          validationErrors.push(`Mainboard: "${card.name}" is already in deck (Commander is singleton)`);
-        } else if (isCommander) {
-          // Commander-specific validations
-          // 1. Check singleton rule (no duplicates in suggestions)
-          if (suggestedCardNames.has(cardNameLower) && !isBasicLand(card.name)) {
-            validationErrors.push(`Mainboard: "${card.name}" appears multiple times in suggestions (must be unique)`);
-          }
-          // 2. Check color identity matches commander
-          else if (!matchesCommanderColorIdentity(owned.colorIdentity, commanderColorIdentity)) {
-            validationErrors.push(`Mainboard: "${card.name}" has colors outside commander identity`);
-          } else {
-            validMainboard.push({ ...card, card_id: owned.card_id });
-            suggestedCardNames.add(cardNameLower);
-          }
-        } else {
-          // Modern format (simpler validation)
-          validMainboard.push({ ...card, card_id: owned.card_id });
+          // Card not in collection, but still include it for Wishlist
+          validMainboard.push({ ...card, card_id: null });
+          suggestedCardNames.add(cardNameLower);
+          continue;
         }
+
+        // For Commander: additional validations
+        if (isCommander) {
+          if (card.qty !== 1) {
+            console.warn(`Mainboard: "${card.name}" qty should be 1 for Commander (got ${card.qty}), adjusting`);
+            card.qty = 1; // Force to 1
+          }
+          if (deckCardNamesSet.has(cardNameLower)) {
+            console.warn(`Mainboard: "${card.name}" already in deck, skipping`);
+            continue;
+          }
+          if (suggestedCardNames.has(cardNameLower)) {
+            console.warn(`Mainboard: "${card.name}" appears multiple times, keeping first`);
+            continue;
+          }
+          if (!matchesCommanderColorIdentity(owned.colorIdentity, commanderColorIdentity)) {
+            console.warn(`Mainboard: "${card.name}" color mismatch, skipping`);
+            continue;
+          }
+        }
+
+        // Add to valid cards
+        validMainboard.push({ ...card, card_id: owned.card_id });
+        suggestedCardNames.add(cardNameLower);
       }
 
-      // Validate sideboard
+      // Validate sideboard - IMPORTANT: Return ALL suggested cards (even if not in collection)
+      // applyDeckWithWishlist will handle intelligent allocation (Collection -> Wishlist -> auto-add)
       for (const card of (deckResponse.sideboard || [])) {
         const owned = collectionMap.get(card.name.toLowerCase());
         const cardNameLower = card.name.toLowerCase();
         
+        // Skip only if card doesn't exist in Scryfall (shouldn't happen with AI)
         if (!owned) {
-          validationErrors.push(`Sideboard: "${card.name}" not in available collection`);
-        } else if (isCommander && card.qty !== 1) {
-          // Commander: must be singleton (qty must be 1)
-          validationErrors.push(`Sideboard: "${card.name}" - Commander is singleton, qty must be 1 (got ${card.qty})`);
-        } else if (!isCommander && card.qty > owned.qty) {
-          // Modern: qty must not exceed available (can use 1-4 copies of available cards)
-          validationErrors.push(`Sideboard: "${card.name}" - requested ${card.qty} but only ${owned.qty} available`);
-        } else if (isCommander && deckCardNamesSet.has(cardNameLower)) {
-          // Commander: reject cards already in deck
-          validationErrors.push(`Sideboard: "${card.name}" is already in deck (Commander is singleton)`);
-        } else if (isCommander) {
-          // Commander-specific validations
-          // 1. Check singleton rule (no duplicates in suggestions)
-          if (suggestedCardNames.has(cardNameLower) && !isBasicLand(card.name)) {
-            validationErrors.push(`Sideboard: "${card.name}" appears multiple times in suggestions (must be unique)`);
-          }
-          // 2. Check color identity matches commander
-          else if (!matchesCommanderColorIdentity(owned.colorIdentity, commanderColorIdentity)) {
-            validationErrors.push(`Sideboard: "${card.name}" has colors outside commander identity`);
-          } else {
-            validSideboard.push({ ...card, card_id: owned.card_id });
-            suggestedCardNames.add(cardNameLower);
-          }
-        } else {
-          // Modern format (simpler validation)
-          validSideboard.push({ ...card, card_id: owned.card_id });
+          // Card not in collection, but still include it for Wishlist
+          validSideboard.push({ ...card, card_id: null });
+          suggestedCardNames.add(cardNameLower);
+          continue;
         }
+
+        // For Commander: additional validations
+        if (isCommander) {
+          if (card.qty !== 1) {
+            console.warn(`Sideboard: "${card.name}" qty should be 1 for Commander (got ${card.qty}), adjusting`);
+            card.qty = 1; // Force to 1
+          }
+          if (deckCardNamesSet.has(cardNameLower)) {
+            console.warn(`Sideboard: "${card.name}" already in deck, skipping`);
+            continue;
+          }
+          if (suggestedCardNames.has(cardNameLower)) {
+            console.warn(`Sideboard: "${card.name}" appears multiple times, keeping first`);
+            continue;
+          }
+          if (!matchesCommanderColorIdentity(owned.colorIdentity, commanderColorIdentity)) {
+            console.warn(`Sideboard: "${card.name}" color mismatch, skipping`);
+            continue;
+          }
+        }
+
+        // Add to valid cards
+        validSideboard.push({ ...card, card_id: owned.card_id });
+        suggestedCardNames.add(cardNameLower);
       }
 
       const totalCards = validMainboard.reduce((sum, c) => sum + c.qty, 0) + validSideboard.reduce((sum, c) => sum + c.qty, 0);
@@ -387,7 +395,7 @@ module.exports = {
       }
       console.log(`[AI] Context: current deck ${currentDeckNonLandSize}/${targetNonLandSize}, remaining ${remainingSlots}, available non-lands ${nonLandCards.length}`);
 
-      // ── Step 10: Validate commander selection (if AI chose one) ────────────
+      // ── Step 11: Validate commander selection (if AI chose one) ────────────
       let selectedCommander = null;
       let selectedCommanderColorIdentity = '';
 
@@ -422,7 +430,9 @@ module.exports = {
         }
       }
 
-      // ── Step 11: Return result ────────────────────────────────────────────
+      console.log(`[AI] Returning suggested deck: ${validMainboard.length} mainboard cards, ${validSideboard.length} sideboard cards`);
+
+      // ── Step 12: Return result ────────────────────────────────────────────
       const result = {
         strategy: deckResponse.strategy || 'No strategy provided',
         mainboard: validMainboard,
