@@ -160,7 +160,7 @@ function AIDeckModal({
             <h2 className={styles.title}>{t('ai.modalTitle')}</h2>
 
             {/* Selected Commander (if any) */}
-            {result.selectedCommander && (
+            {result?.selectedCommander && (
               <div className={styles.section}>
                 <label className={styles.sectionLabel}>Selected Commander</label>
                 <p className={styles.strategyText}>
@@ -172,13 +172,13 @@ function AIDeckModal({
             {/* Strategy */}
             <div className={styles.section}>
               <label className={styles.sectionLabel}>{t('ai.strategyLabel')}</label>
-              <p className={styles.strategyText}>{result.strategy}</p>
+              <p className={styles.strategyText}>{result?.strategy}</p>
             </div>
 
             {/* Card Count */}
             <div className={styles.section}>
               <p className={styles.infoText}>
-                {(result.mainboard?.length || 0) + (result.sideboard?.length || 0)} total cards
+                {(result?.mainboard?.length || 0) + (result?.sideboard?.length || 0)} total cards
               </p>
             </div>
 
@@ -192,58 +192,7 @@ function AIDeckModal({
               </button>
             </div>
           </>
-        ) : confirmationData ? (
-          // Confirmation State - Collection vs Wishlist Split
-          <>
-            <h2 className={styles.title}>{t('ai.modalTitle')}</h2>
-            <p className={styles.confirmLabel}>Confirmar adição de cartas</p>
-
-            {/* 2-Column Split */}
-            <div className={styles.splitContainer}>
-              {/* Left: Collection */}
-              <div className={styles.splitColumn}>
-                <h3 className={styles.columnTitle}>{t('collection.title') || 'Cartas da Coleção'}</h3>
-                <div className={styles.cardsList}>
-                  {confirmationData.collection?.map((card, idx) => (
-                    <div key={idx} className={styles.cardItem}>
-                      <span className={styles.cardName}>{card.name}</span>
-                      <span className={styles.cardQty}>× {card.qty}</span>
-                    </div>
-                  ))}
-                  {!confirmationData.collection?.length && (
-                    <p className={styles.emptyText}>Nenhuma carta</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Right: Wishlist */}
-              <div className={styles.splitColumn}>
-                <h3 className={styles.columnTitle}>{t('wishlist.title') || 'Nova Wishlist'}</h3>
-                <div className={styles.cardsList} style={{ backgroundColor: '#E6E6FA' }}>
-                  {confirmationData.wishlist?.map((card, idx) => (
-                    <div key={idx} className={styles.cardItem}>
-                      <span className={styles.cardName}>{card.name}</span>
-                      <span className={styles.cardQty}>× {card.qty}</span>
-                    </div>
-                  ))}
-                  {!confirmationData.wishlist?.length && (
-                    <p className={styles.emptyText}>Nenhuma carta</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className={styles.buttonRow}>
-              <button className={styles.cancelBtn} onClick={() => onBackToResult()}>
-                {t('modal.back') || 'Voltar'}
-              </button>
-              <button className={styles.applyBtn} onClick={() => onConfirm()} disabled={isLoading}>
-                {isLoading ? t('ai.loadingMessage') : (t('modal.confirm') || 'Confirmar')}
-              </button>
-            </div>
-          </>
-        ) : null}
+        )}
       </div>
     </div>
   );
