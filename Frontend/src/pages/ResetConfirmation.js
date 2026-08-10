@@ -1,7 +1,7 @@
 import { React } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import Axios from "axios";
+import Api from '../Api';
 import * as yup from "yup";
 import styles from "../styles/ForgotPassword.module.css";
 import { toast } from 'react-toastify';
@@ -25,7 +25,7 @@ const ResetConfirmation = () => {
 
   const handleSubmit = (values) => {
     if (resetToken) {
-      Axios.put(`${window.name}/new-password/${resetToken}`, {
+      Api.put(`/new-password/${resetToken}`, {
         password: values.password,
       })
         .then((response) => {

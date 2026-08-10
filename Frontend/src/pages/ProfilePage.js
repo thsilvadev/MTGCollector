@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuthHeader, useAuthUser } from 'react-auth-kit';
-import Axios from 'axios';
+import Api from '../Api';
 import { toast } from 'react-toastify';
 import styles from '../styles/ProfilePage.module.css';
 import { useI18n } from '../i18n/LanguageContext';
@@ -43,8 +43,8 @@ function BattleModal({ opponentDeck, authHeaderRef, onClose, onSend, t }) {
     let cancelled = false;
     async function load() {
       try {
-        const { data } = await Axios.get(
-          `${window.name}/profile/me/decks`,
+        const { data } = await Api.get(
+          `/profile/me/decks`,
           { headers: { Authorization: authHeaderRef.current() } }
         );
         if (!cancelled) {
@@ -191,8 +191,8 @@ function AllTestimonialsModal({ userId, authHeaderRef, t, onClose }) {
     let cancelled = false;
     async function load() {
       try {
-        const { data } = await Axios.get(
-          `${window.name}/profile/${userId}/testimonials?limit=50&offset=0`,
+        const { data } = await Api.get(
+          `/profile/${userId}/testimonials?limit=50&offset=0`,
           { headers: { Authorization: authHeaderRef.current() } }
         );
         if (!cancelled) setItems(data.testimonials || []);
@@ -270,11 +270,11 @@ export default function ProfilePage({ isSelf = false }) {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const profileUrl = `${window.name}/profile/${userId}`;
+      const profileUrl = `/profile/${userId}`;
       const [profileRes, decksRes, testimonialsRes] = await Promise.allSettled([
-        Axios.get(profileUrl, { headers: { Authorization: authHeaderRef.current() } }),
-        Axios.get(`${profileUrl}/decks`, { headers: { Authorization: authHeaderRef.current() } }),
-        Axios.get(`${profileUrl}/testimonials?limit=3&offset=0`, { headers: { Authorization: authHeaderRef.current() } }),
+        Api.get(profileUrl, { headers: { Authorization: authHeaderRef.current() } }),
+        Api.get(`${profileUrl}/decks`, { headers: { Authorization: authHeaderRef.current() } }),
+        Api.get(`${profileUrl}/testimonials?limit=3&offset=0`, { headers: { Authorization: authHeaderRef.current() } }),
       ]);
 
       if (profileRes.status === 'fulfilled') {
@@ -309,8 +309,8 @@ export default function ProfilePage({ isSelf = false }) {
 
   async function handleDeclareBattle({ deck_id, my_deck_id, battle_date, score_challenger, score_deck_owner }) {
     try {
-      await Axios.post(
-        `${window.name}/battles`,
+      await Api.post(
+        `/battles`,
         { deck_id, my_deck_id, battle_date, score_challenger, score_deck_owner },
         { headers: { Authorization: authHeaderRef.current() } }
       );
@@ -329,16 +329,16 @@ export default function ProfilePage({ isSelf = false }) {
     setTLoading(true);
     try {
       const targetId = profile?.id_user;
-      await Axios.post(
-        `${window.name}/profile/${targetId}/testimonials`,
+      await Api.post(
+        `/profile/${targetId}/testimonials`,
         { text: tText.trim() },
         { headers: { Authorization: authHeaderRef.current() } }
       );
       setTText('');
       toast.success('Depoimento publicado!');
       // Reload testimonials
-      const { data } = await Axios.get(
-        `${window.name}/profile/${targetId}/testimonials?limit=3&offset=0`,
+      const { data } = await Api.get(
+        `/profile/${targetId}/testimonials?limit=3&offset=0`,
         { headers: { Authorization: authHeaderRef.current() } }
       );
       setTestimonials(data.testimonials || []);

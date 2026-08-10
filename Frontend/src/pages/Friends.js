@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthHeader } from 'react-auth-kit';
-import Axios from 'axios';
+import Api from '../Api';
 import { toast } from 'react-toastify';
 import styles from '../styles/Friends.module.css';
 import { useI18n } from '../i18n/LanguageContext';
@@ -75,8 +75,8 @@ function Friends() {
   useEffect(() => {
     const cfg = { headers: { Authorization: authHeaderRef.current() } };
     Promise.all([
-      Axios.get(`${window.name}/friends`, cfg),
-      Axios.get(`${window.name}/friends/requests`, cfg),
+      Api.get(`/friends`, cfg),
+      Api.get(`/friends/requests`, cfg),
     ])
       .then(([friendsRes, requestsRes]) => {
         setFriends(friendsRes.data);
@@ -110,7 +110,7 @@ function Friends() {
     if (!tag) return;
     closeAddMode();
     try {
-      await Axios.post(`${window.name}/friends/request`, { game_tag: tag }, { headers: { Authorization: authHeaderRef.current() } });
+      await Api.post(`/friends/request`, { game_tag: tag }, { headers: { Authorization: authHeaderRef.current() } });
       toast.success(t('friends.inviteSent'));
     } catch (err) {
       const msg = err?.response?.data?.error || '';
@@ -124,7 +124,7 @@ function Friends() {
 
   async function handleAccept(invite) {
     try {
-      await Axios.put(`${window.name}/friends/request/${invite.id_request}/accept`, {}, { headers: { Authorization: authHeaderRef.current() } });
+      await Api.put(`/friends/request/${invite.id_request}/accept`, {}, { headers: { Authorization: authHeaderRef.current() } });
       setInvites((prev) => prev.filter((i) => i.id_request !== invite.id_request));
       setFriends((prev) => [
         ...prev,
@@ -138,7 +138,7 @@ function Friends() {
 
   async function handleDecline(invite) {
     try {
-      await Axios.put(`${window.name}/friends/request/${invite.id_request}/decline`, {}, { headers: { Authorization: authHeaderRef.current() } });
+      await Api.put(`/friends/request/${invite.id_request}/decline`, {}, { headers: { Authorization: authHeaderRef.current() } });
       setInvites((prev) => prev.filter((i) => i.id_request !== invite.id_request));
       toast.info(t('friends.declined'));
     } catch (err) {
@@ -148,7 +148,7 @@ function Friends() {
 
   async function handleRemove(friend) {
     try {
-      await Axios.delete(`${window.name}/friends/${friend.id_user}`, { headers: { Authorization: authHeaderRef.current() } });
+      await Api.delete(`/friends/${friend.id_user}`, { headers: { Authorization: authHeaderRef.current() } });
       setFriends((prev) => prev.filter((f) => f.id_user !== friend.id_user));
       toast.info(t('friends.removed'));
     } catch (err) {

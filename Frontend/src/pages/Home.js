@@ -11,7 +11,7 @@ import SearchContainer from "../components/SearchContainer";
 import SideBar from "../components/SideBar";
 
 //Tools
-import Axios from "axios";
+import Api from '../Api';
 
 import React, { useState, useEffect } from "react";
 
@@ -57,7 +57,7 @@ function Home() {
     setPage(0);
     // Always reset cards when superParams changes
     setIsLoading(true);
-    Axios.get(`${window.name}/cards/0?${superParams}`).then(
+    Api.get(`/cards/0?${superParams}`).then(
       (response) => {
         // Reset the cards with the new data
         setCards(response.data);
@@ -71,7 +71,7 @@ function Home() {
     console.log("Page state before fetch:", page);
     if (page > 0){
       setIsLoading(true);
-      Axios.get(`${window.name}/cards/${page}?${superParams}`).then(
+      Api.get(`/cards/${page}?${superParams}`).then(
         (response) => {
           console.log("Page state after fetch:", page);
           // Append the new data to the existing cards
@@ -132,7 +132,7 @@ function Home() {
   };
 
   const deleteFromCollection = (cardIdCollection) => {
-    Axios.delete(`${window.name}/card/${cardIdCollection}`, config).then(() => {
+    Api.delete(`/card/${cardIdCollection}`, config).then(() => {
       console.log(`Card deleted from collection`);
       notify();
       toggleRefresh();

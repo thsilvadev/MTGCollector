@@ -1,6 +1,6 @@
 import { React, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Axios from 'axios';
+import Api from '../Api';
 import { toast } from 'react-toastify';
 
 const Confirmation = () => {
@@ -12,7 +12,7 @@ const Confirmation = () => {
 
   useEffect(() => {
     if (emailToken) {
-      Axios.put(`${window.name}/confirmation/${emailToken}`, {
+      Api.put(`/confirmation/${emailToken}`, {
         confirmed: "confirmed",
       }).then((response) => {
         if (response.data.message){

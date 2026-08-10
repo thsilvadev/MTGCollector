@@ -10,7 +10,7 @@ import Card from "../components/Card";
 
 import SearchContainer from "../components/SearchContainer";
 
-import Axios from "axios";
+import Api from '../Api';
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
 
@@ -127,7 +127,7 @@ function Collection() {
   useEffect(() => {
     setIsLoading(true);
     setPage(0);
-    Axios.get(`${window.name}/collection/0?${superParams}`, config)
+    Api.get(`/collection/0?${superParams}`, config)
       .then((response) => {
         setTotalCards(response.data.total);
         setCards(response.data.cards);
@@ -151,7 +151,7 @@ function Collection() {
   useEffect(() => {
     if (page === 0) return;
     setIsLoadingMore(true);
-    Axios.get(`${window.name}/collection/${page}?${superParams}`, config)
+    Api.get(`/collection/${page}?${superParams}`, config)
       .then((response) => {
         setCards((prev) => [...prev, ...response.data.cards]);
         setIsDroppable(true);
@@ -322,8 +322,8 @@ function Collection() {
 
     try {
       setIsDroppable(false);
-      await Axios.post(
-        `${window.name}/eachDeck/`,
+      await Api.post(
+        `/eachDeck/`,
         { id_card: collectionId, deck: chosenDeck, sideboard: isSideboard },
         config
       ).then(() => setDeckToggler((t) => !t));
@@ -336,7 +336,7 @@ function Collection() {
   const deleteFromDeck = (cardIdConstructed) => {
     if (!isDroppable) return;
     try {
-      Axios.delete(`${window.name}/eachDeck/${cardIdConstructed}`, config)
+      Api.delete(`/eachDeck/${cardIdConstructed}`, config)
         .then(() => setDeckToggler((t) => !t));
     } catch (error) {
       console.error("Failed to remove card from deck:", error);
@@ -347,8 +347,8 @@ function Collection() {
   // qty=null → move all copies (DnD), qty=N → move exactly N copies (modal)
   const moveCard = async (cardScryfallId, toSideboard, qty = null) => {
     try {
-      await Axios.put(
-        `${window.name}/eachDeck/move`,
+      await Api.put(
+        `/eachDeck/move`,
         { card_id: cardScryfallId, deck: selectedDeck, sideboard: toSideboard, qty },
         config
       );
@@ -362,7 +362,7 @@ function Collection() {
   // Set exact qty of a card in the deck or sideboard (from MiniCard modal)
   const setDeckCardQty = async (cardScryfallId, newQty, isSideboard = false) => {
     try {
-      await Axios.put(`${window.name}/eachDeck/setqty`, {
+      await Api.put(`/eachDeck/setqty`, {
         card_id: cardScryfallId,
         deck: selectedDeck,
         qty: newQty,
@@ -381,7 +381,7 @@ function Collection() {
     const newValue   = isCommanderDeck ? 0 : 1;
     const clearFields = newValue === 0 ? { commanderName: null, commanderColors: null } : {};
     try {
-      await Axios.put(`${window.name}/decks/${selectedDeck}`, { isCommander: newValue, ...clearFields }, config);
+      await Api.put(`/decks/${selectedDeck}`, { isCommander: newValue, ...clearFields }, config);
       setDecks(prev => prev.map(d =>
         d.id_deck.toString() === selectedDeck.toString()
           ? { ...d, isCommander: newValue, ...clearFields }
@@ -397,7 +397,7 @@ function Collection() {
   const setDeckCommander = async (card) => {
     if (!selectedDeck) return;
     try {
-      await Axios.put(`${window.name}/decks/${selectedDeck}`, {
+      await Api.put(`/decks/${selectedDeck}`, {
         commanderName:   card.name,
         commanderColors: card.colorIdentity,
       }, config);
@@ -430,7 +430,7 @@ function Collection() {
     }
     setAiLoading(true);
     try {
-      const res = await Axios.post(`${window.name}/ai/buildDeck`, {
+      const res = await Api.post(`/ai/buildDeck`, {
         deckId: selectedDeck,
         selectedColors,
         isCommander,
@@ -463,7 +463,7 @@ function Collection() {
       }
       
       // Use new intelligent matching endpoint
-      const response = await Axios.post(`${window.name}/ai/applyDeckWithWishlist`, payload, config);
+      const response = await Api.post(`/ai/applyDeckWithWishlist`, payload, config);
       
       // Show confirmation screen with details
       setAiConfirmationData(response.data.details);
@@ -515,7 +515,7 @@ function Collection() {
   const [decks, setDecks] = useState([]);
 
   useEffect(() => {
-    Axios.get(`${window.name}/decks/0`, config)
+    Api.get(`/decks/0`, config)
       .then((response) => {
         setDecks(response.data);
       })
@@ -529,7 +529,7 @@ function Collection() {
 
   useEffect(() => {
     if (selectedDeck) {
-      Axios.get(`${window.name}/eachDeck/${selectedDeck}`, config)
+      Api.get(`/eachDeck/${selectedDeck}`, config)
         .then((response) => {
           setDeckCards(response.data);
         setIsDroppable(true);
@@ -712,8 +712,8 @@ function Collection() {
 
       if (colorChanged || countChanged) {
         try {
-          await Axios.put(
-            `${window.name}/decks/${selectedDeck}`,
+          await Api.put(
+            `/decks/${selectedDeck}`,
             { color: deckColorDefined, card_count: DeckSize },
             config
           );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuthHeader, useAuthUser } from 'react-auth-kit';
-import Axios from 'axios';
+import Api from '../Api';
 import styles from '../styles/Battles.module.css';
 import { useI18n } from '../i18n/LanguageContext';
 
@@ -115,8 +115,8 @@ export default function Battles() {
     let cancelled = false;
     async function load() {
       try {
-        const { data } = await Axios.get(
-          `${window.name}/battles`,
+        const { data } = await Api.get(
+          `/battles`,
           { headers: { Authorization: authHeaderRef.current() } }
         );
         if (!cancelled) setBattles(data);
@@ -132,8 +132,8 @@ export default function Battles() {
 
   async function handleAccept(id_battle) {
     try {
-      await Axios.put(
-        `${window.name}/battles/${id_battle}/accept`,
+      await Api.put(
+        `/battles/${id_battle}/accept`,
         {},
         { headers: { Authorization: authHeaderRef.current() } }
       );
@@ -147,8 +147,8 @@ export default function Battles() {
 
   async function handleDecline(id_battle) {
     try {
-      await Axios.put(
-        `${window.name}/battles/${id_battle}/decline`,
+      await Api.put(
+        `/battles/${id_battle}/decline`,
         {},
         { headers: { Authorization: authHeaderRef.current() } }
       );

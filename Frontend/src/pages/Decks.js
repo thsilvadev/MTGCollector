@@ -8,7 +8,7 @@ import AppModal from "../components/AppModal";
 
 //tools
 import { React, useState, useEffect } from "react";
-import Axios from "axios";
+import Api from "../Api";
 import { useAuthHeader } from "react-auth-kit";
 import { toast } from 'react-toastify';
 import { useI18n } from '../i18n/LanguageContext';
@@ -57,7 +57,7 @@ function Decks() {
   };
 
   useEffect(() => {
-    Axios.get(`${window.name}/decks/${page}`, config)
+    Api.get(`/decks/${page}`, config)
       .then((response) => {
         setDecks(response.data);
       })
@@ -81,8 +81,8 @@ function Decks() {
         onConfirm: (deckName, deckDescription, isCommanderFlag) => {
           setModal(null);
           if (!deckName) return;
-          Axios.post(
-            `${window.name}/decks`,
+          Api.post(
+            `/decks`,
             {
               name: deckName,
               description: deckDescription,

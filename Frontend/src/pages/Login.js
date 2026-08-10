@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as yup from "yup";
-import Axios from "axios";
+import Api from '../Api';
 import { useNavigate } from 'react-router-dom';
 import { useSignIn } from "react-auth-kit";
 import { toast } from 'react-toastify';
@@ -24,7 +24,7 @@ function Login() {
     setResendLoading(true);
     setResendMsg('');
     try {
-      const response = await Axios.post(`${window.name}/resend-confirmation`, { email: resendEmail });
+      const response = await Api.post(`/resend-confirmation`, { email: resendEmail });
       setResendMsg(response.data.message || response.data.error);
     } catch (err) {
       setResendMsg(err.response?.data?.error || 'An error occurred.');
@@ -36,7 +36,7 @@ function Login() {
   
 
   const handleClickLogin = (values) => {
-    Axios.post(`${window.name}/login`, {
+    Api.post(`/login`, {
         email: values.email,
         password: values.password
     }).then((response) => {
@@ -66,7 +66,7 @@ function Login() {
   };
 
   const handleClickRegister = (values) => {
-    Axios.post(`${window.name}/register`, {
+    Api.post(`/register`, {
         email: values.email,
         password: values.password,
         name: values.name,
