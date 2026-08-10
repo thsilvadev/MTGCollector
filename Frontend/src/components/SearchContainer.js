@@ -3,7 +3,7 @@ import styles from "../styles/SearchContainer.module.css";
 
 //imports
 import React, { useCallback, useEffect, useState } from "react";
-import Axios from "axios";
+import Api from "../Api";
 
 
 //imgs
@@ -286,7 +286,7 @@ const SearchContainer = ({ baseOfSearch, onParamsChange, isLoading }) => {
       localStorage.removeItem("localSets");
       localStorage.removeItem("localSetsVersion");
     }
-    Axios.get(`${window.name}/sets`)
+    Api.get(`/sets`)
       .then((response) => {
         const sets = response.data;
         if (!Array.isArray(sets)) {
