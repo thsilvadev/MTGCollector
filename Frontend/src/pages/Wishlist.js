@@ -341,22 +341,22 @@ function Wishlist() {
                 <Card
                   key={item.id_wishlist}
                   id={item.id_wishlist}
-                  multiverseId={item.multiverseId}
+                  multiverseId={item.multiverseId || 0}
                   scryfallId={item.card_id}
                   name={item.name}
                   types={item.types}
                   keywords={item.keywords || ''}
                   count={item.qty}
                   table="collection"
-                  id_collection={item.card_id}
+                  id_collection={item.id_wishlist}
                   refresh={() => { setPage(0); fetchWishlist(); }}
                   getChosenDeck={selectedDeck}
                   getDeckCards={deckCards}
                   getCollectionCards={wishlistItems}
-                  prices={item.prices}
+                  prices={item.prices || {}}
                   isCommanderDeck={isCommanderDeck}
                   commanderColorIdentity={selectedDeckInfo?.commanderColors || ''}
-                  onAddToDeck={(cardId) => addWishlistCardToDeck(cardId)}
+                  onAddToDeck={(cardId) => addWishlistCardToDeck(item.id_wishlist)}
                 />
               ))}
               {isLoadingMore && (
