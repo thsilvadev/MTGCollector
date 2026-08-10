@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Collection.module.css';
-import Axios from 'axios';
+import Api from '../Api';
 import { useAuthHeader } from 'react-auth-kit';
 import { useI18n } from '../i18n/LanguageContext';
 import { toast } from 'react-toastify';
@@ -12,7 +12,6 @@ import MiniCard from '../components/MiniCard';
 function Wishlist() {
   const { t } = useI18n();
   const authHeader = useAuthHeader();
-  const config = { headers: { Authorization: authHeader() } };
 
   const [wishlistItems, setWishlistItems] = useState([]);
   const [page, setPage] = useState(0);
@@ -37,9 +36,9 @@ function Wishlist() {
   const fetchWishlist = async () => {
     try {
       setIsLoading(true);
-      const response = await Axios.get(
-        `${window.name}/wishlist?page=${page}`,
-        config
+      const response = await Api.get(
+        `/wishlist?page=${page}`,
+        { headers: { Authorization: authHeader() } }
       );
       setWishlistItems(response.data.items || []);
       setTotalItems(response.data.items?.length || 0);
@@ -61,14 +60,14 @@ function Wishlist() {
 
       if (newQty === 0) {
         // Delete
-        await Axios.delete(`${window.name}/wishlist/${id_wishlist}`, config);
+        await Api.delete(`/wishlist/${id_wishlist}`, { headers: { Authorization: authHeader() } });
         toast.success(t('wishlist.removed') || 'Card removed from wishlist');
       } else {
         // Update
-        await Axios.put(
-          `${window.name}/wishlist/${id_wishlist}`,
+        await Api.put(
+          `/wishlist/${id_wishlist}`,
           { qty: newQty },
-          config
+          { headers: { Authorization: authHeader() } }
         );
         toast.success(t('wishlist.updated') || 'Wishlist updated');
       }
