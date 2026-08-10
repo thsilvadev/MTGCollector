@@ -5,7 +5,6 @@ import { useAuthHeader } from 'react-auth-kit';
 import { useI18n } from '../i18n/LanguageContext';
 import { toast } from 'react-toastify';
 import { Scrollbars } from 'react-custom-scrollbars-2';
-import Card from '../components/Card';
 import SearchContainer from '../components/SearchContainer';
 import MiniCard from '../components/MiniCard';
 
@@ -19,7 +18,6 @@ function Wishlist() {
   const [isLoading, setIsLoading] = useState(false);
   const [superParams, setSuperParams] = useState('');
   const _superParamsTimer = useRef(null);
-  const [selectedCard, setSelectedCard] = useState(null);
 
   const handleSuperParams = (paramsData) => {
     clearTimeout(_superParamsTimer.current);
@@ -117,8 +115,10 @@ function Wishlist() {
                 >
                   <MiniCard
                     name={item.name}
-                    imageUrl={item.imageUrl}
-                    onClick={() => setSelectedCard(item)}
+                    scryfallId={item.card_id}
+                    table="wishlist"
+                    cost=""
+                    types={item.types}
                   />
                   <div className={styles.wishlistQtyControl}>
                     <label>{t('wishlist.quantity') || 'Qty'}:</label>
@@ -150,16 +150,6 @@ function Wishlist() {
           )}
         </Scrollbars>
       </div>
-
-      {/* Card Detail (if selected) */}
-      {selectedCard && (
-        <Card
-          name={selectedCard.name}
-          imageUrl={selectedCard.imageUrl}
-          colorIdentity={selectedCard.colorIdentity}
-          onClose={() => setSelectedCard(null)}
-        />
-      )}
     </div>
   );
 }
