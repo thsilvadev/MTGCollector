@@ -6,14 +6,39 @@
 #   • Frontend: replaces the nginx build with craco dev server (hot-reload, port 3001)
 
 services:
-
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    ports:
+      - "3306:3306" # expose for local dev, but not in production
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mtgchest}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./Backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "--password=${MYSQL_ROOT_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
   backend:
     # Install ALL deps (including devDependencies like nodemon) for dev
     build:
       context: ./Backend
       dockerfile: Dockerfile.dev
     volumes:
-      - ./Backend/src:/app/src          # live-reload source
+      - ./Backend/src:/app/src # live-reload source
       - ./Backend/knexfile.js:/app/knexfile.js
       # keep node_modules from the container, don't overwrite with host
       - backend_nm:/app/node_modules
@@ -28,10 +53,10 @@ services:
     environment:
       - PORT=3001
       - REACT_APP_API_URL=http://localhost:3001/api
-      - CHOKIDAR_USEPOLLING=true   # file-watch inside Docker on Linux
+      - CHOKIDAR_USEPOLLING=true # file-watch inside Docker on Linux
       - WATCHPACK_POLLING=true
     volumes:
-      - ./Frontend/src:/app/src         # live-reload source
+      - ./Frontend/src:/app/src # live-reload source
       - ./Frontend/public:/app/public
       # keep node_modules from the container
       - frontend_nm:/app/node_modules
@@ -40,3 +65,4 @@ services:
 volumes:
   backend_nm:
   frontend_nm:
+  mysql_data:

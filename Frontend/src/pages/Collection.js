@@ -12,7 +12,7 @@ import SearchContainer from "../components/SearchContainer";
 
 import Api from '../Api';
 
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 
 import { Scrollbars } from "react-custom-scrollbars-2";
 
@@ -412,17 +412,6 @@ function Collection() {
     }
   };
 
-  // Compute locked colors from existing deck cards
-  const lockedColors = useMemo(() => {
-    const s = new Set();
-    if (deckCards && Array.isArray(deckCards)) {
-      deckCards.forEach(c => {
-        (c.colorIdentity || '').split(',').map(x => x.trim()).filter(Boolean).forEach(col => s.add(col));
-      });
-    }
-    return s;
-  }, [deckCards]);
-
   // AI Deck Builder: Submit (call backend)
   const handleAISubmit = async ({ selectedColors, isCommander }) => {
     if (isCommander !== isCommanderDeck) {
@@ -542,6 +531,17 @@ function Collection() {
   }, [selectedDeck, deckToggler]);
 
   //How many cards there are in selected deck?
+
+  // Compute locked colors from existing deck cards
+  const lockedColors = useMemo(() => {
+    const s = new Set();
+    if (deckCards && Array.isArray(deckCards)) {
+      deckCards.forEach(c => {
+        (c.colorIdentity || '').split(',').map(x => x.trim()).filter(Boolean).forEach(col => s.add(col));
+      });
+    }
+    return s;
+  }, [deckCards]);
 
   // Separate main deck from sideboard
   const mainDeckCards = useMemo(() => deckCards.filter(c => !c.sideboard), [deckCards]);
@@ -701,14 +701,15 @@ function Collection() {
 
   //function to UPDATE deck card_count and deck color
 
-  const updateDeck = debounce(async () => {
-    if (selectedDeck) {
+  const updateDeck = useCallback(debounce(async () => {
+    if (selectedDeck && decks.length > 0) {
       let selectedDeckObject = decks.find(
         (deck) => deck.id_deck.toString() === selectedDeck
       );
+      if (!selectedDeckObject) return;
 
       const colorChanged = deckColorDefined !== selectedDeckObject?.color;
-      const countChanged = DeckSize         !== selectedDeckObject?.card_count;
+      const countChanged = DeckSize !== selectedDeckObject?.card_count;
 
       if (colorChanged || countChanged) {
         try {
@@ -723,14 +724,14 @@ function Collection() {
         }
       }
     }
-  }, 400);
+  }, 1000), [selectedDeck, deckColorDefined, DeckSize, decks, config]);
 
   // Add a useEffect hook to trigger updateDeck when deckColorDefined or DeckSize change
   useEffect(() => {
-    if (selectedDeck) {
-      updateDeck(deckColorDefined, DeckSize);
+    if (selectedDeck && DeckSize > 0) {
+      updateDeck();
     }
-  }, [deckColorDefined, DeckSize]);
+  }, [deckColorDefined, DeckSize, selectedDeck, updateDeck]);
 
   const RenderedDeckSize = DeckSize > 0
     ? (isCommanderDeck ? `${DeckSize} / 100 Cards` : `${DeckSize} Cards`)

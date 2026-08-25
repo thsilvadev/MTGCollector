@@ -21,6 +21,7 @@ function Wishlist() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [superParams, setSuperParams] = useState('');
+  const [totalCost, setTotalCost] = useState('0.00');
   const _superParamsTimer = useRef(null);
   const scrollbarsRef = useRef(null);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -62,8 +63,10 @@ function Wishlist() {
       
       if (page === 0) {
         setWishlistItems(response.data.items || []);
+        setTotalCost(response.data.totalCost || '0.00');
       } else {
         setWishlistItems(prev => [...prev, ...(response.data.items || [])]);
+        setTotalCost(response.data.totalCost || '0.00');
       }
     } catch (err) {
       console.error('Failed to fetch wishlist:', err);
@@ -107,14 +110,11 @@ function Wishlist() {
 
   // Infinite scroll handler
   const handleScrollFrame = (values) => {
-    const { scrollLeft } = values;
+    const { scrollLeft, scrollWidth, clientWidth } = values;
     setScrollLeft(scrollLeft);
 
-    if (scrollbarsRef.current) {
-      const { scrollWidth, clientWidth } = scrollbarsRef.current.getScrollbars();
-      if (scrollWidth - scrollLeft - clientWidth < 500 && !isLoadingMore && !isLoading) {
-        setPage(prev => prev + 1);
-      }
+    if (scrollWidth - scrollLeft - clientWidth < 500 && !isLoadingMore && !isLoading) {
+      setPage(prev => prev + 1);
     }
   };
 
@@ -318,7 +318,14 @@ function Wishlist() {
   return (
     <div className={styles.Background}>
       <div>
-        <h1 className={styles.title}>{t('wishlist.title') || 'My Wishlist'}</h1>
+        <h1 className={styles.title}>
+          {t('wishlist.title') || 'My Wishlist'}
+          {totalCost && parseFloat(totalCost) > 0 && (
+            <span style={{ fontSize: '0.6em', marginLeft: '8px', opacity: 0.7 }}>
+              (${totalCost})
+            </span>
+          )}
+        </h1>
 
         <SearchContainer
           baseOfSearch="wishlist"
@@ -357,6 +364,7 @@ function Wishlist() {
                   isCommanderDeck={isCommanderDeck}
                   commanderColorIdentity={selectedDeckInfo?.commanderColors || ''}
                   onAddToDeck={(cardId) => addWishlistCardToDeck(item.id_wishlist)}
+                  isWishlist={true}
                 />
               ))}
               {isLoadingMore && (

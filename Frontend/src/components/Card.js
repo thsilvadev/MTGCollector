@@ -38,6 +38,7 @@ function Card({
   isCommanderDeck = false,
   commanderColorIdentity = '',
   onAddToDeck,
+  isWishlist = false,
 }) {
   //Scryfall ID management
 
@@ -101,8 +102,10 @@ function Card({
   const clickHandler = () => {
     if (table === "allCards") {
       postOnCollection();
-    } else if (table === "collection") {
+    } else if (table === "collection" && !isWishlist) {
       deleteFromCollection();
+    } else if (table === "collection" && isWishlist) {
+      editWishlistQuantity();
     }
   };
 
@@ -189,6 +192,31 @@ function Card({
     });
   };
 
+  //Edit Wishlist Quantity
+  const editWishlistQuantity = () => {
+    setModal({
+      type: 'set-qty',
+      cardName: name,
+      currentQty: count || 1,
+      maxQty: 99,
+      message: t('modal.wishlistQtyMsg') || 'How many copies do you want in your wishlist?',
+      onCancel: () => setModal(null),
+      onConfirm: (newQty) => {
+        setModal(null);
+        if (newQty === count) return;
+        if (newQty === 0) {
+          Axios.delete(`${window.name}/wishlist/${id}`, config)
+            .then(() => { console.log(`${name} deleted from wishlist`); toggleRefresh(); })
+            .catch((err) => { console.error(err); toast.error(t('toast.failedRemove')); });
+        } else {
+          Axios.put(`${window.name}/wishlist/${id}`, { qty: newQty }, config)
+            .then(() => { console.log(`${name} wishlist updated to ${newQty}`); toggleRefresh(); })
+            .catch((err) => { console.error(err); toast.error(t('toast.failedRemove')); });
+        }
+      },
+    });
+  };
+
   //How many in collection?
 
   //Quantity owned in collection and in wishlist
@@ -244,6 +272,13 @@ function Card({
   const renderer = () => {
     if (isMouseOver || istouchOver) {
       const priceLabel = prices?.usd ? ` · $${prices.usd}${t('card.perUnit')}` : '';
+      
+      if (isWishlist) {
+        // For wishlist: show wishlist quantity
+        return <span>{t('card.inWishlist') || 'in Wishlist'}: {count}{priceLabel}</span>;
+      }
+      
+      // For collection: show collection quantity
       if (collectionCard.length === 0) {
         return <span>{t('card.notObtained')}{priceLabel}</span>;
       } else {
@@ -271,8 +306,13 @@ function Card({
         (card) => card.id_card.toString() === collectionIdString
       );
       let onCollectionCard = getCollectionCards.find(
-        (card) => card.id_collection.toString() === collectionIdString
+        (card) => card.id_collection?.toString() === collectionIdString
       );
+
+      // If no collection card found, card doesn't exist in collection
+      if (!onCollectionCard) {
+        return "Card not found in collection. Add it first!";
+      }
 
       let onDeckCounter = onDeckCard ? onDeckCard.countById : 0;
 
@@ -524,13 +564,13 @@ function Card({
           onTouchEnd={handleTouchLeave}
           onTouchMove={HandleOffset}
         />
-        {table === "collection" && getChosenDeck && getChosenDeck !== 0 && onAddToDeck && isDraggableToggler && (
+        {table === "collection" && !isWishlist && getChosenDeck && getChosenDeck !== 0 && onAddToDeck && isDraggableToggler ? (
           <button
             className={styles.DeckAddBtn}
             onClick={e => { e.stopPropagation(); onAddToDeck(id_collection); }}
             title="Add to deck"
           >＋</button>
-        )}
+        ) : null}
         <div className={scaledCardClass} style={scaledStyle}>
           <img
             className={`${isBattleOrPlane}`}
