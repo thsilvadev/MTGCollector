@@ -274,8 +274,16 @@ function Card({
       const priceLabel = prices?.usd ? ` · $${prices.usd}${t('card.perUnit')}` : '';
       
       if (isWishlist) {
-        // For wishlist: show wishlist quantity
-        return <span>{t('card.inWishlist') || 'in Wishlist'}: {count}{priceLabel}</span>;
+        // For wishlist: show wishlist quantity and collection quantity below
+        const wishlistLine = <span>{t('card.inWishlist') || 'in Wishlist'} {count}{priceLabel}</span>;
+        const collectionLine = collectionCard.length === 0 
+          ? <span>{t('card.notObtained')}{priceLabel}</span>
+          : collectionCard.map((hoveredCard) => (
+              <span key={hoveredCard.id}>
+                {t('card.inCollection')} {hoveredCard.countById}{priceLabel}
+              </span>
+            ));
+        return <>{wishlistLine}<br/>{collectionLine}</>;
       }
       
       // For collection: show collection quantity
