@@ -45,6 +45,7 @@ services:
       - backend
     networks:
       - app_network
+      - rede_compartilhada
 
   frontend:
     profiles:

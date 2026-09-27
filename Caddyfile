@@ -1,3 +1,7 @@
 api.mtgchest.online {
     reverse_proxy backend:3000
 }
+
+api.botpit.online {
+    rever_proxy nanommo-backend:3000
+}
