@@ -2,6 +2,9 @@
 # Frontend is served by Vercel.
 #
 # Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+networks:
+  rede-compartilhada:
+    external: true
 services:
 
   db:
