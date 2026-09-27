@@ -3,5 +3,5 @@ api.mtgchest.online {
 }
 
 api.botpit.online {
-    rever_proxy nanommo-backend:3000
+    reverse_proxy nanommo-backend:3000
 }
